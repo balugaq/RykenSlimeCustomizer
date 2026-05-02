@@ -6,19 +6,27 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.ProjectAddonManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SaveditemsGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddonLoader;
@@ -50,7 +58,7 @@ public class MainCommand implements TabExecutor {
                     return false;
                 }
 
-                List<ProjectAddon> addons = RykenSlimefunCustomizer.addonManager.getAllValues();
+                List<ProjectAddon> addons = RykenSlimefunCustomizer.addonManager.getAllAddons();
                 List<String> nameWithId = addons.stream()
                         .map(a -> a.getAddonName() + "(id: " + a.getAddonId() + ")")
                         .toList();
@@ -75,6 +83,26 @@ public class MainCommand implements TabExecutor {
                 }
                 sender.sendMessage(CMIChatColor.translate("&a重载插件成功！"));
                 return true;
+            } else if (args[0].equalsIgnoreCase("resaveitems")) {
+                if (!sender.hasPermission("rsc.command") || !sender.hasPermission("rsc.command.resaveitems")) {
+                    sender.sendMessage(CMIChatColor.translate("&4你没有权限去做这些！"));
+                    return false;
+                }
+
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(CMIChatColor.translate("&4只有玩家才能执行此命令！"));
+                    return false;
+                }
+
+                if (!Bukkit.getPluginManager().isPluginEnabled("JustEnoughGuide")) {
+                    sender.sendMessage(CMIChatColor.translate("&4此命令需要服务器安装JustEnoughGuide才能正常使用"));
+                    return false;
+                }
+
+                player.sendMessage(CMIChatColor.translate("&c注意：为确保正常保存所有物品，请站在一个空旷平整的地面上，不要移动，并执行/rsc resaveitems start"));
+                player.sendMessage(CMIChatColor.translate("&c执行此指令后，会自动在您下方生成一些箱子，用于存放保存的物品"));
+                player.sendMessage(CMIChatColor.translate("&c接下来，您可以升级/降低服务器版本，箱子中的物品在世界升级时会自动被服务器修正"));
+                player.sendMessage(CMIChatColor.translate("&c在您重新进入世界后，输入/rsc resaveitems end 以自动重新保存物品"));
             }
         } else if (args.length == 2) {
             if (args[0].equalsIgnoreCase("enable")) {
@@ -215,6 +243,86 @@ public class MainCommand implements TabExecutor {
 
                 sender.sendMessage(CMIChatColor.translate("&a重载成功！"));
                 return true;
+            } else if (args[0].equalsIgnoreCase("resaveitems")) {
+                if (!sender.hasPermission("rsc.command") || !sender.hasPermission("rsc.command.resaveitems")) {
+                    sender.sendMessage(CMIChatColor.translate("&4你没有权限去做这些！"));
+                    return false;
+                }
+
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(CMIChatColor.translate("&4只有玩家才能执行此命令！"));
+                    return false;
+                }
+
+                if (!Bukkit.getPluginManager().isPluginEnabled("JustEnoughGuide")) {
+                    sender.sendMessage(CMIChatColor.translate("&4此命令需要服务器安装JustEnoughGuide才能正常使用"));
+                    return false;
+                }
+
+                if (player.getLocation().toBlockLocation().getBlockY() == player.getWorld().getMinHeight()) {
+                    sender.sendMessage(CMIChatColor.translate("&4所处Y过低，请站高一些"));
+                    return false;
+                }
+
+                if (!player.isOnGround()) {
+                    sender.sendMessage(CMIChatColor.translate("&4请站在地上"));
+                    return false;
+                }
+
+                if (args[1].equalsIgnoreCase("start")) {
+                    List<ItemStack> itemStacks = SaveditemsGroup.instance.getObjects().stream()
+                            .map(x -> (ItemStack) x)
+                            .toList();
+
+                    for (int i = 0; i < itemStacks.size(); i++) {
+                        Location chestLocation = player.getLocation().clone().add((int) (i / 27), -1, 0);
+                        Block block = chestLocation.getBlock();
+                        if (block.getType() != Material.CHEST) {
+                            block.setType(Material.CHEST);
+                        }
+                        BlockState blockState = block.getState();
+                        if (blockState instanceof InventoryHolder holder) {
+                            holder.getInventory().setItem(i % 27, itemStacks.get(i));
+                        }
+                    }
+
+                    player.sendMessage(CMIChatColor.translate("&a保存成功！请执行下一步操作"));
+                } else if (args[1].equalsIgnoreCase("end")) {
+                    int i = 0;
+                    while (true) {
+                        Location chestLocation = player.getLocation().clone().add(i++, -1, 0);
+                        Block block = chestLocation.getBlock();
+                        if (block.getType() != Material.CHEST) {
+                            player.sendMessage(CMIChatColor.translate("&a已重新保存成功！"));
+                            break;
+                        }
+
+                        BlockState blockState = block.getState();
+                        if (blockState instanceof InventoryHolder holder) {
+                            for (int j = 0; j < 27; j++) {
+                                ItemStack itemStack = holder.getInventory().getItem(j);
+                                if (itemStack != null) {
+                                    ItemStack clone = itemStack.clone();
+                                    String source = clone.getItemMeta().getPersistentDataContainer().get(SaveditemsGroup.SOURCE_KEY, PersistentDataType.STRING);
+                                    clone.editMeta(meta -> {
+                                        meta.getPersistentDataContainer().remove(SaveditemsGroup.SOURCE_KEY);
+                                    });
+
+                                    // resave clone
+                                    String prjId = source.split("/")[0];
+                                    String fileName = source.split("/")[1];
+
+                                    ProjectAddon addon = RykenSlimefunCustomizer.addonManager.get(prjId);
+
+                                    CommonUtils.saveItem(itemStack, fileName, addon);
+                                    player.sendMessage(CMIChatColor.translate("&a已重新保存 " + source));
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    sender.sendMessage(CMIChatColor.translate("&4请输入正确的参数！ (start/end)"));
+                }
             }
         } else if (args.length == 3) {
             if (args[0].equalsIgnoreCase("saveitem")) {
@@ -243,8 +351,8 @@ public class MainCommand implements TabExecutor {
                     sender.sendMessage(CMIChatColor.translate("&4你不能在控制台使用此指令！"));
                     return false;
                 }
-            } else if (args[0].equalsIgnoreCase("getsaveitem")) {
-                if (!sender.hasPermission("rsc.command") || !sender.hasPermission("rsc.command.getsaveitem")) {
+            } else if (args[0].equalsIgnoreCase("getsaveditem")) {
+                if (!sender.hasPermission("rsc.command") || !sender.hasPermission("rsc.command.getsaveditem")) {
                     sender.sendMessage(CMIChatColor.translate("&4你没有权限去做这些！"));
                     return false;
                 }
@@ -258,7 +366,7 @@ public class MainCommand implements TabExecutor {
                 }
 
                 File file = new File(
-                        RykenSlimefunCustomizer.addonManager.getAddonFolder(prjId), "items/" + itemId + ".yml");
+                        RykenSlimefunCustomizer.addonManager.getAddonFolder(prjId), "saveditems/" + itemId + ".yml");
                 if (!file.exists() || file.length() == 0) {
                     sender.sendMessage(CMIChatColor.translate("&4指向的物品文件没有内容！"));
                     return false;
@@ -302,14 +410,14 @@ public class MainCommand implements TabExecutor {
 
     public @NotNull List<String> onTabCompleteRaw(@NotNull String[] args) {
         if (args.length == 1) {
-            return List.of("list", "reload", "reloadPlugin", "list", "enable", "disable", "saveitem", "menupreview");
+            return List.of("list", "reload", "reloadPlugin", "list", "enable", "disable", "saveitem", "menupreview", "getsaveditem");
         } else if (args.length == 2) {
             return switch (args[0]) {
                 case "enable" -> Arrays.stream(Objects.requireNonNull(ProjectAddonManager.ADDONS_DIRECTORY.listFiles()))
                         .map(File::getName)
                         .toList();
-                case "disable", "saveitem", "getsaveitem" -> RykenSlimefunCustomizer.addonManager
-                        .getAllValues()
+                case "disable", "saveitem", "getsaveditem" -> RykenSlimefunCustomizer.addonManager
+                        .getAllAddons()
                         .stream()
                         .map(ProjectAddon::getAddonId)
                         .toList();
@@ -338,6 +446,7 @@ public class MainCommand implements TabExecutor {
                         &e/rsc disable <附属ID> 卸载某个附属
                         &e/rsc saveitem <附属ID> <ID> 保存物品
                         &e/rsc menupreview <ID> 预览机器菜单
-                        &e/rsc getsaveitem <附属ID> <ID> 获取保存的物品"""));
+                        &e/rsc getsaveditem <附属ID> <ID> 获取保存的物品
+                        &e/rsc resaveitems 重新保存所有保存物品"""));
     }
 }

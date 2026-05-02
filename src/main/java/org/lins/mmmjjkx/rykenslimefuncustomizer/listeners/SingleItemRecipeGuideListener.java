@@ -3,6 +3,8 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.listeners;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.player.PlayerProfile;
 import io.github.thebusybiscuit.slimefun4.core.guide.GuideHistory;
+import io.github.thebusybiscuit.slimefun4.core.guide.SlimefunGuide;
+import io.github.thebusybiscuit.slimefun4.core.guide.SlimefunGuideMode;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.implementation.guide.SurvivalSlimefunGuide;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.data.persistent.PersistentDataAPI;
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
+import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ClickAction;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.AContainer;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
@@ -106,6 +109,11 @@ public class SingleItemRecipeGuideListener implements Listener {
         pdc.set(RECIPE_TEMPLATE_INDEX_KEY, PersistentDataType.INTEGER, templateIndex);
         item.setItemMeta(meta);
         return item;
+    }
+
+    public static boolean viewItem(Player player, int slot, ItemStack itemStack, ClickAction action) {
+        new SurvivalSlimefunGuide(false, false).displayItem(PlayerProfile.find(player).get(), itemStack, 0, true);
+        return false;
     }
 
     public static ItemStack tagItemLinkedRecipe(ItemStack item, int recipeIndex) {
@@ -235,7 +243,7 @@ public class SingleItemRecipeGuideListener implements Listener {
             for (int i = 0; i < input.length; i++) {
                 ItemStack inputItem = input[i];
                 if (inputItem != null) {
-                    addItem(inputSlots[i], inputItem, (pl, s, is, action) -> false);
+                    addItem(inputSlots[i], inputItem, SingleItemRecipeGuideListener::viewItem);
                 }
             }
 
@@ -254,7 +262,7 @@ public class SingleItemRecipeGuideListener implements Listener {
                     }
 
                     recipeTask.add(outputSlot, taggedChanceOutputs);
-                    addMenuClickHandler(outputSlot, (pl, s, is, action) -> false);
+                    addMenuClickHandler(outputSlot, SingleItemRecipeGuideListener::viewItem);
                 } else {
                     List<Integer> chances = rmr.getChances();
 
@@ -269,7 +277,7 @@ public class SingleItemRecipeGuideListener implements Listener {
                             }
 
                             if (chance > 0) {
-                                addItem(outputSlots[i], chanceOutput, (pl, s, is, action) -> false);
+                                addItem(outputSlots[i], chanceOutput, SingleItemRecipeGuideListener::viewItem);
                             }
                         }
                     }
@@ -278,7 +286,7 @@ public class SingleItemRecipeGuideListener implements Listener {
                 for (int i = 0; i < outputSlots.length; i++) {
                     ItemStack output = recipe.getOutput()[i];
                     if (output != null) {
-                        addItem(outputSlots[i], output, (pl, s, is, action) -> false);
+                        addItem(outputSlots[i], output, SingleItemRecipeGuideListener::viewItem);
                     }
                 }
             }
@@ -352,7 +360,7 @@ public class SingleItemRecipeGuideListener implements Listener {
             int seconds = recipe.getTicks() / 2;
             ItemStack templateItem = template.template().clone();
             CommonUtils.addLore(templateItem, true, "&d&l&o*模板物品不消耗*");
-            addItem(templateSlot, templateItem, (pl, s, is, action) -> false);
+            addItem(templateSlot, templateItem, SingleItemRecipeGuideListener::viewItem);
 
             if (inputSlots.length != 0 && recipe.getInput().length != 0) {
                 for (int i = 0; i < inputSlots.length; i++) {
@@ -362,7 +370,7 @@ public class SingleItemRecipeGuideListener implements Listener {
 
                     ItemStack inputItem = recipe.getInput()[i];
                     if (inputItem != null) {
-                        addItem(inputSlots[i], inputItem.clone(), (pl, s, is, action) -> false);
+                        addItem(inputSlots[i], inputItem.clone(), SingleItemRecipeGuideListener::viewItem);
                     }
                 }
             }
@@ -379,7 +387,7 @@ public class SingleItemRecipeGuideListener implements Listener {
                 }
 
                 recipeTask.add(outputSlots[0], taggedChanceOutputs);
-                addMenuClickHandler(outputSlots[0], (pl, s, is, action) -> false);
+                addMenuClickHandler(outputSlots[0], SingleItemRecipeGuideListener::viewItem);
             } else {
                 List<Integer> chances = recipe.getChances();
 
@@ -398,7 +406,7 @@ public class SingleItemRecipeGuideListener implements Listener {
                         }
 
                         if (chance > 0) {
-                            addItem(outputSlots[i], chanceOutput, (pl, s, is, action) -> false);
+                            addItem(outputSlots[i], chanceOutput, SingleItemRecipeGuideListener::viewItem);
                         }
                     }
                 }
@@ -523,7 +531,7 @@ public class SingleItemRecipeGuideListener implements Listener {
                 for (int slot : linkedInput.keySet()) {
                     ItemStack inputItem = linkedInput.get(slot);
                     if (inputItem != null) {
-                        addItem(slot, inputItem.clone(), (pl, s, is, action) -> false);
+                        addItem(slot, inputItem.clone(), SingleItemRecipeGuideListener::viewItem);
                     }
                 }
                 int outputSlot = outputSlots[0];
@@ -539,7 +547,7 @@ public class SingleItemRecipeGuideListener implements Listener {
                     }
 
                     recipeTask.add(outputSlot, taggedChanceOutputs);
-                    addMenuClickHandler(outputSlot, (pl, s, is, action) -> false);
+                    addMenuClickHandler(outputSlot, SingleItemRecipeGuideListener::viewItem);
                 } else {
                     List<Integer> chances = lmr.getChances();
 
@@ -554,7 +562,7 @@ public class SingleItemRecipeGuideListener implements Listener {
                             }
 
                             if (chance > 0) {
-                                addItem(outputSlots[i], chanceOutput, (pl, s, is, action) -> false);
+                                addItem(outputSlots[i], chanceOutput, SingleItemRecipeGuideListener::viewItem);
                             }
                         }
                     }
@@ -564,13 +572,13 @@ public class SingleItemRecipeGuideListener implements Listener {
                 for (int i = 0; i < input.length; i++) {
                     ItemStack inputItem = input[i];
                     if (inputItem != null) {
-                        addItem(inputSlots[i], inputItem, (pl, s, is, action) -> false);
+                        addItem(inputSlots[i], inputItem, SingleItemRecipeGuideListener::viewItem);
                     }
                 }
                 for (int i = 0; i < outputSlots.length; i++) {
                     ItemStack output = recipe.getOutput()[i];
                     if (output != null) {
-                        addItem(outputSlots[i], output, (pl, s, is, action) -> false);
+                        addItem(outputSlots[i], output, SingleItemRecipeGuideListener::viewItem);
                     }
                 }
             }
@@ -584,7 +592,7 @@ public class SingleItemRecipeGuideListener implements Listener {
 
             progressBar = new CustomItemStack(progressBar, rawName);
 
-            addItem(progressSlot, progressBar, (pl, s, is, action) -> false);
+            addItem(progressSlot, progressBar, SingleItemRecipeGuideListener::viewItem);
         }
 
         @Override
@@ -622,14 +630,14 @@ public class SingleItemRecipeGuideListener implements Listener {
                     for (int slot : preset.getPresetSlots()) {
                         ItemStack itemStack = preset.getItemInSlot(slot);
                         if (itemStack != null && itemStack.getType() != Material.AIR) {
-                            addItem(slot, itemStack, (pl, s, is, action) -> false);
+                            addItem(slot, itemStack, SingleItemRecipeGuideListener::viewItem);
                         }
                     }
                     CustomLinkedMachineRecipe recipe =
                             (CustomLinkedMachineRecipe) cw.getMachineRecipes().get(index);
                     Map<Integer, ItemStack> linkedInput = recipe.getLinkedInput();
                     for (int slot : linkedInput.keySet()) {
-                        addItem(slot, linkedInput.get(slot).clone(), (pl, s, is, action) -> false);
+                        addItem(slot, linkedInput.get(slot).clone(), SingleItemRecipeGuideListener::viewItem);
                     }
 
                     LinkedOutput linkedOutput = recipe.getLinkedOutput();
@@ -649,11 +657,11 @@ public class SingleItemRecipeGuideListener implements Listener {
                                 }
 
                                 if (chance > 0) {
-                                    addItem(slot, chanceOutput, (pl, s, is, action) -> false);
+                                    addItem(slot, chanceOutput, SingleItemRecipeGuideListener::viewItem);
                                 }
                             }
                         } else {
-                            addItem(slot, outputMap.get(slot).clone(), (pl, s, is, action) -> false);
+                            addItem(slot, outputMap.get(slot).clone(), SingleItemRecipeGuideListener::viewItem);
                         }
                     }
 
@@ -661,7 +669,7 @@ public class SingleItemRecipeGuideListener implements Listener {
                         for (int slot : outputSlots) {
                             ItemStack existing = getItemInSlot(slot);
                             if (existing == null || existing.getType() == Material.AIR) {
-                                addItem(slot, itemStack.clone(), (pl, s, is, action) -> false);
+                                addItem(slot, itemStack.clone(), SingleItemRecipeGuideListener::viewItem);
                                 break;
                             }
                         }

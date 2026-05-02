@@ -101,7 +101,7 @@ public final class ProjectAddonManager {
             }
         }
 
-        checkStupids();
+        checkFiles();
 
         for (File folder : folders) {
             if (skip.contains(folder.getName())) continue;
@@ -135,7 +135,7 @@ public final class ProjectAddonManager {
         ExceptionHandler.info("共计" + projectAddons.size() + "个附属被加载");
     }
 
-    public void checkStupids() {
+    public void checkFiles() {
         File folder = RykenSlimefunCustomizer.INSTANCE.getDataFolder();
         if (folder.listFiles() != null) {
             boolean b = Arrays.stream(Objects.requireNonNull(folder.listFiles()))
@@ -177,7 +177,7 @@ public final class ProjectAddonManager {
         return projectAddons.get(id);
     }
 
-    public List<ProjectAddon> getAllValues() {
+    public List<ProjectAddon> getAllAddons() {
         return new ArrayList<>(projectAddons.values());
     }
 

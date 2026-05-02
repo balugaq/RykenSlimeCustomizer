@@ -51,7 +51,7 @@ public class BlockPopulator extends org.bukkit.generator.BlockPopulator {
             return;
         }
 
-        List<ProjectAddon> addons = RykenSlimefunCustomizer.addonManager.getAllValues();
+        List<ProjectAddon> addons = RykenSlimefunCustomizer.addonManager.getAllAddons();
 
         for (ProjectAddon addon : addons) {
             List<GenerationInfo> generationInfos = addon.getGenerationInfos();

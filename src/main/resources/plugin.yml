@@ -189,6 +189,7 @@ softdepend:
   - EcoScrolls
   - EcoCrates
   - EcoArmor
+  - JustEnoughGuide
 loadBefore:
   - SaneCrafting
   - SlimefunAdvancements

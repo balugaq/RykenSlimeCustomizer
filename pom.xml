@@ -214,5 +214,12 @@
             <version>2.15.1</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.balugaq</groupId>
+            <artifactId>JustEnoughGuide</artifactId>
+            <version>2.1.17</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/JustEnoughGuide v2.1.17.jar</systemPath>
+        </dependency>
     </dependencies>
 </project>

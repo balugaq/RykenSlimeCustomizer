@@ -5,17 +5,27 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Objects;
+
+import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.Library;
 import net.guizhanss.guizhanlib.updater.GuizhanBuildsUpdater;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SaveditemsGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.commands.MainCommand;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.BlockListener;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SingleItemRecipeGuideListener;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.generations.BlockPopulator;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
@@ -59,7 +69,41 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
             world.getPopulators().add(new BlockPopulator());
         }
 
-        ExceptionHandler.info("RykenSlimeCustomizer加载成功！");
+        if (Bukkit.getPluginManager().isPluginEnabled("JustEnoughGuide")) {
+            SaveditemsGroup itemGroup = new SaveditemsGroup(
+                    new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "saveditems"), new CustomItemStack(
+                    Material.COMMAND_BLOCK,
+                    "&c保存的物品 (RSC saveditems)"
+            )
+            );
+
+            SaveditemsGroup.instance = itemGroup;
+
+            for (ProjectAddon addon : addonManager.getAllAddons()) {
+                File[] files = addon.getSavedItemsFolder().listFiles();
+                if (files == null) return;
+                for (File file : Arrays.stream(files).filter(file -> {
+                    return file.isFile() && (file.getName().endsWith(".yml") || file.getName().endsWith("yaml"));
+                }).toList()) {
+                    try {
+                        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+                        ItemStack item = config.getItemStack("item");
+                        if (item != null) {
+                            String rawSource = addon.getAddonId() + "/" + file.getName();
+                            String source = rawSource.substring(0, rawSource.lastIndexOf("."));
+                            item.editMeta(meta -> {
+                                meta.getPersistentDataContainer().set(SaveditemsGroup.SOURCE_KEY, PersistentDataType.STRING, source);
+                            });
+                            itemGroup.addItem(item);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            itemGroup.register(this);
+        }
 
         if (getConfig().getBoolean("pluginUpdate", false)
                 && getDescription().getVersion().startsWith("b")
@@ -68,6 +112,13 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         }
 
         getServer().getScheduler().runTaskLater(this, () -> runtime = true, 1);
+
+        ExceptionHandler.info("============================");
+        ExceptionHandler.info("RykenSlimeCustomizer加载成功！");
+        ExceptionHandler.info("原作者: lijinhong11");
+        ExceptionHandler.info("改作者: balugaq");
+        ExceptionHandler.info("项目主页: https://github.com/balugaq/RykenSlimeCustomizer");
+        ExceptionHandler.info("============================");
     }
 
     @Override
