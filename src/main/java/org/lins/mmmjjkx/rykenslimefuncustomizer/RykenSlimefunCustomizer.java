@@ -88,9 +88,8 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
                     
                     String prjId = addon.getAddonId();
                     
-                    try {
-                        Files.walk(savedItemsFolder.toPath())
-                            .filter(path -> path.toFile().isFile() && 
+                    try (var stream = Files.walk(savedItemsFolder.toPath())) {
+                            stream.filter(path -> path.toFile().isFile() &&
                                    (path.toString().endsWith(".yml") || path.toString().endsWith(".yaml")))
                             .forEach(path -> {
                                 try {
@@ -111,7 +110,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
                                         itemGroup.addItem(item);
                                     }
                                 } catch (Exception e) {
-                                    e.printStackTrace();
+                                    ExceptionHandler.handleError("无法读取 " + path, e);
                                 }
                             });
                     } catch (IOException e) {

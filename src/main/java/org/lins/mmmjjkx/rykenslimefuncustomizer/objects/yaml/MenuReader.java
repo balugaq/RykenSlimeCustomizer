@@ -78,6 +78,45 @@ public class MenuReader extends YamlReader<CustomMenu> {
         }
 
         int progress = 22;
+        ItemStack progressItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        if (section.contains("matrix")) {
+
+            List<String> matrix = section.getStringList("matrix");
+            Map<Integer, ItemStack> slotMap = new HashMap<>();
+            Map<Character, ItemStack> mapping = new HashMap<>();
+            int slot = 0;
+            for (String line : matrix) {
+                for (char c : line.toCharArray()) {
+                    if (!mapping.containsKey(c)) {
+                        var k = section.getConfigurationSection("mapping." + c);
+                        if (k == null) {
+                            slot += 1;
+                            continue;
+                        }
+                        mapping.put(c, CommonUtils.readItem(k, true, addon));
+                        if (k.getBoolean("progressbar", false)) {
+                            progress = slot;
+                            if (k.contains("progressBarItem")) {
+                                progressItem =
+                                        CommonUtils.readItem(k.getConfigurationSection("progressBarItem"), true, addon);
+                            } else {
+                                progressItem = mapping.get(c);
+                            }
+
+                            ItemMeta meta = progressItem.getItemMeta();
+                            if (meta != null) {
+                                PersistentDataContainer pdc = meta.getPersistentDataContainer();
+                                pdc.set(PROGRESS_KEY, PersistentDataType.INTEGER, 0);
+                            }
+                        }
+                    }
+                    slotMap.put(slot, mapping.get(c));
+                    slot += 1;
+                }
+            }
+
+            return new CustomMenu(s, title, slotMap, playerInvClickable, progress, progressItem, eval);
+        }
 
         Map<Integer, ItemStack> slotMap = new HashMap<>();
         ConfigurationSection slots = section.getConfigurationSection("slots");
@@ -86,7 +125,6 @@ public class MenuReader extends YamlReader<CustomMenu> {
             return null;
         }
 
-        ItemStack progressItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
 
         for (String slot : slots.getKeys(false)) {
             try {
