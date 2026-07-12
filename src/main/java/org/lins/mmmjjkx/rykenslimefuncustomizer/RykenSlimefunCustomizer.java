@@ -1,15 +1,30 @@
+/*
+ * RykenSlimefunCustomizer
+ * Copyright (C) 2026 lijinhong11(mmmjjjkx) and balugaq
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package org.lins.mmmjjkx.rykenslimefuncustomizer;
 
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
+import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Objects;
-
-import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.Library;
 import net.guizhanss.guizhanlib.updater.GuizhanBuildsUpdater;
@@ -74,45 +89,51 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
             ExceptionHandler.info("已检测到JustEnoughGuide，正在适配...");
             try {
                 SaveditemsGroup itemGroup = new SaveditemsGroup(
-                        new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "saveditems"), new CustomItemStack(
-                        Material.COMMAND_BLOCK,
-                        "&c保存的物品 (RSC saveditems)"
-                )
-                );
+                        new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "saveditems"),
+                        new CustomItemStack(Material.COMMAND_BLOCK, "&c保存的物品 (RSC saveditems)"));
 
                 SaveditemsGroup.instance = itemGroup;
 
                 for (ProjectAddon addon : addonManager.getAllAddons()) {
                     File savedItemsFolder = addon.getSavedItemsFolder();
                     if (!savedItemsFolder.exists()) continue;
-                    
+
                     String prjId = addon.getAddonId();
-                    
+
                     try (var stream = Files.walk(savedItemsFolder.toPath())) {
-                            stream.filter(path -> path.toFile().isFile() &&
-                                   (path.toString().endsWith(".yml") || path.toString().endsWith(".yaml")))
-                            .forEach(path -> {
-                                try {
-                                    File file = path.toFile();
-                                    YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                                    ItemStack item = config.getItemStack("item");
-                                    if (item != null) {
-                                        // 计算相对于saveditems文件夹的路径
-                                        String relativePath = savedItemsFolder.toPath().relativize(path).toString();
-                                        // 移除文件扩展名
-                                        String pathWithoutExt = relativePath.substring(0, relativePath.lastIndexOf("."));
-                                        // 格式: prjId;相对路径
-                                        String source = prjId + ";" + pathWithoutExt;
-                                        
-                                        item.editMeta(meta -> {
-                                            meta.getPersistentDataContainer().set(SaveditemsGroup.SOURCE_KEY, PersistentDataType.STRING, source);
-                                        });
-                                        itemGroup.addItem(item);
+                        stream.filter(path -> path.toFile().isFile()
+                                        && (path.toString().endsWith(".yml")
+                                                || path.toString().endsWith(".yaml")))
+                                .forEach(path -> {
+                                    try {
+                                        File file = path.toFile();
+                                        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+                                        ItemStack item = config.getItemStack("item");
+                                        if (item != null) {
+                                            // 计算相对于saveditems文件夹的路径
+                                            String relativePath = savedItemsFolder
+                                                    .toPath()
+                                                    .relativize(path)
+                                                    .toString();
+                                            // 移除文件扩展名
+                                            String pathWithoutExt =
+                                                    relativePath.substring(0, relativePath.lastIndexOf("."));
+                                            // 格式: prjId;相对路径
+                                            String source = prjId + ";" + pathWithoutExt;
+
+                                            item.editMeta(meta -> {
+                                                meta.getPersistentDataContainer()
+                                                        .set(
+                                                                SaveditemsGroup.SOURCE_KEY,
+                                                                PersistentDataType.STRING,
+                                                                source);
+                                            });
+                                            itemGroup.addItem(item);
+                                        }
+                                    } catch (Exception e) {
+                                        ExceptionHandler.handleError("无法读取 " + path, e);
                                     }
-                                } catch (Exception e) {
-                                    ExceptionHandler.handleError("无法读取 " + path, e);
-                                }
-                            });
+                                });
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -166,7 +187,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
     @Override
     public String getBugTrackerURL() {
-        return "https://github.com/SlimefunReloadingProject/RykenSlimeCustomizer/issues";
+        return "https://github.com/balugaq/RykenSlimeCustomizer/issues";
     }
 
     private void setupLibraries() {

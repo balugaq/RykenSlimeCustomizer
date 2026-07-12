@@ -1,3 +1,20 @@
+/*
+ * RykenSlimefunCustomizer
+ * Copyright (C) 2026 lijinhong11(mmmjjjkx) and balugaq
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml;
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
@@ -82,7 +99,10 @@ public abstract class YamlReader<T> {
     }
 
     public final List<T> readAll() {
-        ExceptionHandler.info("正在加载" + addon.getAddonId() + "/" + this.getClass().getSimpleName().substring(0, this.getClass().getSimpleName().length() - 6));
+        ExceptionHandler.info("正在加载" + addon.getAddonId() + "/"
+                + this.getClass()
+                        .getSimpleName()
+                        .substring(0, this.getClass().getSimpleName().length() - 6));
         List<T> objects = new ArrayList<>();
         for (String key : configuration.getKeys(false)) {
             ConfigurationSection section = configuration.getConfigurationSection(key);
@@ -117,7 +137,10 @@ public abstract class YamlReader<T> {
     }
 
     public List<T> loadLateInits() {
-        ExceptionHandler.info("正在加载延迟项 " + addon.getAddonId() + "/" + this.getClass().getSimpleName().substring(0, this.getClass().getSimpleName().length() - 6));
+        ExceptionHandler.info("正在加载延迟项 " + addon.getAddonId() + "/"
+                + this.getClass()
+                        .getSimpleName()
+                        .substring(0, this.getClass().getSimpleName().length() - 6));
         List<T> objects = new ArrayList<>();
         lateInits.forEach(key -> {
             ExceptionHandler.debugLog("开始读取配置：" + key);
@@ -398,6 +421,7 @@ public abstract class YamlReader<T> {
     }
 
     private static String getLoadingProgress(ProjectAddon addon) {
-        return addon.getLoadedObjects() + "/" + addon.getTotalObjects() + " (" + ((int)(((double)addon.getLoadedObjects())/addon.getTotalObjects()*10000))/100.0D + "%)";
+        return addon.getLoadedObjects() + "/" + addon.getTotalObjects() + " ("
+                + ((int) (((double) addon.getLoadedObjects()) / addon.getTotalObjects() * 10000)) / 100.0D + "%)";
     }
 }

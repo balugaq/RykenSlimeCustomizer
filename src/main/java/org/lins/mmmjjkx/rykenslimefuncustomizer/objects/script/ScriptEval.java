@@ -1,3 +1,20 @@
+/*
+ * RykenSlimefunCustomizer
+ * Copyright (C) 2026 lijinhong11(mmmjjjkx) and balugaq
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -26,6 +43,7 @@ import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.scheduler.BukkitTask;
 import org.graalvm.polyglot.HostAccess;
 import org.jetbrains.annotations.Nullable;
@@ -35,37 +53,99 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.enhanced.NBTAPIIntegration;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.CiConsumer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.CiFunction;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ClassUtils;
 
 @Getter(AccessLevel.PROTECTED)
 public abstract class ScriptEval {
-    protected final HostAccess UNIVERSAL_HOST_ACCESS = HostAccess.newBuilder()
-            .allowPublicAccess(true)
-            .allowAllImplementations(true)
-            .allowAllClassImplementations(true)
-            .allowArrayAccess(true)
-            .allowListAccess(true)
-            .allowBufferAccess(true)
-            .allowIterableAccess(true)
-            .allowIteratorAccess(true)
-            .allowMapAccess(true)
-            .allowAccessInheritance(true)
-            .targetTypeMapping(Double.class, Float.class, null, Double::floatValue)
-            .targetTypeMapping(Integer.class, Float.class, null, Integer::floatValue)
-            .targetTypeMapping(Boolean.class, String.class, null, String::valueOf)
-            .targetTypeMapping(Integer.class, String.class, null, String::valueOf)
-            .targetTypeMapping(Character.class, String.class, null, String::valueOf)
-            .targetTypeMapping(Long.class, String.class, null, String::valueOf)
-            .targetTypeMapping(Float.class, String.class, null, String::valueOf)
-            .targetTypeMapping(Double.class, String.class, null, String::valueOf)
-            .targetTypeMapping(Object.class, String.class, null, String::valueOf)
-            .denyAccess(System.class)
-            .denyAccess(Process.class)
-            .denyAccess(Runtime.class)
-            .denyAccess(ProcessBuilder.class)
-            .denyAccess(ClassLoader.class)
-            .denyAccess(Permission.class)
-            .denyAccess(Permissions.class)
-            .build();
+    protected final HostAccess UNIVERSAL_HOST_ACCESS = createHostAccess();
+
+    private static HostAccess createHostAccess() {
+        HostAccess.Builder builder = HostAccess.newBuilder()
+                .allowPublicAccess(true)
+                .allowAllImplementations(true)
+                .allowAllClassImplementations(true)
+                .allowArrayAccess(true)
+                .allowListAccess(true)
+                .allowBufferAccess(true)
+                .allowIterableAccess(true)
+                .allowIteratorAccess(true)
+                .allowMapAccess(true)
+                .allowAccessInheritance(true)
+                .targetTypeMapping(Double.class, Float.class, null, Double::floatValue)
+                .targetTypeMapping(Integer.class, Float.class, null, Integer::floatValue)
+                .targetTypeMapping(Boolean.class, String.class, null, String::valueOf)
+                .targetTypeMapping(Integer.class, String.class, null, String::valueOf)
+                .targetTypeMapping(Character.class, String.class, null, String::valueOf)
+                .targetTypeMapping(Long.class, String.class, null, String::valueOf)
+                .targetTypeMapping(Float.class, String.class, null, String::valueOf)
+                .targetTypeMapping(Double.class, String.class, null, String::valueOf)
+                .targetTypeMapping(Object.class, String.class, null, String::valueOf)
+                .denyAccess(System.class)
+                .denyAccess(Process.class)
+                .denyAccess(Runtime.class)
+                .denyAccess(ProcessBuilder.class)
+                .denyAccess(ClassLoader.class)
+                .denyAccess(Permission.class)
+                .denyAccess(Permissions.class)
+                .denyAccess(PluginManager.class);
+
+        denyLuckPerms(builder);
+        denyGroupManager(builder);
+
+        return builder.build();
+    }
+
+    private static void denyLuckPerms(HostAccess.Builder builder) {
+        if (!Bukkit.getPluginManager().isPluginEnabled("LuckPerms")) {
+            return;
+        }
+        String[] classNames = {
+            "net.luckperms.api.LuckPerms",
+            "net.luckperms.api.LuckPermsProvider",
+            "net.luckperms.api.model.user.User",
+            "net.luckperms.api.model.user.UserManager",
+            "net.luckperms.api.model.group.Group",
+            "net.luckperms.api.model.group.GroupManager",
+            "net.luckperms.api.node.Node",
+            "net.luckperms.api.node.NodeBuilder",
+            "net.luckperms.api.node.NodeEqualityPredicate",
+            "net.luckperms.api.node.types.PermissionNode",
+            "net.luckperms.api.node.types.PrefixNode",
+            "net.luckperms.api.node.types.SuffixNode",
+            "net.luckperms.api.node.types.MetaNode",
+            "net.luckperms.api.node.types.InheritanceNode",
+            "net.luckperms.api.node.types.RegexPermissionNode",
+            "net.luckperms.api.node.types.ChatMetaNode",
+            "net.luckperms.api.node.types.WeightNode",
+            "net.luckperms.api.node.types.DisplayNameNode",
+            "net.luckperms.api.track.Track",
+        };
+        for (String name : classNames) {
+            try {
+                builder.denyAccess(Class.forName(name));
+            } catch (ClassNotFoundException ignored) {
+            }
+        }
+    }
+
+    private static void denyGroupManager(HostAccess.Builder builder) {
+        if (!Bukkit.getPluginManager().isPluginEnabled("GroupManager")) {
+            return;
+        }
+        String[] classNames = {
+            "org.anjocaido.groupmanager.GroupManager",
+            "org.anjocaido.groupmanager.data.Group",
+            "org.anjocaido.groupmanager.data.User",
+            "org.anjocaido.groupmanager.dataholder.WorldDataHolder",
+            "org.anjocaido.groupmanager.permissions.AnjoPermissionsHandler",
+        };
+        for (String name : classNames) {
+            try {
+                builder.denyAccess(Class.forName(name));
+            } catch (ClassNotFoundException ignored) {
+            }
+        }
+    }
 
     private final File file;
     private final ProjectAddon addon;
@@ -98,19 +178,20 @@ public abstract class ScriptEval {
     }
 
     protected final void setup() {
-        addThing("server", Bukkit.getServer());
+        addThing("server", ClassUtils.wrapServer(Bukkit.getServer()));
 
         // functions
         addThing("isPluginLoaded", (Function<String, Boolean>)
                 s -> Bukkit.getPluginManager().isPluginEnabled(s));
 
         addThing("runOpCommand", (BiConsumer<Player, String>) (p, s) -> {
-            boolean op = p.isOp();
-            p.setOp(true);
+            Player realPlayer = ClassUtils.unwrap(p);
+            boolean op = realPlayer.isOp();
+            realPlayer.setOp(true);
             try {
-                p.performCommand(parsePlaceholder(p, s));
+                realPlayer.performCommand(parsePlaceholder(realPlayer, s));
             } finally {
-                p.setOp(op);
+                realPlayer.setOp(op);
             }
         });
 
