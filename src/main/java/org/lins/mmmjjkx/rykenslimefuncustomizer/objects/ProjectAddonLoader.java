@@ -1,3 +1,20 @@
+/*
+ * RykenSlimefunCustomizer
+ * Copyright (C) 2026 lijinhong11(mmmjjjkx) and balugaq
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects;
 
 import io.github.thebusybiscuit.slimefun4.api.researches.Research;
@@ -290,12 +307,25 @@ public class ProjectAddonLoader {
         GenerationReader generationReader = new GenerationReader(generations, addon);
 
         ExceptionHandler.info("开始加载 " + file.getName() + " 中的物品内容...");
-        addon.addTotalObjects(mobDropsReader.getSize() + resourceReader.getSize() + itemReader.getSize()
-                                      + armorReader.getSize() + capacitorsReader.getSize() + foodReader.getSize() + menuReader.getSize()
-                                      + machineReader.getSize() + generatorReader.getSize() + solarGeneratorReader.getSize()
-                                      + materialGeneratorReader.getSize() + recipeMachineReader.getSize() + simpleMachineReader.getSize()
-                                      + multiBlockMachineReader.getSize() + superReader.getSize() + templateMachineReader.getSize()
-                                      + linkedRecipeMachineReader.getSize() + workbenchReader.getSize() + generationReader.getSize());
+        addon.addTotalObjects(mobDropsReader.getSize()
+                + resourceReader.getSize()
+                + itemReader.getSize()
+                + armorReader.getSize()
+                + capacitorsReader.getSize()
+                + foodReader.getSize()
+                + menuReader.getSize()
+                + machineReader.getSize()
+                + generatorReader.getSize()
+                + solarGeneratorReader.getSize()
+                + materialGeneratorReader.getSize()
+                + recipeMachineReader.getSize()
+                + simpleMachineReader.getSize()
+                + multiBlockMachineReader.getSize()
+                + superReader.getSize()
+                + templateMachineReader.getSize()
+                + linkedRecipeMachineReader.getSize()
+                + workbenchReader.getSize()
+                + generationReader.getSize());
 
         mobDropsReader.preload();
         resourceReader.preload();

@@ -1,3 +1,20 @@
+/*
+ * RykenSlimefunCustomizer
+ * Copyright (C) 2026 lijinhong11(mmmjjjkx) and balugaq
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.utils;
 
 import java.lang.reflect.Field;
@@ -27,13 +44,21 @@ public class ClassUtils {
     private static final Map<String, Class<?>> cache = new HashMap<>();
 
     public static final List<String> SERVER_BANNED_METHODS = List.of(
-            "shutdown", "reload", "dispatchCommand", "getBanList",
-            "getIPBans", "getPluginManager", "getOperators", "setDefaultGameMode"
-    );
+            "shutdown",
+            "reload",
+            "dispatchCommand",
+            "getBanList",
+            "getIPBans",
+            "getPluginManager",
+            "getOperators",
+            "setDefaultGameMode",
+            "createWorld",
+            "unloadWorld",
+            "clearRecipes",
+            "resetRecipes");
 
-    public static final List<String> PLAYER_BANNED_METHODS = List.of(
-            "kickPlayer", "banPlayer", "setOp", "performCommand"
-    );
+    public static final List<String> PLAYER_BANNED_METHODS =
+            List.of("kickPlayer", "banPlayer", "setOp", "performCommand", "chat", "hidePlayer", "showPlayer");
 
     @SuppressWarnings("unchecked")
     public static <T> Class<? extends T> generateClass(
@@ -66,7 +91,8 @@ public class ClassUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> Class<? extends T> generateAgentClass(Class<T> extendClass, String newName, List<String> bannedMethods) {
+    public static <T> Class<? extends T> generateAgentClass(
+            Class<T> extendClass, String newName, List<String> bannedMethods) {
         if (cache.containsKey(newName)) {
             return (Class<? extends T>) cache.get(newName);
         }
@@ -79,8 +105,8 @@ public class ClassUtils {
                 .defineField("delegate", extendClass, Visibility.PRIVATE)
                 .defineConstructor(1)
                 .withParameters(extendClass)
-                .intercept(SuperMethodCall.INSTANCE
-                        .andThen(FieldAccessor.ofField("delegate").setsArgumentAt(0)))
+                .intercept(SuperMethodCall.INSTANCE.andThen(
+                        FieldAccessor.ofField("delegate").setsArgumentAt(0)))
                 .method(ElementMatchers.not(ElementMatchers.isDeclaredBy(Object.class)))
                 .intercept(MethodDelegation.to(new AgentInterceptor(bannedSet)));
 
@@ -96,7 +122,8 @@ public class ClassUtils {
     public static Server wrapServer(Server server) {
         try {
             Class<? extends Server> agentClass = generateAgentClass(
-                    server.getClass(), "org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.agent.ServerAgent",
+                    server.getClass(),
+                    "org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.agent.ServerAgent",
                     SERVER_BANNED_METHODS);
             return (Server) agentClass.getDeclaredConstructors()[0].newInstance(server);
         } catch (Exception e) {
@@ -107,7 +134,8 @@ public class ClassUtils {
     public static Player wrapPlayer(Player player) {
         try {
             Class<? extends Player> agentClass = generateAgentClass(
-                    player.getClass(), "org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.agent.PlayerAgent",
+                    player.getClass(),
+                    "org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.agent.PlayerAgent",
                     PLAYER_BANNED_METHODS);
             return (Player) agentClass.getDeclaredConstructors()[0].newInstance(player);
         } catch (Exception e) {
@@ -128,12 +156,13 @@ public class ClassUtils {
 
     private record AgentInterceptor(Set<String> bannedMethods) {
         @RuntimeType
-            public Object intercept(@Origin Method method, @FieldValue("delegate") Object delegate, @AllArguments Object[] args)
-                    throws Throwable {
-                if (bannedMethods.contains(method.getName())) {
-                    throw new UnsupportedOperationException("Method " + method.getName() + " is banned");
-                }
-                return method.invoke(delegate, args);
+        public Object intercept(
+                @Origin Method method, @FieldValue("delegate") Object delegate, @AllArguments Object[] args)
+                throws Throwable {
+            if (bannedMethods.contains(method.getName())) {
+                throw new UnsupportedOperationException("Method " + method.getName() + " is banned");
             }
+            return method.invoke(delegate, args);
         }
+    }
 }
