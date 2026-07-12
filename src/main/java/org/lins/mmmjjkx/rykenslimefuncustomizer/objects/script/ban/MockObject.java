@@ -35,6 +35,10 @@ public class MockObject {
     @Contract(pure = true, value = "null -> null")
     public static <T> T mock(@Nullable T obj) {
         if (obj == null) return null;
+        if (obj instanceof Restriction) {
+            // mocked object
+            return obj;
+        }
 
         if (obj instanceof List<?> list) {
             List<Object> clone = new ArrayList<>();
