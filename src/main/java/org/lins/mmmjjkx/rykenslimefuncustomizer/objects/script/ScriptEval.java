@@ -26,6 +26,7 @@ import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.scheduler.BukkitTask;
 import org.graalvm.polyglot.HostAccess;
 import org.jetbrains.annotations.Nullable;
@@ -35,6 +36,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.enhanced.NBTAPIIntegration;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.CiConsumer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.CiFunction;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ClassUtils;
 
 @Getter(AccessLevel.PROTECTED)
 public abstract class ScriptEval {
@@ -65,6 +67,7 @@ public abstract class ScriptEval {
             .denyAccess(ClassLoader.class)
             .denyAccess(Permission.class)
             .denyAccess(Permissions.class)
+            .denyAccess(PluginManager.class)
             .build();
 
     private final File file;
@@ -98,19 +101,20 @@ public abstract class ScriptEval {
     }
 
     protected final void setup() {
-        addThing("server", Bukkit.getServer());
+        addThing("server", ClassUtils.wrapServer(Bukkit.getServer()));
 
         // functions
         addThing("isPluginLoaded", (Function<String, Boolean>)
                 s -> Bukkit.getPluginManager().isPluginEnabled(s));
 
         addThing("runOpCommand", (BiConsumer<Player, String>) (p, s) -> {
-            boolean op = p.isOp();
-            p.setOp(true);
+            Player realPlayer = ClassUtils.unwrap(p);
+            boolean op = realPlayer.isOp();
+            realPlayer.setOp(true);
             try {
-                p.performCommand(parsePlaceholder(p, s));
+                realPlayer.performCommand(parsePlaceholder(realPlayer, s));
             } finally {
-                p.setOp(op);
+                realPlayer.setOp(op);
             }
         });
 

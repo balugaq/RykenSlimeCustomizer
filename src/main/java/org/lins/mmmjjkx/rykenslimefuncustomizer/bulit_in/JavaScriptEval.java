@@ -24,7 +24,9 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.BlockMenuUtil;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ClassUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.bukkit.entity.Player;
 
 public class JavaScriptEval extends ScriptEval {
     private final Context jsEngine = Context.newBuilder("js")
@@ -117,6 +119,11 @@ public class JavaScriptEval extends ScriptEval {
         }
 
         try {
+            for (int i = 0; i < args.length; i++) {
+                if (args[i] instanceof Player player) {
+                    args[i] = ClassUtils.wrapPlayer(player);
+                }
+            }
             Object result = function.execute(args);
             ExceptionHandler.debugLog(
                     "运行了 " + getAddon().getAddonName() + "的脚本" + getFile().getName() + "中的函数 " + funName);

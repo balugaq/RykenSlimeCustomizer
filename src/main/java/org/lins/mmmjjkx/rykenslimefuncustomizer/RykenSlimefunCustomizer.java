@@ -166,7 +166,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
     @Override
     public String getBugTrackerURL() {
-        return "https://github.com/SlimefunReloadingProject/RykenSlimeCustomizer/issues";
+        return "https://github.com/balugaq/RykenSlimeCustomizer/issues";
     }
 
     private void setupLibraries() {
