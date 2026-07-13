@@ -29,9 +29,6 @@ import io.github.thebusybiscuit.slimefun4.core.handlers.WeaponUseHandler;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.parent.CustomItem;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.mocks.WrappedToolUseEvent;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.mocks.WrappedUseEvent;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.mocks.WrappedWeaponHitEvent;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 
 public class CustomEnergyItem extends CustomItem implements Rechargeable, NotPlaceable {
@@ -55,18 +52,14 @@ public class CustomEnergyItem extends CustomItem implements Rechargeable, NotPla
             eval.doInit();
 
             this.addItemHandler((ItemUseHandler) e -> {
-                eval.evalFunction("onUse", new WrappedUseEvent(e), this);
+                eval.evalFunction("onUse", e, this);
                 e.cancel();
             });
 
             this.addItemHandler((WeaponUseHandler) (e, p, it) -> {
-                try {
-                    eval.evalFunction("onWeaponHit", new WrappedWeaponHitEvent(e), p, it);
-                } catch (IllegalAccessException ex) {
-                    throw new RuntimeException(ex);
-                }
+                eval.evalFunction("onWeaponHit", e, p, it);
             });
-            this.addItemHandler((ToolUseHandler) (e, it, i, drops) -> eval.evalFunction("onToolUse", new WrappedToolUseEvent(e), it, i, drops));
+            this.addItemHandler((ToolUseHandler) (e, it, i, drops) -> eval.evalFunction("onToolUse", e, it, i, drops));
         } else {
             this.addItemHandler((ItemUseHandler) PlayerRightClickEvent::cancel);
         }

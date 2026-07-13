@@ -19,11 +19,7 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.mocks;
 
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
-import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.*;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.DynamicType;
@@ -33,18 +29,25 @@ import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import net.bytebuddy.implementation.bind.annotation.Super;
 import net.bytebuddy.matcher.ElementMatchers;
-import org.bukkit.Server;
-import org.bukkit.block.Block;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.function.BiFunction;
+
 public class MockObject {
+    @Getter
     private static final Map<Class<?>, Mocker<?>> mocks = new LinkedHashMap<>();
+
+    static {
+        MockRegistry.register();
+    }
 
     @Contract(pure = true, value = "null -> null")
     public static <T> T mock(@Nullable T obj) {
@@ -98,8 +101,7 @@ public class MockObject {
                         | IllegalAccessException
                         | NoSuchMethodException
                         | InvocationTargetException e) {
-                    throw new RuntimeException(
-                            "Failed to create Mocked" + obj.getClass().getSimpleName(), e);
+                    throw failedToMockObject(obj, e);
                 }
             }
         }
@@ -107,57 +109,65 @@ public class MockObject {
         return obj;
     }
 
-    static {
-        mocks.put(
-                Server.class,
-                new BanMocker<>(
-                        Server.class,
-                        List.of(
-                                "banIP",
-                                "clearRecipes",
-                                "createWorld",
-                                "dispatchCommand",
-                                "getBanList",
-                                "getIPBans",
-                                "getWhitelistedPlayers",
-                                "getWorlds",
-                                "reload",
-                                "resetRecipes",
-                                "selectEntities",
-                                "setDefaultGameMode",
-                                "shutdown",
-                                "unloadWorld")));
-
-        mocks.put(
-                Player.class,
-                new BanMocker<>(
-                        Player.class,
-                        List.of(
-                                "ban",
-                                "banIp",
-                                "banPlayerFull",
-                                "banPlayerIp",
-                                "chat",
-                                "getHAProxyAddress",
-                                "kick",
-                                "kickPlayer",
-                                "performCommand",
-                                "setGameMode",
-                                "setOp",
-                                "transfer")));
-
-        mocks.put(PluginManager.class, new PluginManagerMocker());
-
-        List<Class<?>> listenClasses = List.of(Entity.class, CommandSender.class, Block.class);
-
-        for (Class<?> clazz : listenClasses) {
-            mocks.put(clazz, new EmptyMocker<>(clazz));
-        }
+    protected static RuntimeException failedToMockObject(Object obj, Exception e) {
+        return new RuntimeException(
+                "Failed to create Mocked" + obj.getClass().getSimpleName(), e);
     }
 
     public static class EmptyMocker<T> extends BanMocker<T> {
         public EmptyMocker(Class<T> clazz) {
             super(clazz, List.of());
+        }
+    }
+
+    @RequiredArgsConstructor
+    public static class InstantizableMocker<T> implements Mocker<T> {
+        private final Class<T> clazz;
+        private final Instantizer<T> instantizer;
+        protected Prechecker prechecker = null;
+
+        @Override
+        @Contract(pure = true)
+        public T mock(T delegate)
+                throws InstantiationException, IllegalAccessException, NoSuchMethodException,
+                InvocationTargetException {
+            return new InstantizableMock<T>(delegate, clazz, prechecker, instantizer).mock();
+        }
+    }
+
+    @FunctionalInterface
+    public interface Instantizer<T> extends BiFunction<Class<T>, T, T> {}
+
+    @RequiredArgsConstructor
+    public static class InstantizableMock<T> implements Mock<T> {
+        private final T delegate;
+        private final Class<T> clazz;
+        private final Prechecker prechecker;
+        private final Instantizer<T> instantizer;
+
+        @Override
+        public T delegate() {
+            return delegate;
+        }
+
+        @Override
+        public Class<T> extend() {
+            return clazz;
+        }
+
+        @Override
+        public Prechecker prechecker() {
+            return prechecker;
+        }
+
+        @Override
+        public Instantizer<T> instantizer() {
+            return instantizer;
+        }
+
+        @Override
+        public Object intercept(Method method, Object[] args, Object instance) throws Throwable {
+            return Mock.super.intercept(method, args, instance);
         }
     }
 
@@ -312,6 +322,11 @@ public class MockObject {
         @Contract(pure = true)
         Class<T> extend();
 
+        @Nullable
+        default Instantizer<T> instantizer() {
+            return null;
+        }
+
         default Prechecker prechecker() {
             return (m, a, i) -> true;
         }
@@ -355,16 +370,19 @@ public class MockObject {
                     .method(ElementMatchers.not(ElementMatchers.isDeclaredBy(Object.class)))
                     .intercept(MethodDelegation.to(new Interceptor(this)));
 
-            Class<?> instanceClazz;
+            Class<T> instanceClazz;
             try (DynamicType.Unloaded<?> unloaded = dynamic.make()) {
-                instanceClazz = unloaded.load(RykenSlimefunCustomizer.INSTANCE
-                                .getJavaPlugin()
-                                .getClass()
-                                .getClassLoader())
+                ClassLoader loader = RykenSlimefunCustomizer.INSTANCE.getJavaPlugin().getClass().getClassLoader();
+                instanceClazz = (Class<T>) unloaded
+                        .load(loader)
                         .getLoaded();
             }
 
-            return ((Class<T>) instanceClazz).getConstructor().newInstance();
+            if (instantizer() != null) {
+                return instantizer().apply(instanceClazz, delegate());
+            }
+
+            return instanceClazz.getConstructor().newInstance();
         }
     }
 
