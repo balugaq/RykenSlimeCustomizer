@@ -33,17 +33,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
-import org.bukkit.entity.Player;
 import org.graalvm.polyglot.*;
 import org.graalvm.polyglot.io.IOAccess;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.mocks.MockObject;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ban.MockObject;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.BlockMenuUtil;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ClassUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 public class JavaScriptEval extends ScriptEval {

@@ -104,38 +104,35 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
                         stream.filter(path -> path.toFile().isFile()
                                         && (path.toString().endsWith(".yml")
                                                 || path.toString().endsWith(".yaml")))
-                            .forEach(path -> {
-                                try {
-                                    File file = path.toFile();
-                                    YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                                    ItemStack item = config.getItemStack("item");
-                                    if (item == null) {
-                                        return;
+                                .forEach(path -> {
+                                    try {
+                                        File file = path.toFile();
+                                        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+                                        ItemStack item = config.getItemStack("item");
+                                        if (item == null) {
+                                            return;
+                                        }
+
+                                        // 计算相对于saveditems文件夹的路径
+                                        String relativePath = savedItemsFolder
+                                                .toPath()
+                                                .relativize(path)
+                                                .toString();
+                                        // 移除文件扩展名
+                                        String pathWithoutExt =
+                                                relativePath.substring(0, relativePath.lastIndexOf("."));
+                                        // 格式: prjId;相对路径
+                                        String source = prjId + ";" + pathWithoutExt;
+
+                                        item.editMeta(meta -> {
+                                            meta.getPersistentDataContainer()
+                                                    .set(SaveditemsGroup.SOURCE_KEY, PersistentDataType.STRING, source);
+                                        });
+                                        itemGroup.addItem(item);
+                                    } catch (Exception e) {
+                                        ExceptionHandler.handleError("无法读取 " + path, e);
                                     }
-
-                                    // 计算相对于saveditems文件夹的路径
-                                    String relativePath = savedItemsFolder
-                                            .toPath()
-                                            .relativize(path)
-                                            .toString();
-                                    // 移除文件扩展名
-                                    String pathWithoutExt =
-                                            relativePath.substring(0, relativePath.lastIndexOf("."));
-                                    // 格式: prjId;相对路径
-                                    String source = prjId + ";" + pathWithoutExt;
-
-                                    item.editMeta(meta -> {
-                                        meta.getPersistentDataContainer()
-                                                .set(
-                                                        SaveditemsGroup.SOURCE_KEY,
-                                                        PersistentDataType.STRING,
-                                                        source);
-                                    });
-                                    itemGroup.addItem(item);
-                                } catch (Exception e) {
-                                    ExceptionHandler.handleError("无法读取 " + path, e);
-                                }
-                            });
+                                });
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -193,7 +190,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
     }
 
     private void setupLibraries() {
-        String graalVersion = "24.1.0";
+        String graalVersion = "25.1.3";
         BukkitLibraryManager libraryManager = new BukkitLibraryManager(this);
 
         for (String repo : getConfig().getStringList("repositories")) {

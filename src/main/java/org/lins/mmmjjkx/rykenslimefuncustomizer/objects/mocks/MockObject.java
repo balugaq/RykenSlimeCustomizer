@@ -1,10 +1,30 @@
-package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ban;
+/*
+ * RykenSlimefunCustomizer
+ * Copyright (C) 2026 lijinhong11(mmmjjjkx) and balugaq
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.mocks;
 
-import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.*;
 import lombok.RequiredArgsConstructor;
-import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.implementation.MethodDelegation;
@@ -13,24 +33,15 @@ import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import net.bytebuddy.implementation.bind.annotation.Super;
 import net.bytebuddy.matcher.ElementMatchers;
-import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
-import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
-
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.*;
 
 public class MockObject {
     private static final Map<Class<?>, Mocker<?>> mocks = new LinkedHashMap<>();
@@ -55,7 +66,7 @@ public class MockObject {
             return (T) clone;
         }
 
-        if (obj instanceof Map<?,?> map) {
+        if (obj instanceof Map<?, ?> map) {
             Map<Object, Object> clone = new HashMap<>();
             for (var e : map.entrySet()) clone.put(mockOne(e.getKey()), mockOne(e.getValue()));
             return (T) clone;
@@ -83,8 +94,12 @@ public class MockObject {
             if (entry.getKey().isAssignableFrom(obj.getClass())) {
                 try {
                     return ((Mocker<T>) entry.getValue()).mock(obj);
-                } catch (InstantiationException | IllegalAccessException e) {
-                    throw new RuntimeException("Failed to create Mocked" + obj.getClass().getSimpleName(), e);
+                } catch (InstantiationException
+                        | IllegalAccessException
+                        | NoSuchMethodException
+                        | InvocationTargetException e) {
+                    throw new RuntimeException(
+                            "Failed to create Mocked" + obj.getClass().getSimpleName(), e);
                 }
             }
         }
@@ -93,45 +108,47 @@ public class MockObject {
     }
 
     static {
-        mocks.put(Server.class, new BanMocker<>(Server.class, List.of(
-                "banIP",
-                "clearRecipes",
-                "createWorld",
-                "dispatchCommand",
-                "getBanList",
-                "getIPBans",
-                "getWhitelistedPlayers",
-                "getWorlds",
-                "reload",
-                "resetRecipes",
-                "selectEntities",
-                "setDefaultGameMode",
-                "shutdown",
-                "unloadWorld"
-        )));
+        mocks.put(
+                Server.class,
+                new BanMocker<>(
+                        Server.class,
+                        List.of(
+                                "banIP",
+                                "clearRecipes",
+                                "createWorld",
+                                "dispatchCommand",
+                                "getBanList",
+                                "getIPBans",
+                                "getWhitelistedPlayers",
+                                "getWorlds",
+                                "reload",
+                                "resetRecipes",
+                                "selectEntities",
+                                "setDefaultGameMode",
+                                "shutdown",
+                                "unloadWorld")));
 
-        mocks.put(Player.class, new BanMocker<>(Player.class, List.of(
-                "ban",
-                "banIp",
-                "banPlayerFull",
-                "banPlayerIp",
-                "chat",
-                "getHAProxyAddress",
-                "kick",
-                "kickPlayer",
-                "performCommand",
-                "setGameMode",
-                "setOp",
-                "transfer"
-        )));
+        mocks.put(
+                Player.class,
+                new BanMocker<>(
+                        Player.class,
+                        List.of(
+                                "ban",
+                                "banIp",
+                                "banPlayerFull",
+                                "banPlayerIp",
+                                "chat",
+                                "getHAProxyAddress",
+                                "kick",
+                                "kickPlayer",
+                                "performCommand",
+                                "setGameMode",
+                                "setOp",
+                                "transfer")));
 
         mocks.put(PluginManager.class, new PluginManagerMocker());
 
-        List<Class<?>> listenClasses = List.of(
-                Entity.class,
-                CommandSender.class,
-                Block.class
-        );
+        List<Class<?>> listenClasses = List.of(Entity.class, CommandSender.class, Block.class);
 
         for (Class<?> clazz : listenClasses) {
             mocks.put(clazz, new EmptyMocker<>(clazz));
@@ -139,7 +156,6 @@ public class MockObject {
     }
 
     public static class EmptyMocker<T> extends BanMocker<T> {
-
         public EmptyMocker(Class<T> clazz) {
             super(clazz, List.of());
         }
@@ -147,7 +163,9 @@ public class MockObject {
 
     public static class PluginManagerMocker implements Mocker<PluginManager> {
         @Override
-        public PluginManager mock(PluginManager delegate) throws InstantiationException, IllegalAccessException {
+        public PluginManager mock(PluginManager delegate)
+                throws InstantiationException, IllegalAccessException, NoSuchMethodException,
+                        InvocationTargetException {
             return new PluginManagerMock(delegate).mock();
         }
     }
@@ -168,12 +186,13 @@ public class MockObject {
 
         @Override
         public Object intercept(Method method, Object[] args, Object instance) throws Throwable {
-            if (((Restriction) instance).restriction() && (
-                    !method.getName().equals("getPlugin")
+            if (((Restriction) instance).restriction()
+                    && (!method.getName().equals("getPlugin")
                             || args.length != 1
                             || args[0] == null
-                            || !args[0].equals(RykenSlimefunCustomizer.INSTANCE.getJavaPlugin().getName()))
-            ) {
+                            || !args[0].equals(RykenSlimefunCustomizer.INSTANCE
+                                    .getJavaPlugin()
+                                    .getName()))) {
                 throw new UnsupportedOperationException("Method " + method.getName() + " is banned and inaccessible.");
             }
 
@@ -189,7 +208,9 @@ public class MockObject {
 
         @Override
         @Contract(pure = true)
-        public T mock(T delegate) throws InstantiationException, IllegalAccessException {
+        public T mock(T delegate)
+                throws InstantiationException, IllegalAccessException, NoSuchMethodException,
+                        InvocationTargetException {
             return new RestrictedMock<T>(delegate, clazz, prechecker, allowedMethodList).mock();
         }
     }
@@ -202,7 +223,9 @@ public class MockObject {
 
         @Override
         @Contract(pure = true)
-        public T mock(T delegate) throws InstantiationException, IllegalAccessException {
+        public T mock(T delegate)
+                throws InstantiationException, IllegalAccessException, NoSuchMethodException,
+                        InvocationTargetException {
             return new BanMock<T>(delegate, clazz, prechecker, banMethodList).mock();
         }
     }
@@ -214,7 +237,8 @@ public class MockObject {
 
     public interface Mocker<T> {
         @Contract(pure = true)
-        T mock(T delegate) throws InstantiationException, IllegalAccessException;
+        T mock(T delegate)
+                throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException;
     }
 
     @RequiredArgsConstructor
@@ -300,16 +324,23 @@ public class MockObject {
         }
 
         @Contract(pure = true)
-        default T mock() throws InstantiationException, IllegalAccessException {
+        default T mock()
+                throws InstantiationException, IllegalAccessException, NoSuchMethodException,
+                        InvocationTargetException {
             ByteBuddy builder = new ByteBuddy();
             DynamicType.Builder<?> dynamic;
 
             Class<?> clazz = delegate().getClass();
-            while (Modifier.isFinal(clazz.getModifiers()) && clazz != Object.class && Arrays.stream(clazz.getDeclaredConstructors()).noneMatch(ctor -> ctor.getParameterCount() == 0)) {
+            while (Modifier.isFinal(clazz.getModifiers())
+                    && clazz != Object.class
+                    && Arrays.stream(clazz.getDeclaredConstructors())
+                            .noneMatch(ctor -> ctor.getParameterCount() == 0)) {
                 clazz = clazz.getSuperclass();
             }
 
-            if (Modifier.isFinal(clazz.getModifiers()) && Arrays.stream(clazz.getDeclaredConstructors()).noneMatch(ctor -> ctor.getParameterCount() == 0)) {
+            if (Modifier.isFinal(clazz.getModifiers())
+                    && Arrays.stream(clazz.getDeclaredConstructors())
+                            .noneMatch(ctor -> ctor.getParameterCount() == 0)) {
                 clazz = extend();
             }
 
@@ -319,25 +350,30 @@ public class MockObject {
                 dynamic = builder.subclass(clazz);
             }
 
-            dynamic = dynamic
-            .name("Mocked" + clazz.getSimpleName())
-            .implement(Restriction.class)
-            .method(ElementMatchers.not(ElementMatchers.isDeclaredBy(Object.class)))
-            .intercept(MethodDelegation.to(new Interceptor(this)));
+            dynamic = dynamic.name("Mocked" + clazz.getSimpleName())
+                    .implement(Restriction.class)
+                    .method(ElementMatchers.not(ElementMatchers.isDeclaredBy(Object.class)))
+                    .intercept(MethodDelegation.to(new Interceptor(this)));
 
             Class<?> instanceClazz;
             try (DynamicType.Unloaded<?> unloaded = dynamic.make()) {
-                instanceClazz = unloaded.load(RykenSlimefunCustomizer.INSTANCE.getJavaPlugin().getClass().getClassLoader()).getLoaded();
+                instanceClazz = unloaded.load(RykenSlimefunCustomizer.INSTANCE
+                                .getJavaPlugin()
+                                .getClass()
+                                .getClassLoader())
+                        .getLoaded();
             }
 
-            return ((Class<T>) instanceClazz).newInstance();
+            return ((Class<T>) instanceClazz).getConstructor().newInstance();
         }
     }
 
     public interface Restriction {
-        Object2BooleanMap<Restriction> restrictions = new Object2BooleanOpenHashMap<>() {{
-            defaultReturnValue(true);
-        }};
+        Object2BooleanMap<Restriction> restrictions = new Object2BooleanOpenHashMap<>() {
+            {
+                defaultReturnValue(true);
+            }
+        };
 
         default boolean restriction() {
             return restrictions.getBoolean(this);
@@ -354,10 +390,11 @@ public class MockObject {
 
     public record Interceptor(Mock<?> mock) {
         @RuntimeType
-        @Nullable
-        public Object intercept(@Origin Method method,
-                                @AllArguments Object[] args,
-                                @Super(strategy = Super.Instantiation.UNSAFE) Object object) throws Throwable {
+        @Nullable public Object intercept(
+                @Origin Method method,
+                @AllArguments Object[] args,
+                @Super(strategy = Super.Instantiation.UNSAFE) Object object)
+                throws Throwable {
             return mock.intercept(method, args, object);
         }
     }
