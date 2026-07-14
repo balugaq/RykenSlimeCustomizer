@@ -165,7 +165,11 @@ public class JavaScriptEval extends ScriptEval {
 
     private void handleExecutionError(Throwable e, String funName) {
         functionCache.remove(funName);
-        failedFunctions.add(funName);
+
+        ExceptionHandler.debugLog("由于开启了 debug 模式，此次脚本运行不会被记录为失败");
+        if (!RykenSlimefunCustomizer.INSTANCE.getConfig().getBoolean("debug")) {
+            failedFunctions.add(funName);
+        }
 
         ExceptionHandler.handleError(
                 "在运行" + getAddon().getAddonName() + "的脚本" + getFile().getName() + "时发生错误", e);

@@ -28,12 +28,10 @@ import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.MethodCall;
 import net.bytebuddy.implementation.MethodDelegation;
-import net.bytebuddy.implementation.bind.annotation.AllArguments;
-import net.bytebuddy.implementation.bind.annotation.Origin;
-import net.bytebuddy.implementation.bind.annotation.RuntimeType;
-import net.bytebuddy.implementation.bind.annotation.Super;
+import net.bytebuddy.implementation.bind.annotation.*;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
+import org.bukkit.event.block.BlockEvent;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.plugin.PluginManager;
 import org.jetbrains.annotations.Contract;
@@ -49,10 +47,24 @@ public class MockObject {
     private static final Map<Class<?>, Mocker<?>> mocks = new LinkedHashMap<>();
 
     private static final Field PLAYER_FIELD = PlayerEvent.class.getDeclaredFields()[0];
+    private static final Field BLOCK_FIELD = BlockEvent.class.getDeclaredFields()[0];
 
     static {
         PLAYER_FIELD.setAccessible(true);
+        BLOCK_FIELD.setAccessible(true);
         MockRegistry.register();
+    }
+
+    private static Set<Class<?>> getAllSubInterfaces(Class<?> clazz) {
+        Set<Class<?>> interfaces = new LinkedHashSet<>();
+        while (clazz != null) {
+            for (Class<?> iface : clazz.getInterfaces()) {
+                interfaces.add(iface);
+                interfaces.addAll(getAllSubInterfaces(iface));
+            }
+            clazz = clazz.getSuperclass();
+        }
+        return interfaces;
     }
 
     private static List<Method> getAllDeclaredMethods(Class<?> clazz) {
@@ -157,7 +169,7 @@ public class MockObject {
     public static class InstantizableMock<T> implements Mock<T> {
         private final T delegate;
         private final Class<T> clazz;
-        private final Prechecker prechecker;
+        private final Prechecker<T> prechecker;
         private final Instantizer<T> instantizer;
 
         @Override
@@ -171,18 +183,13 @@ public class MockObject {
         }
 
         @Override
-        public Prechecker prechecker() {
+        public Prechecker<T> prechecker() {
             return prechecker;
         }
 
         @Override
         public Instantizer<T> instantizer() {
             return instantizer;
-        }
-
-        @Override
-        public Object intercept(Method method, Object[] args, Object instance) throws Throwable {
-            return Mock.super.intercept(method, args, instance);
         }
     }
 
@@ -210,8 +217,8 @@ public class MockObject {
         }
 
         @Override
-        public Object intercept(Method method, Object[] args, Object instance) throws Throwable {
-            if (restriction(instance)
+        public Object intercept(PluginManager self, Method method, Object[] args, Object instance) throws Throwable {
+            if (restriction(self)
                     && (!method.getName().equals("getPlugin")
                             || args.length != 1
                             || args[0] == null
@@ -221,7 +228,7 @@ public class MockObject {
                 throw new UnsupportedOperationException("Method " + method.getName() + " is banned and inaccessible.");
             }
 
-            return Mock.super.intercept(method, args, instance);
+            return Mock.super.intercept(self, method, args, instance);
         }
     }
 
@@ -256,8 +263,8 @@ public class MockObject {
     }
 
     @FunctionalInterface
-    public interface Prechecker {
-        boolean precheck(Method method, Object[] args, Object instance);
+    public interface Prechecker<T> {
+        boolean precheck(T self, Method method, Object[] args, Object object);
     }
 
     public interface Mocker<T> {
@@ -284,17 +291,17 @@ public class MockObject {
         }
 
         @Override
-        public Prechecker prechecker() {
+        public Prechecker<T> prechecker() {
             return prechecker;
         }
 
         @Override
-        public Object intercept(Method method, Object[] args, Object instance) throws Throwable {
-            if (restriction(instance) && banMethodList.contains(method.getName())) {
+        public Object intercept(T self, Method method, Object[] args, Object instance) throws Throwable {
+            if (restriction(self) && banMethodList.contains(method.getName())) {
                 throw new UnsupportedOperationException("Method " + method.getName() + " is banned and inaccessible.");
             }
 
-            return Mock.super.intercept(method, args, instance);
+            return Mock.super.intercept(self, method, args, instance);
         }
     }
 
@@ -302,7 +309,7 @@ public class MockObject {
     public static class RestrictedMock<T> implements Mock<T> {
         private final T delegate;
         private final Class<T> extend;
-        private final Prechecker prechecker;
+        private final Prechecker<T> prechecker;
         private final List<String> allowedMethodList;
 
         @Override
@@ -316,19 +323,17 @@ public class MockObject {
         }
 
         @Override
-        public Prechecker prechecker() {
+        public Prechecker<T> prechecker() {
             return prechecker;
         }
 
         @Override
-        public Object intercept(Method method, Object[] args, Object instance) throws Throwable {
-            Method restrictionMethod = instance.getClass().getMethod("restriction");
-            boolean restricted = (boolean) restrictionMethod.invoke(instance);
-            if (restricted && !allowedMethodList.contains(method.getName())) {
+        public Object intercept(T self, Method method, Object[] args, Object instance) throws Throwable {
+            if (restriction(self) && !allowedMethodList.contains(method.getName())) {
                 throw new UnsupportedOperationException("Method " + method.getName() + " is banned and inaccessible.");
             }
 
-            return Mock.super.intercept(method, args, instance);
+            return Mock.super.intercept(self, method, args, instance);
         }
     }
 
@@ -363,6 +368,78 @@ public class MockObject {
         return Objects.hashCode(unmocked);
     }
 
+    public static <T> T mockEquals(T obj, Class<T> extend) {
+        try {
+            return new EqualsMock<>(obj, extend, null).mock();
+        } catch (InstantiationException
+                 | IllegalAccessException
+                 | NoSuchMethodException
+                 | InvocationTargetException e) {
+            throw failedToMockObject(obj, e);
+        }
+    }
+
+    @RequiredArgsConstructor
+    public static class EqualsMock<T> implements Mock<T> {
+        private final T delegate;
+        private final Class<T> extend;
+        private final Prechecker<T> prechecker;
+
+        @Override
+        public T delegate() {
+            return delegate;
+        }
+
+        @Override
+        public Class<T> extend() {
+            return extend;
+        }
+
+        @Override
+        public Prechecker<T> prechecker() {
+            return prechecker;
+        }
+
+        @Override
+        public ElementMatcher.Junction<MethodDescription> methodMatcher() {
+            return ElementMatchers.isDeclaredBy(Object.class).and(ElementMatchers.named("equals").or(ElementMatchers.named("hashCode")));
+        }
+
+        @Override
+        public Object intercept(T self, Method method, Object[] args, Object object) {
+            if (prechecker() != null && !prechecker().precheck(self, method, args, object)) {
+                return null;
+            }
+
+            if (method.getName().equals("equals")) {
+                return MockObject.equals(args[0], self);
+            }
+
+            return MockObject.hashCode(self);
+        }
+    }
+
+    public static boolean hasSuperMethod(Method method, Object delegate) {
+        if (delegate.getClass().isInterface()) {
+            // has super method
+            return false;
+        }
+
+        Class<?> clazz = delegate.getClass().getSuperclass();
+        while (clazz != null && clazz != Object.class) {
+            try {
+                clazz.getMethod(method.getName(), method.getParameterTypes());
+                // has super method
+                return false;
+            } catch (NoSuchMethodException ignored) {
+            }
+            clazz = clazz.getSuperclass();
+        }
+
+        // no super method
+        return true;
+    }
+
     public interface Mock<T> {
         @Contract(pure = true)
         T delegate();
@@ -375,24 +452,32 @@ public class MockObject {
             return null;
         }
 
-        default Prechecker prechecker() {
-            return (m, a, i) -> true;
+        default ElementMatcher.Junction<MethodDescription> methodMatcher() {
+            return ElementMatchers.not(ElementMatchers.isDeclaredBy(Restriction.class)).and(ElementMatchers.not(ElementMatchers.isPrivate()));
         }
 
-        default Object intercept(Method method, Object[] args, Object instance) throws Throwable {
-            if (prechecker() != null && !prechecker().precheck(method, args, instance)) {
+        default Prechecker<T> prechecker() {
+            return (s, m, a, i) -> true;
+        }
+
+        default Object intercept(T self, Method method, Object[] args, Object object) throws Throwable {
+            if (prechecker() != null && !prechecker().precheck(self, method, args, object)) {
                 return null;
             }
 
             if (method.getName().equals("equals") && args.length == 1) {
-                return MockObject.equals(args[0], instance);
+                return MockObject.equals(args[0], self);
             }
 
             if (method.getName().equals("hashCode") && args.length == 0) {
-                return MockObject.hashCode(instance);
+                return MockObject.hashCode(self);
             }
 
-            return MockObject.mock(invokeSuperMethod(method, delegate(), args));
+            if (extend().isInterface()) {
+                return method.invoke(mockEquals(delegate(), extend()), args);
+            } else {
+                return invokeSuperMethod(method, mockEquals(delegate(), extend()), args);
+            }
         }
 
         @Contract(pure = true)
@@ -403,11 +488,13 @@ public class MockObject {
             DynamicType.Builder<?> dynamic;
 
             Class<?> clazz = delegate().getClass();
-            if (!extend().isInterface() && instantizer() == null) {
+
+            if (instantizer() == null) {
                 while (clazz != Object.class && (
                         Modifier.isFinal(clazz.getModifiers())
-                        || Arrays.stream(clazz.getDeclaredConstructors())
-                        .noneMatch(ctor -> ctor.getParameterCount() == 0))) {
+                                || (!clazz.isInterface()
+                                && Arrays.stream(clazz.getDeclaredConstructors())
+                                .noneMatch(ctor -> ctor.getParameterCount() == 0)))) {
                     clazz = clazz.getSuperclass();
                 }
             }
@@ -421,19 +508,31 @@ public class MockObject {
             }
 
             if (clazz.isInterface()) {
-                dynamic = builder.subclass(Object.class).implement(clazz);
+                dynamic = builder.subclass(Object.class);
+
+                dynamic = dynamic.implement(clazz);
+                Set<Class<?>> allInterfaces = getAllSubInterfaces(clazz);
+                for (Class<?> iface : allInterfaces) {
+                    dynamic = dynamic.implement(iface);
+                }
             } else {
                 dynamic = builder.subclass(clazz);
             }
 
+            /*
             Set<String> mocked = new HashSet<>();
             for (Method method : getAllDeclaredMethods(clazz)) {
-                if (Modifier.isFinal(method.getModifiers()) ||
-                        Modifier.isStatic(method.getModifiers())) {
+                if (Modifier.isFinal(method.getModifiers())
+                        || Modifier.isStatic(method.getModifiers())
+                        || Modifier.isPrivate(method.getModifiers())) {
                     continue;
                 }
 
                 if (method.getDeclaringClass() == Object.class) {
+                    continue;
+                }
+
+                if (!hasSuperMethod(method, delegate())) {
                     continue;
                 }
 
@@ -452,11 +551,16 @@ public class MockObject {
 
                 dynamic = paramDef.intercept(MethodCall.invoke(method).onSuper().withAllArguments());
             }
+             */
 
-            dynamic = dynamic.name("Mocked" + clazz.getSimpleName())
-                    .implement(Restriction.class)
-                    .method(ElementMatchers.any())
-                    .intercept(MethodDelegation.to(new Interceptor(this)));
+            dynamic = dynamic.name("Mocked" + clazz.getSimpleName());
+
+
+            var builder2 = dynamic.method(methodMatcher());
+
+            dynamic = builder2
+                    .intercept(MethodDelegation.to(new Interceptor<>(this)))
+                    .implement(Restriction.class);
 
             Class<T> instanceClazz;
             try (DynamicType.Unloaded<?> unloaded = dynamic.make()) {
@@ -485,6 +589,10 @@ public class MockObject {
 
             if (instance instanceof PlayerEvent) {
                 PLAYER_FIELD.set(instance, MockObject.mock(PLAYER_FIELD.get(instance)));
+            }
+
+            if (instance instanceof BlockEvent) {
+                BLOCK_FIELD.set(instance, MockObject.mock(BLOCK_FIELD.get(instance)));
             }
 
             return instance;
@@ -522,14 +630,15 @@ public class MockObject {
         return true;
     }
 
-    public record Interceptor(Mock<?> mock) {
+    public record Interceptor<T>(Mock<T> mock) {
         @RuntimeType
         @Nullable public Object intercept(
+                @This T self,
                 @Origin Method method,
                 @AllArguments Object[] args,
                 @Super(strategy = Super.Instantiation.UNSAFE) Object object)
                 throws Throwable {
-            return mock.intercept(method, args, object);
+            return MockObject.mock(mock.intercept(self, method, args, object));
         }
     }
 }
