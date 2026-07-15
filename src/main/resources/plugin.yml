@@ -193,10 +193,10 @@ softdepend:
 loadBefore:
   - SaneCrafting
   - SlimefunAdvancements
-authors: [mmmjjkx]
+authors: [mmmjjkx, balugaq]
 description: An advanced Slimefun customize plugin
 commands:
-  rykenslimecustomizer:
+  rykenslimefuncustomizer:
     aliases: ["rsc"]
     permission: rsc.command.help
 permissions:

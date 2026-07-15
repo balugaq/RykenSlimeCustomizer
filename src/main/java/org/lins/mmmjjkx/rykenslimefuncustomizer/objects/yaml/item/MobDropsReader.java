@@ -95,10 +95,9 @@ public class MobDropsReader extends YamlReader<CustomMobDrop> {
                     .append(LegacyComponentSerializer.legacyAmpersand().deserialize(" &a的概率掉落"));
 
             ItemStack itemStack = new CustomItemStack(eggMaterial, meta -> {
-                meta.setDisplayName(entityType.toString());
                 meta.lore(List.of(lore));
             });
-            ItemStack[] recipe = new ItemStack[] {null, null, null, null, itemStack};
+            ItemStack[] recipe = new ItemStack[] {null, null, null, null, itemStack, null, null, null, null};
 
             return new CustomMobDrop(group.getSecondValue(), sfis, recipe, chance, entityType, sfis);
         }

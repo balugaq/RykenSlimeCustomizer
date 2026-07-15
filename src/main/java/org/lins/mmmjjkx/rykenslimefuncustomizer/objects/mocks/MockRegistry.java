@@ -20,6 +20,7 @@ import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 import java.lang.reflect.Field;
@@ -163,5 +164,7 @@ public class MockRegistry {
         } catch (NoSuchFieldException e) {
             ExceptionHandler.handleError("No such field", e);
         }
+
+        MockObject.getMocks().put(RykenSlimefunCustomizer.class, new MockObject.EmptyMocker<>(RykenSlimefunCustomizer.class));
     }
 }
