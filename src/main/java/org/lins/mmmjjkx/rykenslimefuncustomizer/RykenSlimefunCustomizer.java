@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.Library;
@@ -313,7 +314,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         }
     }
 
-    public static void debug(Supplier<String> supplier) {
-        ExceptionHandler.debugLog(supplier);
+    public static void debug(Callable<String> callable) {
+        ExceptionHandler.debugLog(callable);
     }
 }

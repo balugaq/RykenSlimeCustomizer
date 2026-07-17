@@ -178,10 +178,8 @@ public abstract class ScriptEval {
         }
     }
 
-    private static final Server mockedServer = MockObject.mock(Bukkit.getServer());
-
     private static Server getServer() {
-        return mockedServer;
+        return Bukkit.getServer();
     }
 
     protected final void setup() {
@@ -254,10 +252,10 @@ public abstract class ScriptEval {
         // removal
         addThing("setData", (CiConsumer<Location, String, String>) StorageCacheUtils::setData);
         addThing("getData", (BiFunction<Location, String, String>)
-                (a, b) -> MockObject.mock(StorageCacheUtils.getData(a, b)));
-        addThing("getBlockMenu", (Function<Location, BlockMenu>) a -> MockObject.mock(StorageCacheUtils.getMenu(a)));
+                (a, b) -> StorageCacheUtils.getData(a, b));
+        addThing("getBlockMenu", (Function<Location, BlockMenu>) a -> StorageCacheUtils.getMenu(a));
         addThing("getBlockData", (Function<Location, SlimefunBlockData>)
-                a -> MockObject.mock(StorageCacheUtils.getBlock(a)));
+                a -> StorageCacheUtils.getBlock(a));
         addThing("isSlimefunBlock", (Function<Location, Boolean>) StorageCacheUtils::hasBlock);
         addThing("isBlock", (BiFunction<Location, String, Boolean>) StorageCacheUtils::isBlock);
         addThing("getSfItemByBlock", (Function<Location, SlimefunItem>) StorageCacheUtils::getSfItem);

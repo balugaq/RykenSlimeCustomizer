@@ -23,6 +23,7 @@ import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import java.lang.reflect.Field;
+import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -104,12 +105,16 @@ public class ExceptionHandler {
         debugLog(() -> message);
     }
 
-    public static void debugLog(Supplier<String> supplier) {
-        String message = supplier.get();
-        if (RykenSlimefunCustomizer.INSTANCE.getConfig().getBoolean("debug")) {
-            if (message == null || message.isBlank()) return;
+    public static void debugLog(Callable<String> callable) {
+        try {
+            String message = callable.call();
+            if (RykenSlimefunCustomizer.INSTANCE.getConfig().getBoolean("debug")) {
+                if (message == null || message.isBlank()) return;
 
-            console.sendMessage(decorate(CMIChatColor.translate("&6DEBUG | " + message)));
+                console.sendMessage(decorate(CMIChatColor.translate("&6DEBUG | " + message)));
+            }
+        } catch (Exception e) {
+            ExceptionHandler.handleError("Unable to debug log", e);
         }
     }
 

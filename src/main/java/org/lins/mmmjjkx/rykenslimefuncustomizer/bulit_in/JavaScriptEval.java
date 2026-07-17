@@ -146,9 +146,6 @@ public class JavaScriptEval extends ScriptEval {
         }
 
         try {
-            for (int i = 0; i < args.length; i++) {
-                args[i] = MockObject.mock(args[i]);
-            }
             Object result = function.execute(args);
             ExceptionHandler.debugLog(
                     "运行了 " + getAddon().getAddonName() + "的脚本" + getFile().getName() + "中的函数 " + funName);
