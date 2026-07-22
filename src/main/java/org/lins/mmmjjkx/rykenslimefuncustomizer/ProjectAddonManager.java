@@ -24,7 +24,9 @@ import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddonLoader;
@@ -37,6 +39,7 @@ public final class ProjectAddonManager {
     public static File CONFIGS_DIRECTORY;
 
     private final Map<String, ProjectAddon> projectAddons = new HashMap<>();
+    private final Map<String, Map<ItemStack[], ItemStack>> preaddRecipes = new HashMap<>();
 
     @Getter
     private final Map<String, File> projectIds = new HashMap<>();
@@ -211,6 +214,15 @@ public final class ProjectAddonManager {
 
     public File getAddonFolder(String id) {
         return projectIds.get(id);
+    }
+
+    @NotNull
+    public Map<ItemStack[], ItemStack> getPreaddRecipes(@NotNull String s) {
+        return preaddRecipes.getOrDefault(s, new HashMap<>());
+    }
+
+    public void addPreaddRecipe(@NotNull String s, @NotNull ItemStack[] input, @NotNull ItemStack output) {
+        preaddRecipes.computeIfAbsent(s, k -> new HashMap<>()).put(input, output);
     }
 
     private void debug(Supplier<String> message) {

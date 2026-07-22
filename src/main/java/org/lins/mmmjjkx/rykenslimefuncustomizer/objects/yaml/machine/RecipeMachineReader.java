@@ -200,7 +200,7 @@ public class RecipeMachineReader extends YamlReader<CustomRecipeMachine> {
         return list;
     }
 
-    static void addToList(
+    public static void addToList(
             List<CustomMachineRecipe> list,
             ConfigurationSection recipes,
             int seconds,

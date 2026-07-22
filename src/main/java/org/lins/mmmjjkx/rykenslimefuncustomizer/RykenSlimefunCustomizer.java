@@ -42,6 +42,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SaveditemsGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.commands.MainCommand;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.BlockListener;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SingleItemRecipeGuideListener;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SuperMultiBlockListener;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.generations.BlockPopulator;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
@@ -81,6 +82,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
         new BlockListener();
         new SingleItemRecipeGuideListener();
+        new SuperMultiBlockListener();
 
         for (World world : Bukkit.getWorlds()) {
             world.getPopulators().add(new BlockPopulator());

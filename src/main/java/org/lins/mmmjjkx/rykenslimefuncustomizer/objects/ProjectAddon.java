@@ -123,6 +123,8 @@ public final class ProjectAddon {
     private List<CustomLinkedRecipeMachine> linkedRecipeMachines = new ArrayList<>();
     // workbenches.yml
     private List<CustomWorkbench> workbenches = new ArrayList<>();
+    // super_multi_block_machines.yml
+    private List<CustomSuperMultiBlockMachine> superMultiBlockMachines = new ArrayList<>();
     // generationInfos.yml
     private List<GenerationInfo> generationInfos = new ArrayList<>();
     private int loadedObjects;

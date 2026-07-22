@@ -101,7 +101,7 @@ public class CustomGenerator extends AbstractEnergyProvider
         BlockMenu inv = StorageCacheUtils.getMenu(l);
         FuelOperation operation = processor.getOperation(l);
 
-        int progressSlot = menu == null || menu.getProgressSlot() == -1 ? 22 : menu.getProgressSlot();
+        int progressSlot = (menu == null || menu.getProgressSlot() == -1) ? 22 : menu.getProgressSlot();
 
         if (inv != null) {
             if (operation != null) {

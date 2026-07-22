@@ -29,6 +29,7 @@ import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomMultiBlockMachine;
@@ -37,7 +38,6 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 public class MultiBlockMachineReader extends YamlReader<CustomMultiBlockMachine> {
-    private static final Map<String, Map<ItemStack[], ItemStack>> preaddRecipes = new HashMap<>();
     public MultiBlockMachineReader(YamlConfiguration config, ProjectAddon addon) {
         super(config, addon);
     }
@@ -143,11 +143,11 @@ public class MultiBlockMachineReader extends YamlReader<CustomMultiBlockMachine>
     }
 
     public static Map<ItemStack[], ItemStack> getPreaddRecipes(String s) {
-        return preaddRecipes.getOrDefault(s, new HashMap<>());
+        return RykenSlimefunCustomizer.addonManager.getPreaddRecipes(s);
     }
 
     public static void addPreaddRecipe(String s, ItemStack[] input, ItemStack output) {
-        preaddRecipes.computeIfAbsent(s, k -> new HashMap<>()).put(input, output);
+        RykenSlimefunCustomizer.addonManager.addPreaddRecipe(s, input, output);
     }
 
     private Map<ItemStack[], ItemStack> readRecipes(String s, ConfigurationSection section, ProjectAddon addon) {

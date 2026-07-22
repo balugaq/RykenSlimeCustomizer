@@ -46,6 +46,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.*;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.item.*;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine.*;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlock;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.update.GithubUpdater;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
@@ -290,6 +291,7 @@ public class ProjectAddonLoader {
         YamlConfiguration templateMachines = doFileLoad(file, Constants.TEMPLATE_MACHINES_FILE);
         YamlConfiguration linkedRecipeMachines = doFileLoad(file, Constants.LINKED_RECIPE_MACHINES_FILE);
         YamlConfiguration workbenches = doFileLoad(file, Constants.WORKBENCHES_FILE);
+        YamlConfiguration superMultiBlockMachines = doFileLoad(file, Constants.SUPER_MULTI_BLOCK_MACHINES_FILE);
         YamlConfiguration generations = doFileLoad(file, Constants.GENERATIONS_FILE);
 
         MobDropsReader mobDropsReader = new MobDropsReader(mob_drops, addon);
@@ -311,6 +313,7 @@ public class ProjectAddonLoader {
         LinkedRecipeMachineReader linkedRecipeMachineReader =
                 new LinkedRecipeMachineReader(linkedRecipeMachines, addon);
         WorkbenchReader workbenchReader = new WorkbenchReader(workbenches, addon);
+        SuperMultiBlockMachineReader superMultiBlockMachineReader = new SuperMultiBlockMachineReader(supers, addon);
         GenerationReader generationReader = new GenerationReader(generations, addon);
 
         ExceptionHandler.info("开始加载 " + file.getName() + " 中的物品内容...");
@@ -332,6 +335,7 @@ public class ProjectAddonLoader {
                 + templateMachineReader.getSize()
                 + linkedRecipeMachineReader.getSize()
                 + workbenchReader.getSize()
+                + superMultiBlockMachineReader.getSize()
                 + generationReader.getSize());
 
         mobDropsReader.preload();
@@ -351,6 +355,7 @@ public class ProjectAddonLoader {
         templateMachineReader.preload();
         linkedRecipeMachineReader.preload();
         workbenchReader.preload();
+        superMultiBlockMachineReader.preload();
         generationReader.preload();
 
         ExceptionHandler.info("开始注册 " + file.getName() + " 存放的内容...");
@@ -373,6 +378,7 @@ public class ProjectAddonLoader {
         addon.setTemplateMachines(templateMachineReader.readAll());
         addon.setLinkedRecipeMachines(linkedRecipeMachineReader.readAll());
         addon.setWorkbenches(workbenchReader.readAll());
+        addon.setSuperMultiBlockMachines(superMultiBlockMachineReader.readAll());
         addon.setGenerationInfos(generationReader.readAll());
 
         ExceptionHandler.info("开始加载要求延迟加载的内容...");
@@ -396,6 +402,7 @@ public class ProjectAddonLoader {
         addon.getTemplateMachines().addAll(templateMachineReader.loadLateInits());
         addon.getLinkedRecipeMachines().addAll(linkedRecipeMachineReader.loadLateInits());
         addon.getWorkbenches().addAll(workbenchReader.loadLateInits());
+        addon.getSuperMultiBlockMachines().addAll(superMultiBlockMachineReader.loadLateInits());
 
         YamlConfiguration researches = doFileLoad(file, Constants.RESEARCHES_FILE);
         ResearchReader researchReader = new ResearchReader(researches, addon);

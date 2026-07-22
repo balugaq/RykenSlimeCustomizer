@@ -205,6 +205,7 @@ public class ItemReader extends YamlReader<SlimefunItem> {
 
         if (hasRadiation) {
             String radio = section.getString("radiation");
+            boolean addRadiationLore = section.getBoolean("add_radiation_lore", true);
             Pair<ExceptionHandler.HandleResult, Radioactivity> radioactivityPair = ExceptionHandler.handleEnumValueOf(
                     "在附属" + addon.getAddonId() + "中加载物品" + id + "时遇到了问题: " + "错误的辐射等级级别: " + radio,
                     Radioactivity.class,
@@ -215,7 +216,9 @@ public class ItemReader extends YamlReader<SlimefunItem> {
                 return null;
             }
 
-            CommonUtils.addLore(sfis, true, LoreBuilder.radioactive(radioactivity));
+            if (addRadiationLore) {
+                CommonUtils.addLore(sfis, true, LoreBuilder.radioactive(radioactivity));
+            }
 
             Class<? extends CustomItem> clazz = ClassUtils.generateClass(
                     instance.getClass(),

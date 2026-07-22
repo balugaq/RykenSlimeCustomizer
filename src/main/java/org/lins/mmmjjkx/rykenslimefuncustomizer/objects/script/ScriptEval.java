@@ -53,6 +53,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.enhanced.NBTAPIIntegration;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.CiConsumer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.CiFunction;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 
 @Getter(AccessLevel.PROTECTED)
 public abstract class ScriptEval {
@@ -187,6 +188,7 @@ public abstract class ScriptEval {
                 s -> Bukkit.getPluginManager().isPluginEnabled(s));
 
         addThing("getServer", (Supplier<Server>) () -> getServer());
+        addThing("getSuperMultiBlockManager", (Supplier<SuperMultiBlockManager>) () -> SuperMultiBlockManager.getInstance());
 
         addThing("runOpCommand", (BiConsumer<Player, String>) (p, s) -> {
             boolean op = p.isOp();
