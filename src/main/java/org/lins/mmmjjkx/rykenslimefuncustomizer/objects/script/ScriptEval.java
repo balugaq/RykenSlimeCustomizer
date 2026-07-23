@@ -146,9 +146,9 @@ public abstract class ScriptEval {
         }
     }
 
-    private final File file;
-    private final ProjectAddon addon;
-    private String fileContext;
+    protected final File file;
+    protected final ProjectAddon addon;
+    protected String fileContext;
 
     public ScriptEval(File file, ProjectAddon addon) {
         this.file = file;

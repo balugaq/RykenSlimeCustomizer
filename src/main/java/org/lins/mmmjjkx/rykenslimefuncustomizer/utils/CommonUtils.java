@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -559,5 +560,14 @@ public class CommonUtils {
         }
 
         return newArray;
+    }
+
+    @Nullable
+    public static <T> T readPipe(String s, Function<String, @Nullable T> parser) {
+        for (String part : Arrays.stream(s.split("\\|")).map(String::trim).toList()) {
+            T r = parser.apply(part);;
+            if (r != null) return r;
+        }
+        return null;
     }
 }

@@ -313,7 +313,7 @@ public class ProjectAddonLoader {
         LinkedRecipeMachineReader linkedRecipeMachineReader =
                 new LinkedRecipeMachineReader(linkedRecipeMachines, addon);
         WorkbenchReader workbenchReader = new WorkbenchReader(workbenches, addon);
-        SuperMultiBlockMachineReader superMultiBlockMachineReader = new SuperMultiBlockMachineReader(supers, addon);
+        SuperMultiBlockMachineReader superMultiBlockMachineReader = new SuperMultiBlockMachineReader(superMultiBlockMachines, addon);
         GenerationReader generationReader = new GenerationReader(generations, addon);
 
         ExceptionHandler.info("开始加载 " + file.getName() + " 中的物品内容...");

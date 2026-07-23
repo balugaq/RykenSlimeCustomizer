@@ -20,6 +20,7 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock;
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
@@ -27,18 +28,18 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class SlimefunMultiBlockPart implements MultiBlockPart {
-    private final SlimefunItem target;
+    private final SlimefunItemStack target;
     private final BlockData blockData;
 
-    public SlimefunMultiBlockPart(@NotNull SlimefunItem target) {
+    public SlimefunMultiBlockPart(@NotNull SlimefunItemStack target) {
         this.target = target;
-        this.blockData = Bukkit.createBlockData(target.getItem().getType());
+        this.blockData = Bukkit.createBlockData(target.getType());
     }
 
     @Override
     public boolean isOfPart(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
         SlimefunItem sfItem = StorageCacheUtils.getSfItem(partLocation);
-        return sfItem != null && sfItem.getId().equals(target.getId());
+        return sfItem != null && sfItem.getId().equals(target.getItemId());
     }
 
     @Override

@@ -18,7 +18,6 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine;
 
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
-import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
@@ -28,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -42,7 +40,6 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomRecipeMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSuperMultiBlockMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomMachineRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
@@ -183,14 +180,6 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
         return List.of(new SlimefunItemStack(addon.getId(s, section.getString("id_alias")), stack));
     }
 
-    public static Map<ItemStack[], ItemStack> getPreaddRecipes(String s) {
-        return RykenSlimefunCustomizer.addonManager.getPreaddRecipes(s);
-    }
-
-    public static void addPreaddRecipe(String s, ItemStack[] input, ItemStack output) {
-        RykenSlimefunCustomizer.addonManager.addPreaddRecipe(s, input, output);
-    }
-
     @Nullable
     private SuperMultiBlockDefinition readMultiBlockDefinition(ConfigurationSection section, String s, @Nullable JavaScriptEval eval) {
         if (section == null) return null;
@@ -220,7 +209,7 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
         // 考虑到多方块结构不一定是规则图形
         // 需要先确定 o 即core的位置，然后对其他进行向量化 -> Vector3i
         // 在 o 上面的是 y+1, o下面的是y-1
-        // o 所在的index对应到其他layer上的位置，就是y轴所在的位置
+        //
 
         Pair<Map<String, MultiBlockPart>, String> mappingAndCore = readMapping(section.getConfigurationSection("mapping"), s, eval);
         if (mappingAndCore == null) return null;
@@ -232,7 +221,7 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
             ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "结构定义为空");
             return null;
         }
-        List<List<String>> structure = structure0.stream().map(x -> (List<String>) x).collect(Collectors.toList());
+        List<List<String>> structure = structure0.stream().map(x -> (List<String>) x).toList();
         if (structure.isEmpty()) {
             ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "结构定义为空");
             return null;
@@ -247,16 +236,16 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
                 String[] blocks = line.split(" ");
                 for (int k = 0; k < blocks.length; k++) {
                     String block = blocks[k];
-                    if (isVaildBlockDesc(block)) {
+                    if (isValidBlockDesc(block)) {
                         blockPositions.put(new Vector3i(j, -i, k), block);
-                    }
-                    if (block.equals(core)) {
-                        if (corePos != null) {
-                            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "在 structure 中存在多个 core，无法判定core");
-                            return null;
-                        }
+                        if (block.equals(core)) {
+                            if (corePos != null) {
+                                ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "在 structure 中存在多个 core，无法判定core");
+                                return null;
+                            }
 
-                        corePos = new Vector3i(j, -i, k);
+                            corePos = new Vector3i(j, -i, k);
+                        }
                     }
                 }
             }
@@ -282,11 +271,10 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
             blockParts.put(pos.subtract(corePos), mapping.get(blockDesc));
         }
 
-        SuperMultiBlockDefinition definition = new SuperMultiBlockDefinition(corePart, blockParts);
-        return definition;
+        return new SuperMultiBlockDefinition(corePart, blockParts);
     }
 
-    public static boolean isVaildBlockDesc(String block) {
+    public static boolean isValidBlockDesc(String block) {
         for (char c : block.toCharArray()) {
             if (c != '_') return false;
         }
@@ -303,6 +291,10 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
         String core = null;
         for (String key : section.getKeys(false)) {
             var partSection = section.getConfigurationSection(key);
+            if (partSection == null) {
+                ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "structure.mapping 中存在无效的 blockDesc: " + key);
+                return null;
+            }
             if (partSection.contains("core")) {
                 if (core != null) {
                     ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "在 structure.mapping 中存在多个 core，无法判定core");
@@ -310,7 +302,9 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
                 }
                 core = key;
             }
-            mapping.put(key, readMultiBlockPart(section, s, eval, key));
+            MultiBlockPart part = readMultiBlockPart(partSection, s, eval, key);
+            if (part == null) return null;
+            mapping.put(key, part);
         }
 
         if (core == null) {
@@ -318,7 +312,7 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
             return null;
         }
 
-        return new Pair<Map<String,MultiBlockPart>,String>(mapping, core);
+        return new Pair<>(mapping, core);
     }
 
     @Nullable
@@ -327,45 +321,82 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
         // material_type: mc / slimefun / custom
         // material: 方块/BlockData/粘液id
         // 对于 custom，由脚本代理检查
-        String type = section.getString("material_type", "");
-        String material = section.getString("material", "");
-        if (type.isEmpty() || material.isEmpty()) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 类型或材料为空");
+        String type = section.getString("material_type");
+        if (type == null) {
+            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 类型为空");
             return null;
         }
 
-        if (type.equals("mc")) {
-            Material m = Material.matchMaterial(material);
-            // 当存在 material 且有效时，data 不会被使用
-            String data = section.getString("data");
-            BlockData blockData = data == null ? null : Bukkit.createBlockData(data);
-            if (blockData == null) {
-                ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + material + " 无效");
-                return null;
-            }
-            return new VanillaMultiBlockPart(m, blockData);
-        }
-
-        if (type.equals("slimefun")) {
-            SlimefunItem slimefunItem = SlimefunItem.getById(material.toUpperCase());
-            if (slimefunItem == null || !slimefunItem.getItem().getType().isBlock()) {
-                ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + material + " 无效");
-                return null;
-            }
-            return new SlimefunMultiBlockPart(slimefunItem);
-        }
-
-        if (type.equals("custom")) {
-            BlockData blockData = null;
-            
-            if (material != null) {
-                blockData = Bukkit.createBlockData(material);
-                if (blockData == null) {
-                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + material + " 无效");
+        switch (type) {
+            case "mc" -> {
+                String material = section.getString("material");
+                if (material == null) {
+                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料为空");
                     return null;
                 }
+
+                VanillaMultiBlockPart r = CommonUtils.readPipe(material, part -> {
+                    if (part.contains("[")) {
+                        try {
+                            BlockData blockData = Bukkit.createBlockData(part);
+                            return new VanillaMultiBlockPart(blockData);
+                        } catch (IllegalArgumentException e) {
+                            ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 方块数据 " + part + " 无效");
+                            return null;
+                        }
+                    }
+
+                    Material m = Material.matchMaterial(part);
+                    if (m == null) {
+                        ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + part + " 无效");
+                        return null;
+                    }
+                    return new VanillaMultiBlockPart(m.createBlockData());
+                });
+
+                if (r == null) {
+                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + material + " 无效");
+                }
+                return r;
             }
-            return new CustomMultiBlockPart(eval, blockData);
+            case "slimefun" -> {
+                String material = section.getString("material");
+                if (material == null) {
+                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料为空");
+                    return null;
+                }
+                SlimefunMultiBlockPart r = CommonUtils.readPipe(material, part -> {
+                    SlimefunItemStack item = getPreloadItem(part.toUpperCase());
+                    if (item == null || !item.getType().isBlock()) {
+                        ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + part + " 无效");
+                        return null;
+                    }
+                    return new SlimefunMultiBlockPart(item);
+                });
+                if (r == null) {
+                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + material + " 无效");
+                }
+                return r;
+            }
+            case "custom" -> {
+                String material = section.getString("material");
+                BlockData blockData = null;
+                if (material != null) {
+                    blockData = CommonUtils.readPipe(material, part -> {
+                        try {
+                            return Bukkit.createBlockData(material);
+                        } catch (IllegalArgumentException e) {
+                            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + material + " 无效");
+                            return null;
+                        }
+                    });
+                }
+                if (eval == null) {
+                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 缺少脚本，无法生成多方块结构定义");
+                    return null;
+                }
+                return new CustomMultiBlockPart(eval, blockData);
+            }
         }
 
         ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 无效的类型: " + type);

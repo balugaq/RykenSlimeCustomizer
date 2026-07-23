@@ -212,6 +212,9 @@ permissions:
       rsc.command.disable: true
       rsc.command.menupreview: true
       rsc.command.info: true
+      rsc.command.getsaveditem: true
+      rsc.command.resaveitems: true
+      rsc.command.clearscriptcache: true
   rsc.command.help:
     default: op
   rsc.command.reload:
@@ -229,4 +232,10 @@ permissions:
   rsc.command.menupreview:
     default: op
   rsc.command.info:
+    default: op
+  rsc.command.getsaveditem:
+    default: op
+  rsc.command.resaveitems:
+    default: op
+  rsc.command.clearscriptcache:
     default: op

@@ -24,28 +24,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class VanillaMultiBlockPart implements MultiBlockPart {
-    private final Material material;
     private final BlockData blockData;
 
-    public VanillaMultiBlockPart(@Nullable Material material, BlockData blockData) {
-        this.material = material;
+    public VanillaMultiBlockPart(BlockData blockData) {
         this.blockData = blockData;
     }
 
     @Override
     public boolean isOfPart(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
-        if (material != null) {
-            // only check material
-            return partLocation.getBlock().getType() == material;
-        }
-        
-        if (partLocation.getBlock().getType() != blockData.getMaterial()) {
-            return false;
-        }
-        if (blockData != null && !partLocation.getBlock().getBlockData().matches(blockData)) {
-            return false;
-        }
-        return true;
+        return partLocation.getBlock().getBlockData().matches(blockData);
     }
 
     @Override

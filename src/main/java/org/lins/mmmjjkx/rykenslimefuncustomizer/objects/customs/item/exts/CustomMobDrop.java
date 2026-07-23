@@ -21,11 +21,15 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.attributes.RandomMobDrop;
+import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import lombok.Getter;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.CustomUnplaceableItem;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class CustomMobDrop extends CustomUnplaceableItem implements RandomMobDrop {
     private final int chance;
@@ -50,5 +54,12 @@ public class CustomMobDrop extends CustomUnplaceableItem implements RandomMobDro
     @Override
     public int getMobDropChance() {
         return chance >= 100 ? 100 : Math.max(chance, 1);
+    }
+
+    @Override
+    public void load() {
+        Set<ItemStack> dropping = Slimefun.getRegistry().getMobDrops().getOrDefault(entityType, new HashSet<>());
+        dropping.add(this.getItem());
+        Slimefun.getRegistry().getMobDrops().put(entityType, dropping);
     }
 }

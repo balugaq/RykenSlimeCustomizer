@@ -35,7 +35,6 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
-@SuppressWarnings("deprecation")
 public class MobDropsReader extends YamlReader<CustomMobDrop> {
     public MobDropsReader(YamlConfiguration config, ProjectAddon addon) {
         super(config, addon);
@@ -81,7 +80,7 @@ public class MobDropsReader extends YamlReader<CustomMobDrop> {
             int chance = section.getInt("chance");
 
             if (chance < 1 || chance > 100) {
-                ExceptionHandler.handleError(
+                ExceptionHandler.handleWarning(
                         "在附属" + addon.getAddonId() + "中加载生物掉落物" + s + "时遇到了问题: " + "掉落概率未设置或不应该小于1或大于100，已转换为1或100");
                 chance = chance >= 100 ? 100 : 1;
             }

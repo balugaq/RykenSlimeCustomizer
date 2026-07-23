@@ -122,12 +122,14 @@ public class JavaScriptEval extends ScriptEval {
             Value bindings = jsEngine.getBindings("js");
 
             if (!bindings.hasMember(funName)) {
+                ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载脚本" + getFile().getName() + "时遇到了问题: " + "不存在函数 " + funName);
                 failedFunctions.add(funName);
                 return null;
             }
 
             Value member = bindings.getMember(funName);
             if (!member.canExecute()) {
+                ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载脚本" + getFile().getName() + "时遇到了问题: " + "函数 " + funName + " 不可执行");
                 failedFunctions.add(funName);
                 return null;
             }
@@ -172,8 +174,7 @@ public class JavaScriptEval extends ScriptEval {
         super.contextInit();
         if (jsEngine != null) {
             try {
-                functionCache.clear();
-                failedFunctions.clear();
+                clearScriptCache();
 
                 jsEngine.eval(
                         Source.newBuilder("js", getFileContext(), "JavaScript").build());
@@ -182,5 +183,10 @@ public class JavaScriptEval extends ScriptEval {
                         "在加载" + getAddon().getAddonName() + "的脚本" + getFile().getName() + "时发生错误", e);
             }
         }
+    }
+
+    public void clearScriptCache() {
+        failedFunctions.clear();
+        functionCache.clear();
     }
 }

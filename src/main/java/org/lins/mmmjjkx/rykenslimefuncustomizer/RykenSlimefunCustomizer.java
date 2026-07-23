@@ -65,6 +65,12 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         System.setProperty("TRUFFLE_CACHE_DIR", cache.getAbsolutePath());
     }
 
+    public static void clearScriptCache() {
+        for (ProjectAddon addon : addonManager.getAllAddons()) {
+            addon.getScriptEvals().forEach(s -> s.clearScriptCache());
+        }
+    }
+
     @Override
     public void onEnable() {
         // Plugin startup logic
