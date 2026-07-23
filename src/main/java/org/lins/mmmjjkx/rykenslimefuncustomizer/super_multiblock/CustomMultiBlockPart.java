@@ -19,6 +19,7 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock;
 
 import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
+import org.graalvm.polyglot.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
@@ -34,14 +35,16 @@ public class CustomMultiBlockPart implements MultiBlockPart {
 
     @Override
     public boolean isOfPart(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
-        Object result = eval.evalFunction("isOfPart", partLocation, superMultiBlockInstance);
-        return Boolean.TRUE.equals(result);
+        Value result = eval.evalFunction("isOfPart", partLocation, superMultiBlockInstance);
+        return result != null && result.asBoolean();
     }
 
     @Override
     @Nullable
     public BlockData getBlockData(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
         if(blockData != null) return blockData;
-        return (BlockData) eval.evalFunction("getBlockData", partLocation, superMultiBlockInstance);
+        Value result = eval.evalFunction("getBlockData", partLocation, superMultiBlockInstance);
+        if (result == null) return null;
+        return result.as(BlockData.class);
     }
 }

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 import net.byteflux.libby.BukkitLibraryManager;
@@ -34,10 +35,14 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.BlockDisplay;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Interaction;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SaveditemsGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.commands.MainCommand;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.BlockListener;
@@ -45,6 +50,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SingleItemRecipeGuideL
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SuperMultiBlockListener;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.generations.BlockPopulator;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
@@ -67,7 +73,25 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
     public static void clearScriptCache() {
         for (ProjectAddon addon : addonManager.getAllAddons()) {
-            addon.getScriptEvals().forEach(s -> s.clearScriptCache());
+            addon.getScriptEvals().forEach(JavaScriptEval::clearScriptCache);
+        }
+    }
+
+    public static void clearDisplayProjectiles() {
+        for (World world : Bukkit.getWorlds()) {
+            killRSCEntity(world.getEntitiesByClass(BlockDisplay.class));
+//            killRSCEntity(world.getEntitiesByClass(Interaction.class));
+        }
+        SuperMultiBlockManager.getInstance().getProjectiles().clear();
+//        SuperMultiBlockManager.getInstance().getInteractions().clear();
+    }
+
+    public static void killRSCEntity(Collection<? extends Entity> entities) {
+        for (Entity entity : entities) {
+            if (!entity.getPersistentDataContainer().has(SuperMultiBlockManager.RSC_KEY) || !entity.isValid()) {
+                return;
+            }
+            entity.remove();
         }
     }
 

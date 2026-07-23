@@ -24,6 +24,7 @@ import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -233,7 +234,7 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
             List<String> layer = structure.get(i);
             for (int j = 0; j < layer.size(); j++) {
                 String line = layer.get(j);
-                String[] blocks = line.split(" ");
+                String[] blocks = Arrays.stream(line.split(" ")).filter(k -> !k.isEmpty()).toArray(String[]::new);
                 for (int k = 0; k < blocks.length; k++) {
                     String block = blocks[k];
                     if (isValidBlockDesc(block)) {
@@ -276,9 +277,9 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
 
     public static boolean isValidBlockDesc(String block) {
         for (char c : block.toCharArray()) {
-            if (c != '_') return false;
+            if (c != '_') return true;
         }
-        return true;
+        return false;
     }
 
     @Nullable

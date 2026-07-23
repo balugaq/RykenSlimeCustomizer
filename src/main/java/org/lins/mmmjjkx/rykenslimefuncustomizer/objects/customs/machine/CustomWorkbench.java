@@ -46,6 +46,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.graalvm.polyglot.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
@@ -135,11 +136,11 @@ public class CustomWorkbench extends AContainer implements EnergyNetComponent, R
                 menu.addMenuClickHandler(
                         CustomWorkbench.this.click, (player, clickedSlot, clickedItem, clickAction) -> {
                             if (CustomWorkbench.this.eval != null) {
-                                Object result = CustomWorkbench.this.eval.evalFunction(
+                                Value result = CustomWorkbench.this.eval.evalFunction(
                                         "onClick", this, player, clickedSlot, clickedItem, clickAction);
-                                if (result instanceof Boolean booleanResult) {
-                                    return booleanResult;
-                                }
+                                if (result != null) {
+                                    return result.asBoolean();
+                               }
 
                                 return false;
                             } else {

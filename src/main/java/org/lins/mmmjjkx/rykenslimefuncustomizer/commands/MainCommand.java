@@ -129,8 +129,17 @@ public class MainCommand implements TabExecutor {
                     return false;
                 }
 
-                RykenSlimefunCustomizer.INSTANCE.clearScriptCache();
+                RykenSlimefunCustomizer.clearScriptCache();
                 sender.sendMessage(CMIChatColor.translate("&a清除脚本缓存成功！"));
+                return true;
+            } else if (args[0].equalsIgnoreCase("cleardisplayprojectiles")) {
+                if (!sender.hasPermission("rsc.command") || !sender.hasPermission("rsc.command.cleardisplayprojectiles")) {
+                    sender.sendMessage(CMIChatColor.translate("&4你没有权限去做这些！"));
+                    return false;
+                }
+
+                RykenSlimefunCustomizer.clearDisplayProjectiles();
+                sender.sendMessage(CMIChatColor.translate("&a清除多方块显示实体成功！"));
                 return true;
             } else {
                 sender.sendMessage(CMIChatColor.translate("&4找不到此子指令！"));
@@ -527,6 +536,7 @@ public class MainCommand implements TabExecutor {
                         &e/rsc menupreview <ID> 预览机器菜单
                         &e/rsc getsaveditem <附属ID> <ID> 获取保存的物品
                         &e/rsc resaveitems 重新保存所有保存物品
-                        &e/rsc clearScriptCache 清除脚本失败缓存"""));
+                        &e/rsc clearScriptCache 清除脚本失败缓存
+                        &e/rsc cleardisplayprojectiles 清除多方块显示实体"""));
     }
 }

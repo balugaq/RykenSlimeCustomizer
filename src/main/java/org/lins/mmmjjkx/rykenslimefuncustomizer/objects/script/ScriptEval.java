@@ -46,6 +46,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.graalvm.polyglot.HostAccess;
+import org.graalvm.polyglot.Value;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
@@ -350,7 +351,7 @@ public abstract class ScriptEval {
     }
 
     @CanIgnoreReturnValue
-    @Nullable public abstract Object evalFunction(String functionName, Object... args);
+    @Nullable public abstract Value evalFunction(String functionName, Object... args);
 
     public abstract void close();
 }

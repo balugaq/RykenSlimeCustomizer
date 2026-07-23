@@ -26,6 +26,7 @@ import io.github.thebusybiscuit.slimefun4.core.networks.energy.EnergyNetComponen
 import java.util.List;
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
+import org.graalvm.polyglot.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
@@ -61,9 +62,9 @@ public class CustomEnergyGenerator extends CustomMachine implements EnergyNetPro
             return defaultOutput;
         } else {
             try {
-                Object result = eval.evalFunction("getGeneratedOutput", l, data);
-                if (result instanceof Integer i) {
-                    return i;
+                Value result = eval.evalFunction("getGeneratedOutput", l, data);
+                if (result != null) {
+                    return result.asInt();
                 } else {
                     ExceptionHandler.handleWarning(
                             "getGeneratedOutput() 返回了一个非整数值: " + result + " 导致自定义发电机的默认输出值将被使用， 请找附属对应作者修复此问题！");

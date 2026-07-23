@@ -21,26 +21,21 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockBreakHandler;
-import io.github.thebusybiscuit.slimefun4.core.handlers.BlockPlaceHandler;
-import io.github.thebusybiscuit.slimefun4.core.services.sounds.SoundEffect;
+import lombok.Data;
 import lombok.Getter;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
-
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.checkerframework.checker.units.qual.m;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
@@ -52,6 +47,18 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlock
 
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
 
+/**
+ * JS:
+ * onTick(block, machine, ctx)
+ * onFormed(machine)
+ * onUnformed(machine)
+ * onInteract(event, machine)
+ * isOfPart(location, multiblock)
+ * cannotStartSuperMultiBlock(location, machine)
+ * -
+ * machine = CustomSuperMultiBlockMachine
+ * multiblock = SuperMultiBlock
+ */
 @Getter
 public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
     private final ScriptEval eval;
@@ -82,8 +89,9 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
 
         addItemHandler(new BlockBreakHandler(false, false) {
             @Override
-            public void onPlayerBreak(BlockBreakEvent event, ItemStack item, List<ItemStack> drops) {
+            public void onPlayerBreak(@NonNull BlockBreakEvent event, @NonNull ItemStack item, @NonNull List<ItemStack> drops) {
                 firstTicks.remove(event.getBlock().getLocation());
+                SuperMultiBlockManager.getInstance().stopSuperMultiBlock(event.getBlock().getLocation());
             }
         });
         register(RykenSlimefunCustomizer.INSTANCE);
@@ -91,21 +99,31 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
 
     private final Set<Location> firstTicks = new HashSet<>();
 
+    @Data
+    public static class TickContext {
+        private boolean callSuper = true;
+        private boolean checkFirstTick = true;
+    }
     @Override
     protected void tick(Block b) {
-        super.tick(b);
-        if (firstTicks.add(b.getLocation())) {
-            if (!SuperMultiBlockManager.getInstance().startSuperMultiBlock(new SuperMultiBlock(CustomSuperMultiBlockMachine.this, b.getLocation()))) {
-                b.getWorld().getNearbyPlayers(b.getLocation(), 10, 10, 10).forEach(p -> {
-                    p.sendMessage(CMIChatColor.colorize("&c附近存在其他多方块阻碍，无法搭建该多方块，请拆除后重试。"));
-                    if (eval != null) {
-                        eval.evalFunction("cannotStartSuperMultiBlock", b, this);
-                    }
-                });
-            }
-        }
+        var ctx = new TickContext();
         if (eval != null) {
-            eval.evalFunction("onTick", b, this);
+            eval.evalFunction("onTick", b, this, ctx);
+        }
+        if (ctx.callSuper) {
+            super.tick(b);
+        }
+        if (ctx.checkFirstTick && firstTicks.add(b.getLocation())) {
+            Bukkit.getScheduler().runTask(RykenSlimefunCustomizer.INSTANCE, () -> {
+                if (!SuperMultiBlockManager.getInstance().startSuperMultiBlock(new SuperMultiBlock(CustomSuperMultiBlockMachine.this, b.getLocation()))) {
+                    b.getWorld().getNearbyPlayers(b.getLocation(), 10, 10, 10).forEach(p -> {
+                        p.sendMessage(CMIChatColor.colorize("&c附近存在其他多方块阻碍，无法搭建该多方块，请拆除后重试。"));
+                        if (eval != null) {
+                            eval.evalFunction("cannotStartSuperMultiBlock", b, this);
+                        }
+                    });
+                }
+            });
         }
     }
 
@@ -130,5 +148,10 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
                 menu.open(event.getPlayer());
             }
         }
+    }
+
+    @Override
+    public boolean register() {
+        return false;
     }
 }

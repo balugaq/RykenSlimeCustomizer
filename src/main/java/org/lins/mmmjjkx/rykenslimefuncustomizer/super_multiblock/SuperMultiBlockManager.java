@@ -23,11 +23,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import net.kyori.adventure.text.Component;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Interaction;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.NamespacedKey;
 import org.bukkit.persistence.PersistentDataType;
@@ -39,15 +41,17 @@ import org.joml.Vector3f;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 
 import lombok.Getter;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 @Getter
 public class SuperMultiBlockManager {
     private static final SuperMultiBlockManager INSTANCE = new SuperMultiBlockManager();
-    private static final NamespacedKey RSC_KEY = new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "rsc_projectile");
+    public static final NamespacedKey RSC_KEY = new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "rsc_projectile");
 
     private final Map<Location, SuperMultiBlock> monitoringLocations = new ConcurrentHashMap<>();
     private final Set<Location> correctLocations = new CopyOnWriteArraySet<>();
     private final Map<Location, BlockDisplay> projectiles = new ConcurrentHashMap<>();
+//    private final Map<Location, Interaction> interactions = new ConcurrentHashMap<>();
 
     private SuperMultiBlockManager() {}
 
@@ -58,7 +62,7 @@ public class SuperMultiBlockManager {
 
     public boolean startSuperMultiBlock(@NotNull SuperMultiBlock superMultiBlock) {
         Set<Location> locations = superMultiBlock.getLocations();
-        if (locations.stream().anyMatch(location -> monitoringLocations.containsKey(location))) {
+        if (locations.stream().anyMatch(monitoringLocations::containsKey)) {
             // don't block the incoming SuperMultiBlock
             return false;
         }
@@ -67,28 +71,55 @@ public class SuperMultiBlockManager {
         for (Location location : locations) {
             monitoringLocations.put(location, superMultiBlock);
         }
+        checkProjectiles(superMultiBlock);
         if (superMultiBlock.getMachine().isDisplayProjectiles()) {
-            displayProjectiles(superMultiBlock);
+            addProjectiles(superMultiBlock);
+        } else {
+            removeProjectiles(superMultiBlock);
         }
         // generate cache
         superMultiBlock.generateCache();
         return true;
     }
 
+    public void removeProjectiles(SuperMultiBlock smb) {
+        Bukkit.getScheduler().runTask(RykenSlimefunCustomizer.INSTANCE, () -> {
+            for (Location location : smb.getLocations()) {
+                removeProjectile(location);
+            }
+        });
+    }
+
     public void checkProjectiles(SuperMultiBlock superMultiBlock) {
         for (Location location : superMultiBlock.getLocations()) {
             for (Entity entity : location.getWorld().getNearbyEntities(location, 0.1, 0.1, 0.1)) {
+                if (!entity.getPersistentDataContainer().has(RSC_KEY, PersistentDataType.BOOLEAN)) {
+                    continue;
+                }
                 if (entity.getType() == EntityType.BLOCK_DISPLAY) {
-                    if (entity.getPersistentDataContainer().has(RSC_KEY, PersistentDataType.BOOLEAN)) {
-                        if (superMultiBlock.getMachine().isDisplayProjectiles()) {
-                            projectiles.put(location, (BlockDisplay) entity);
-                        } else {
-                            entity.remove();
-                            projectiles.remove(location);
-                        }
+                    if (superMultiBlock.getMachine().isDisplayProjectiles()) {
+                        projectiles.put(location, (BlockDisplay) entity);
+                    } else {
+                        entity.remove();
+                        projectiles.remove(location);
                     }
                 }
+//                if (entity.getType() == EntityType.INTERACTION) {
+//                    if (superMultiBlock.getMachine().isDisplayProjectiles()) {
+//                        interactions.put(location, (Interaction) entity);
+//                    } else {
+//                        entity.remove();
+//                        interactions.remove(location);
+//                    }
+//                }
             }
+        }
+    }
+
+    public void stopSuperMultiBlock(@NotNull Location location) {
+        var smb = getSuperMultiBlock(location);
+        if (smb != null) {
+            stopSuperMultiBlock(smb);
         }
     }
 
@@ -99,9 +130,17 @@ public class SuperMultiBlockManager {
                 monitoringLocations.remove(location);
             }
         }
+
+        removeProjectiles(superMultiBlock);
     }
 
     public void markDirty(@NotNull Location location) {
+        Bukkit.getScheduler().runTaskLaterAsynchronously(RykenSlimefunCustomizer.INSTANCE, () -> {
+            markDirty0(location);
+        }, 1L);
+    }
+
+    private void markDirty0(@NotNull Location location) {
         SuperMultiBlock superMultiBlock = monitoringLocations.get(location);
         if (superMultiBlock == null) {
             return;
@@ -111,6 +150,8 @@ public class SuperMultiBlockManager {
     
         if (!superMultiBlock.isFormed(location)) {
             correctLocations.remove(location);
+        } else {
+            correctLocations.add(location);
         }
 
         boolean isFormedNow = superMultiBlock.isFullyFormed();
@@ -122,6 +163,9 @@ public class SuperMultiBlockManager {
 
         if (!isFormedBefore && isFormedNow) {
             superMultiBlock.onFormed();
+            if (superMultiBlock.getMachine().isDisplayProjectiles()) {
+                removeProjectiles(superMultiBlock);
+            }
         }
     }
 
@@ -130,22 +174,23 @@ public class SuperMultiBlockManager {
         return monitoringLocations.get(location);
     }
 
-    @NotNull
-    public Map<Location, BlockDisplay> getProjectiles() {
-        return projectiles;
-    }
+    public void addProjectiles(@NotNull SuperMultiBlock superMultiBlock) {
+        Bukkit.getScheduler().runTask(RykenSlimefunCustomizer.INSTANCE, () -> {
+            Set<Location> locations = superMultiBlock.getLocations();
+            for (Location location : locations) {
+                MultiBlockPart part = superMultiBlock.getPart(location);
+                if (part == null) {
+                    continue;
+                }
 
-    public void displayProjectiles(@NotNull SuperMultiBlock superMultiBlock) {
-        Set<Location> locations = superMultiBlock.getLocations();
-        for (Location location : locations) {
-            MultiBlockPart part = superMultiBlock.getPart(location);
-            if (part != null) {
                 BlockData blockData = part.getBlockData(superMultiBlock, location);
                 if (blockData != null) {
                     addProjectile(location, blockData);
+                } else {
+                    ExceptionHandler.handleError("无法展示超大多方块投影: 机器:" + superMultiBlock.getMachine().getId() + "，位置:" + location);
                 }
             }
-        }
+        });
     }
 
     public void addProjectile(@NotNull Location location, @NotNull BlockData blockData) {
@@ -156,14 +201,29 @@ public class SuperMultiBlockManager {
                     return;
                 }
             }
+//            if (entity.getType() == EntityType.INTERACTION) {
+//                if (entity.getPersistentDataContainer().has(RSC_KEY, PersistentDataType.BOOLEAN)) {
+//                    interactions.put(location, (Interaction) entity);
+//                    return;
+//                }
+//            }
         }
+        float scale = 0.8f;
+        float offset = (1.0f - scale) / 2f;
         BlockDisplay display = (BlockDisplay) location.getWorld().spawnEntity(location, EntityType.BLOCK_DISPLAY);
         display.setBlock(blockData);
-        display.setTransformation(new Transformation(new Vector3f(0, 0, 0), new AxisAngle4f(0, 0, 0, 0), new Vector3f(0.8f, 0.8f, 0.8f), new AxisAngle4f(0, 0, 0, 0)));
+        display.setTransformation(new Transformation(new Vector3f(offset, offset, offset), new AxisAngle4f(0, 0, 0, 0), new Vector3f(scale, scale, scale), new AxisAngle4f(0, 0, 0, 0)));
         display.getPersistentDataContainer().set(RSC_KEY, PersistentDataType.BOOLEAN, true);
         display.customName(Component.empty());
         display.setCustomNameVisible(false);
+        display.setGlowing(true);
         projectiles.put(location, display);
+//        Interaction interaction = (Interaction) location.getWorld().spawnEntity(location.clone().add(0.5, 0.5, 0.5), EntityType.INTERACTION);
+//        interaction.setInteractionHeight(scale);
+//        interaction.setInteractionWidth(scale);
+//        interaction.setResponsive(true);
+//        interaction.getPersistentDataContainer().set(RSC_KEY, PersistentDataType.BOOLEAN, true);
+//        interactions.put(location, interaction);
     }
 
     public void removeProjectile(@NotNull Location location) {
@@ -171,6 +231,10 @@ public class SuperMultiBlockManager {
         if (display != null && !display.isDead() && display.isValid()) {
             display.remove();
         }
+//        Interaction interaction = interactions.remove(location);
+//        if (interaction != null && !interaction.isDead() && interaction.isValid()) {
+//            interaction.remove();
+//        }
     }
 
     public void onPlayerInteract(PlayerInteractEvent event) {
