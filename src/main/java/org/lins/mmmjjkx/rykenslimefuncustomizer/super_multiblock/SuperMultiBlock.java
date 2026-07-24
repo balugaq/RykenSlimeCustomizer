@@ -80,6 +80,10 @@ public class SuperMultiBlock {
         machine.onUnformed();
     }
 
+    public void onDestroy() {
+        machine.onDestroy();
+    }
+
     public void onInteract(PlayerInteractEvent event) {
         machine.onInteract(event, this);
     }

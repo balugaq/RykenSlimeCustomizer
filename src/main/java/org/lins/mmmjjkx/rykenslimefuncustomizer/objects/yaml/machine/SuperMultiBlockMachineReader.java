@@ -142,6 +142,8 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
 
         boolean displayProjectiles = section.getBoolean("displayProjectiles", true);
         boolean checkFormed = section.getBoolean("checkFormed", true);
+        boolean openMenuWhenClickedParts = section.getBoolean("openMenuWhenClickedParts", true);
+        boolean noMenuWhenNotFormed = section.getBoolean("noMenuWhenNotFormed", true);
 
         SuperMultiBlockDefinition definition = readMultiBlockDefinition(section, s, eval);
         if (definition == null) return null;
@@ -162,7 +164,9 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
                 eval,
                 definition,
                 displayProjectiles,
-                checkFormed
+                checkFormed,
+                openMenuWhenClickedParts,
+                noMenuWhenNotFormed
         );
     }
 

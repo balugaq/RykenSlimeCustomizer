@@ -40,6 +40,7 @@ import org.joml.Vector3f;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 
 import lombok.Getter;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSuperMultiBlockMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 @Getter
@@ -115,14 +116,14 @@ public class SuperMultiBlockManager {
         }
     }
 
-    public void stopSuperMultiBlock(@NotNull Location location) {
+    public void destroySuperMultiBlock(@NotNull Location location) {
         var smb = getSuperMultiBlock(location);
         if (smb != null) {
-            stopSuperMultiBlock(smb);
+            destroySuperMultiBlock(smb);
         }
     }
 
-    public void stopSuperMultiBlock(@NotNull SuperMultiBlock superMultiBlock) {
+    public void destroySuperMultiBlock(@NotNull SuperMultiBlock superMultiBlock) {
         Set<Location> locations = superMultiBlock.getLocations();
         for (Location location : locations) {
             if (monitoringLocations.get(location) == superMultiBlock) {
@@ -131,6 +132,8 @@ public class SuperMultiBlockManager {
         }
 
         removeProjectiles(superMultiBlock);
+        CustomSuperMultiBlockMachine.firstTicks.remove(superMultiBlock.getCoreLocation());
+        superMultiBlock.onDestroy();
     }
 
     public void markDirty(@NotNull Location location) {
@@ -157,7 +160,7 @@ public class SuperMultiBlockManager {
 
         if (isFormedBefore && !isFormedNow) {
             superMultiBlock.onUnformed();
-            stopSuperMultiBlock(superMultiBlock);
+            destroySuperMultiBlock(superMultiBlock);
         }
 
         if (!isFormedBefore && isFormedNow) {

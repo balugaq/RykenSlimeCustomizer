@@ -21,6 +21,7 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockBreakHandler;
+import io.github.thebusybiscuit.slimefun4.implementation.handlers.SimpleBlockBreakHandler;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import lombok.Data;
 import lombok.Getter;
@@ -34,11 +35,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.graalvm.polyglot.Value;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jspecify.annotations.NonNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
@@ -55,9 +56,12 @@ import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
  * onTick(block, machine, ctx)
  * onFormed(machine)
  * onUnformed(machine)
+ * onDestroy(machine)
  * onInteract(event, machine)
  * isOfPart(location, multiblock)
  * cannotStartSuperMultiBlock(location, machine)
+ * onClickedPartBlock(event, machine)
+ * onClickedPartBlockNotFormed(event, machine)
  * -
  * machine = CustomSuperMultiBlockMachine
  * multiblock = SuperMultiBlock
@@ -69,9 +73,11 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
     private final SuperMultiBlockDefinition definition;
     private final boolean displayProjectiles;
     private final boolean checkFormed;
+    private final boolean openMenuWhenClickedParts;
+    private final boolean noMenuWhenNotFormed;
 
     public CustomSuperMultiBlockMachine(
-        ItemGroup itemGroup,
+            ItemGroup itemGroup,
             SlimefunItemStack item,
             RecipeType recipeType,
             ItemStack[] recipe,
@@ -86,25 +92,39 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
             @Nullable ScriptEval eval,
             @Nullable SuperMultiBlockDefinition definition,
             boolean displayProjectiles,
-            boolean checkFormed) {
+            boolean checkFormed,
+            boolean openMenuWhenClickedParts,
+            boolean noMenuWhenNotFormed) {
         super(itemGroup, item, recipeType, recipe, input, output, recipes, energyPerCraft, capacity, menu, speed, hideAllRecipes);
 
         this.eval = eval;
         this.definition = definition;
         this.displayProjectiles = displayProjectiles;
         this.checkFormed = checkFormed;
+        this.openMenuWhenClickedParts = openMenuWhenClickedParts;
+        this.noMenuWhenNotFormed = noMenuWhenNotFormed;
 
-        addItemHandler(new BlockBreakHandler(false, false) {
-            @Override
-            public void onPlayerBreak(@NonNull BlockBreakEvent event, @NonNull ItemStack item, @NonNull List<ItemStack> drops) {
-                firstTicks.remove(event.getBlock().getLocation());
-                SuperMultiBlockManager.getInstance().stopSuperMultiBlock(event.getBlock().getLocation());
-            }
-        });
         register(RykenSlimefunCustomizer.INSTANCE);
     }
 
-    private final Set<Location> firstTicks = new HashSet<>();
+    @NotNull
+    @Override
+    protected BlockBreakHandler onBlockBreak() {
+        return new SimpleBlockBreakHandler() {
+            public void onBlockBreak(@NotNull Block b) {
+                SuperMultiBlockManager.getInstance().destroySuperMultiBlock(b.getLocation());
+                BlockMenu inv = StorageCacheUtils.getMenu(b.getLocation());
+                if (inv != null) {
+                    inv.dropItems(b.getLocation(), CustomSuperMultiBlockMachine.this.getInputSlots());
+                    inv.dropItems(b.getLocation(), CustomSuperMultiBlockMachine.this.getOutputSlots());
+                }
+
+                CustomSuperMultiBlockMachine.this.getMachineProcessor().endOperation(b);
+            }
+        };
+    }
+
+    public static final Set<Location> firstTicks = new HashSet<>();
 
     @Data
     public static class TickContext {
@@ -165,14 +185,32 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
         }
     }
 
+    public void onDestroy() {
+        if (eval != null) {
+            eval.evalFunction("onDestroy", this);
+        }
+    }
+
     public void onInteract(PlayerInteractEvent event, SuperMultiBlock instance) {
         if (eval != null) {
-            eval.evalFunction("onInteract", event, this);
-        } else {
-            var menu = StorageCacheUtils.getMenu(instance.getCoreLocation());
-            if (menu != null) {
-                menu.open(event.getPlayer());
+            Value value = eval.evalFunction("onInteract", event, this); // returns `callOrigin`
+            if (value == null || !value.asBoolean()) {
+                return;
             }
+        }
+
+        if (!instance.getMachine().openMenuWhenClickedParts && !event.getClickedBlock().getLocation().equals(instance.getCoreLocation())) {
+            if (eval != null) eval.evalFunction("onClickedPartBlock", event, this);
+            return;
+        }
+        if (noMenuWhenNotFormed && !instance.isFullyFormedCached()) {
+            if (eval != null) eval.evalFunction("onClickedPartBlockNotFormed", event, this);
+            return;
+        }
+        var menu = StorageCacheUtils.getMenu(instance.getCoreLocation());
+        if (menu != null) {
+            menu.open(event.getPlayer());
+            event.setCancelled(true);
         }
     }
 
