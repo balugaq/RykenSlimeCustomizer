@@ -50,4 +50,8 @@ public class SuperMultiBlockDefinition {
         }
         return locations;
     }
+
+    public boolean isFullyFormedCached(Location coreLocation) {
+        return SuperMultiBlockManager.getInstance().getCorrectLocations().containsAll(getLocations(coreLocation));
+    }
 }

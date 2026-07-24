@@ -21,19 +21,14 @@ import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class SlimefunMultiBlockPart implements MultiBlockPart {
-    protected final SlimefunItemStack target;
-    protected final BlockData blockData;
-
-    public SlimefunMultiBlockPart(@NotNull SlimefunItemStack target) {
-        this.target = target;
-        this.blockData = Bukkit.createBlockData(target.getType());
+public class MultiBlockMultiBlockPart extends SlimefunMultiBlockPart {
+    public MultiBlockMultiBlockPart(SlimefunItemStack target) {
+        super(target);
     }
 
     @Override
@@ -46,5 +41,11 @@ public class SlimefunMultiBlockPart implements MultiBlockPart {
     @Nullable
     public BlockData getBlockData(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
         return blockData;
+    }
+
+    @Override
+    public boolean isBuilt(@NotNull SuperMultiBlock ancestor, @NotNull Location partLocation) {
+        SuperMultiBlock smb = SuperMultiBlockManager.getInstance().getSuperMultiBlock(partLocation);
+        return smb != null && smb.isFullyFormedCached(); // 不需要检测是不是正确的多方块，因为一定经过 isOfPart 检测。
     }
 }

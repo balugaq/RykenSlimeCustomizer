@@ -37,7 +37,6 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
@@ -142,6 +141,7 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
         }
 
         boolean displayProjectiles = section.getBoolean("displayProjectiles", true);
+        boolean checkFormed = section.getBoolean("checkFormed", true);
 
         SuperMultiBlockDefinition definition = readMultiBlockDefinition(section, s, eval);
         if (definition == null) return null;
@@ -161,7 +161,8 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
                 hideAllRecipes,
                 eval,
                 definition,
-                displayProjectiles
+                displayProjectiles,
+                checkFormed
         );
     }
 
@@ -222,7 +223,18 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
             ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "结构定义为空");
             return null;
         }
-        List<List<String>> structure = structure0.stream().map(x -> (List<String>) x).toList();
+        List<List<String>> structure = new ArrayList<>();
+        for (Object o : structure0) {
+            if (!(o instanceof List<?> st)) {
+                ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "结构定义格式错误");
+                return null;
+            }
+            if (!(st.get(0) instanceof String)) {
+                ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "结构定义格式错误");
+                return null;
+            }
+            structure.add((List<String>) st);
+        }
         if (structure.isEmpty()) {
             ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "结构定义为空");
             return null;

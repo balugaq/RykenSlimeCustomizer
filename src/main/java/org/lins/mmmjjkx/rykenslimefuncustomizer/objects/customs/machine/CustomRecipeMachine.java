@@ -231,61 +231,67 @@ public class CustomRecipeMachine extends AContainer implements RecipeDisplayItem
     @Override
     protected void constructMenu(BlockMenuPreset preset) {}
 
+    protected boolean preTick(Block b, BlockMenu inv, int progressSlot) {
+        return true;
+    }
+
     @Override
     protected void tick(Block b) {
         BlockMenu inv = StorageCacheUtils.getMenu(b.getLocation());
-        CustomCraftingOperation currentOperation = (CustomCraftingOperation) this.processor.getOperation(b);
         int progressSlot = this.menu == null || this.menu.getProgressSlot() == -1 ? 22 : this.menu.getProgressSlot();
-        if (inv != null) {
-            if (currentOperation != null) {
-                if (takeCharge(b.getLocation())) {
-                    if (!currentOperation.isFinished()) {
-                        this.processor.updateProgressBar(inv, progressSlot, currentOperation);
-                        currentOperation.addProgress(1);
-                    } else {
-                        CustomMachineRecipe currentRecipe = currentOperation.getRecipe();
-                        if (currentRecipe != null) {
-                            ItemStack[] outputs =
-                                    currentRecipe.getMatchChanceResult().toArray(ItemStack[]::new);
 
-                            if (!currentRecipe.isChooseOneIfHas()) {
-                                for (ItemStack o : outputs) {
-                                    if (o != null) {
-                                        inv.pushItem(o.clone(), this.getOutputSlots());
-                                    }
-                                }
-                            } else {
-                                if (outputs.length > 0) {
-                                    int index = new SecureRandom().nextInt(outputs.length);
-                                    ItemStack is = outputs[index];
-                                    if (is != null) {
-                                        inv.pushItem(is.clone(), this.getOutputSlots());
-                                    }
-                                }
-                            }
-                        }
-
-                        ItemStack progress;
-                        if (this.menu == null) {
-                            progress = ChestMenuUtils.getBackground();
-                        } else {
-                            progress = this.menu.getItems().getOrDefault(progressSlot, ChestMenuUtils.getBackground());
-                        }
-                        inv.replaceExistingItem(progressSlot, progress);
-
-                        this.processor.endOperation(b);
-                    }
-                }
-            } else {
-                MachineRecipe next = this.findNextRecipe(inv);
-                if (next != null) {
-                    CustomMachineRecipe currentRecipe = (CustomMachineRecipe) next;
-                    currentOperation = new CustomCraftingOperation(currentRecipe);
-                    this.processor.startOperation(b, currentOperation);
-                    this.processor.updateProgressBar(inv, progressSlot, currentOperation);
-                }
-            }
+        if (!preTick(b, inv, progressSlot)) {
+            return;
         }
+
+        CustomCraftingOperation currentOperation = (CustomCraftingOperation) this.processor.getOperation(b);
+        if (inv == null) return;
+        if (currentOperation == null) {
+            MachineRecipe next = this.findNextRecipe(inv);
+            if (next != null) {
+                CustomMachineRecipe currentRecipe = (CustomMachineRecipe) next;
+                currentOperation = new CustomCraftingOperation(currentRecipe);
+                this.processor.startOperation(b, currentOperation);
+                this.processor.updateProgressBar(inv, progressSlot, currentOperation);
+            }
+            return;
+        }
+        if (!takeCharge(b.getLocation())) {
+            return;
+        }
+
+        if (!currentOperation.isFinished()) {
+            this.processor.updateProgressBar(inv, progressSlot, currentOperation);
+            currentOperation.addProgress(1);
+            return;
+        }
+
+        // finished recipe
+        CustomMachineRecipe currentRecipe = currentOperation.getRecipe();
+        if (currentRecipe == null) return;
+
+        ItemStack[] outputs = currentRecipe.getMatchChanceResult().toArray(ItemStack[]::new);
+        if (outputs.length == 0) return;
+
+        if (!currentRecipe.isChooseOneIfHas()) {
+            for (ItemStack o : outputs) {
+                if (o != null) inv.pushItem(o.clone(), this.getOutputSlots());
+            }
+        } else {
+            int index = new SecureRandom().nextInt(outputs.length);
+            ItemStack is = outputs[index];
+            if (is != null) inv.pushItem(is.clone(), this.getOutputSlots());
+        }
+
+        ItemStack progress;
+        if (this.menu == null) {
+            progress = ChestMenuUtils.getBackground();
+        } else {
+            progress = this.menu.getItems().getOrDefault(progressSlot, ChestMenuUtils.getBackground());
+        }
+        inv.replaceExistingItem(progressSlot, progress);
+
+        this.processor.endOperation(b);
     }
 
     protected MachineRecipe findNextRecipe(BlockMenu inv) {

@@ -21,6 +21,7 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockBreakHandler;
+import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import lombok.Data;
 import lombok.Getter;
 
@@ -28,8 +29,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -61,9 +64,11 @@ import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
  */
 @Getter
 public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
+    public static final ItemStack NOT_BUILT_YET = new CustomItemStack(Material.BRICKS, "&c多方块尚未搭建完成!", "");
     private final ScriptEval eval;
     private final SuperMultiBlockDefinition definition;
     private final boolean displayProjectiles;
+    private final boolean checkFormed;
 
     public CustomSuperMultiBlockMachine(
         ItemGroup itemGroup,
@@ -80,12 +85,14 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
             boolean hideAllRecipes,
             @Nullable ScriptEval eval,
             @Nullable SuperMultiBlockDefinition definition,
-            boolean displayProjectiles) {
+            boolean displayProjectiles,
+            boolean checkFormed) {
         super(itemGroup, item, recipeType, recipe, input, output, recipes, energyPerCraft, capacity, menu, speed, hideAllRecipes);
 
         this.eval = eval;
         this.definition = definition;
         this.displayProjectiles = displayProjectiles;
+        this.checkFormed = checkFormed;
 
         addItemHandler(new BlockBreakHandler(false, false) {
             @Override
@@ -104,27 +111,46 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
         private boolean callSuper = true;
         private boolean checkFirstTick = true;
     }
+
     @Override
     protected void tick(Block b) {
         var ctx = new TickContext();
         if (eval != null) {
             eval.evalFunction("onTick", b, this, ctx);
         }
-        if (ctx.callSuper) {
-            super.tick(b);
-        }
         if (ctx.checkFirstTick && firstTicks.add(b.getLocation())) {
-            Bukkit.getScheduler().runTask(RykenSlimefunCustomizer.INSTANCE, () -> {
-                if (!SuperMultiBlockManager.getInstance().startSuperMultiBlock(new SuperMultiBlock(CustomSuperMultiBlockMachine.this, b.getLocation()))) {
+            if (!SuperMultiBlockManager.getInstance().startSuperMultiBlock(new SuperMultiBlock(CustomSuperMultiBlockMachine.this, b.getLocation()))) {
+                Bukkit.getScheduler().runTask(RykenSlimefunCustomizer.INSTANCE, () -> {
                     b.getWorld().getNearbyPlayers(b.getLocation(), 10, 10, 10).forEach(p -> {
                         p.sendMessage(CMIChatColor.colorize("&c附近存在其他多方块阻碍，无法搭建该多方块，请拆除后重试。"));
                         if (eval != null) {
                             eval.evalFunction("cannotStartSuperMultiBlock", b, this);
                         }
                     });
-                }
-            });
+                });
+            }
         }
+
+        if (ctx.callSuper) {
+            if (checkFormed) {
+                SuperMultiBlock smb = SuperMultiBlockManager.getInstance().getSuperMultiBlock(b.getLocation());
+                if (smb == null || !smb.isFullyFormedCached()) {
+                    return;
+                }
+            }
+            super.tick(b);
+        }
+    }
+
+    @Override
+    protected boolean preTick(Block b, BlockMenu inv, int progressSlot) {
+        if (!checkFormed) return true;
+        SuperMultiBlock smb = SuperMultiBlockManager.getInstance().getSuperMultiBlock(b.getLocation());
+        if (smb == null || !smb.isFullyFormedCached()) {
+            inv.replaceExistingItem(progressSlot, NOT_BUILT_YET);
+            return false;
+        }
+        return true;
     }
 
     public void onFormed() {

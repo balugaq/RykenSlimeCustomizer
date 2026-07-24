@@ -41,21 +41,21 @@ public class SuperMultiBlock {
         return machine.getDefinition();
     }
 
-    public boolean isFullyFormed() {
-        return getLocations().stream().allMatch(loc -> SuperMultiBlockManager.getInstance().getCorrectLocations().contains(loc));
+    public boolean isFullyFormedCached() {
+        return getDefinition().isFullyFormedCached(coreLocation);
     }
 
-    public boolean generateCache() {
+    public void generateCache() {
         for (Location location : getLocations()) {
             if (isFormed(location)) {
                 SuperMultiBlockManager.getInstance().getCorrectLocations().add(location);
             }
         }
-        return isFullyFormed();
     }
 
     public boolean isFormed(Location location) {
-        return getPart(location).isOfPart(this, location);
+        var part = getPart(location);
+        return part != null && part.isOfPart(this, location) && part.isBuilt(this, location);
     }
 
     @Nullable

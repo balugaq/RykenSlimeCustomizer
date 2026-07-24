@@ -29,7 +29,6 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Interaction;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.NamespacedKey;
 import org.bukkit.persistence.PersistentDataType;
@@ -146,7 +145,7 @@ public class SuperMultiBlockManager {
             return;
         }
 
-        boolean isFormedBefore = superMultiBlock.isFullyFormed();
+        boolean isFormedBefore = superMultiBlock.isFullyFormedCached();
     
         if (!superMultiBlock.isFormed(location)) {
             correctLocations.remove(location);
@@ -154,7 +153,7 @@ public class SuperMultiBlockManager {
             correctLocations.add(location);
         }
 
-        boolean isFormedNow = superMultiBlock.isFullyFormed();
+        boolean isFormedNow = superMultiBlock.isFullyFormedCached();
 
         if (isFormedBefore && !isFormedNow) {
             superMultiBlock.onUnformed();

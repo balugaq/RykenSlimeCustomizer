@@ -27,4 +27,9 @@ public interface MultiBlockPart {
 
     @Nullable
     BlockData getBlockData(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation);
+
+    // 独立于 isOfPart，这专门给多方块套娃使用的，即多方块里套了另一个多方块的情况
+    default boolean isBuilt(@NotNull SuperMultiBlock ancestor, @NotNull Location partLocation) {
+        return true;
+    }
 }
