@@ -92,7 +92,8 @@ tasks.named<ProcessResources>("processResources") {
 }
 
 tasks.named<ShadowJar>("shadowJar") {
-    archiveBaseName.set("RykenSlimefunCustomizer")
+
+    archiveBaseName.set("RykenSlimeCustomizer") // Don't change it, it's used to fix build station identifier issue
     archiveVersion.set(project.version.toString())
     archiveClassifier.set("")
     relocate("io.github.projectunified.uniitem", "org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.uniitem")
