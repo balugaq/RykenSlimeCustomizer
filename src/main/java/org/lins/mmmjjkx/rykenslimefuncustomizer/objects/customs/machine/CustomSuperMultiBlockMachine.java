@@ -17,15 +17,18 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine;
 
+import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockBreakHandler;
+import io.github.thebusybiscuit.slimefun4.core.handlers.BlockPlaceHandler;
 import io.github.thebusybiscuit.slimefun4.implementation.handlers.SimpleBlockBreakHandler;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import lombok.Data;
 import lombok.Getter;
 
+import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,11 +38,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.graalvm.polyglot.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
@@ -50,19 +56,27 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlock
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ReflectionUtils;
 
 /**
  * JS:
  * onTick(block, machine, ctx)
- * onFormed(machine)
- * onUnformed(machine)
+ * onFormed(partLocation, machine)
+ * onUnformed(partLocation, machine)
  * onDestroy(machine)
  * onInteract(event, machine)
  * isOfPart(location, multiblock)
  * cannotStartSuperMultiBlock(location, machine)
  * onClickedPartBlock(event, machine)
  * onClickedPartBlockNotFormed(event, machine)
+ * autoSwitchedDisplayLayer(layer, machine)
+ * switchDisplayLayer(layerIndex, machine)
+ * onClickedPartBlockNotFormed(event, machine)
+ * formedLayer(layer, machine)
  * -
+ * ctx = TickContext
+ * event = PlayerInteractEvent
  * machine = CustomSuperMultiBlockMachine
  * multiblock = SuperMultiBlock
  */
@@ -75,6 +89,19 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
     private final boolean checkFormed;
     private final boolean openMenuWhenClickedParts;
     private final boolean noMenuWhenNotFormed;
+    private final boolean allowSwitchDisplayLayer;
+    private final boolean defaultNotice;
+
+    private static @Nullable Field MENU_FIELD = null;
+
+    static {
+        try {
+            MENU_FIELD = SlimefunBlockData.class.getDeclaredField("menu");
+            MENU_FIELD.setAccessible(true);
+        } catch (NoSuchFieldException e) {
+            ExceptionHandler.handleError("Failed to get menu field from SlimefunBlockData.class.", e);
+        }
+    }
 
     public CustomSuperMultiBlockMachine(
             ItemGroup itemGroup,
@@ -90,11 +117,13 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
             int speed,
             boolean hideAllRecipes,
             @Nullable ScriptEval eval,
-            @Nullable SuperMultiBlockDefinition definition,
+            SuperMultiBlockDefinition definition,
             boolean displayProjectiles,
             boolean checkFormed,
             boolean openMenuWhenClickedParts,
-            boolean noMenuWhenNotFormed) {
+            boolean noMenuWhenNotFormed,
+            boolean allowSwitchDisplayLayer,
+            boolean defaultNotice) {
         super(itemGroup, item, recipeType, recipe, input, output, recipes, energyPerCraft, capacity, menu, speed, hideAllRecipes);
 
         this.eval = eval;
@@ -103,6 +132,30 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
         this.checkFormed = checkFormed;
         this.openMenuWhenClickedParts = openMenuWhenClickedParts;
         this.noMenuWhenNotFormed = noMenuWhenNotFormed;
+        this.allowSwitchDisplayLayer = allowSwitchDisplayLayer;
+        this.defaultNotice = defaultNotice;
+
+        addItemHandler(new BlockPlaceHandler(false) {
+            @Override
+            public void onPlayerPlace(@NonNull BlockPlaceEvent e) {
+                Bukkit.getScheduler().runTaskLaterAsynchronously(RykenSlimefunCustomizer.INSTANCE, () -> {
+                    var data = StorageCacheUtils.getBlock(e.getBlock().getLocation());
+
+                    try {
+                        MENU_FIELD.set(data, new BlockMenu(data.getBlockMenu().getPreset(), e.getBlock().getLocation(), data.getBlockMenu().getContents()) {
+                            @Override
+                            public void open(Player... players) {
+                                if (!noMenuWhenNotFormed || definition.isFullyFormedCached(e.getBlock().getLocation())) {
+                                    super.open(players);
+                                }
+                            }
+                        });
+                    } catch (IllegalAccessException e2) {
+                        ExceptionHandler.handleError("Failed to set menu field.", e2);
+                    }
+                }, 1L);
+            }
+        });
 
         register(RykenSlimefunCustomizer.INSTANCE);
     }
@@ -140,18 +193,26 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
         }
         if (ctx.checkFirstTick && firstTicks.add(b.getLocation())) {
             if (!SuperMultiBlockManager.getInstance().startSuperMultiBlock(new SuperMultiBlock(CustomSuperMultiBlockMachine.this, b.getLocation()))) {
-                Bukkit.getScheduler().runTask(RykenSlimefunCustomizer.INSTANCE, () -> {
-                    b.getWorld().getNearbyPlayers(b.getLocation(), 10, 10, 10).forEach(p -> {
+                if (defaultNotice) {
+                    SuperMultiBlockManager.findNearbyPlayers(b.getLocation(), 10, p -> {
                         p.sendMessage(CMIChatColor.colorize("&c附近存在其他多方块阻碍，无法搭建该多方块，请拆除后重试。"));
-                        if (eval != null) {
-                            eval.evalFunction("cannotStartSuperMultiBlock", b, this);
-                        }
                     });
-                });
+                }
+                if (eval != null) {
+                    eval.evalFunction("cannotStartSuperMultiBlock", b, this);
+                }
+            } else {
+                if (defaultNotice) {
+                    String click = noMenuWhenNotFormed ? "右键" : "左键";
+                    SuperMultiBlockManager.findNearbyPlayers(b.getLocation(), 10, p -> {
+                        p.sendMessage(CMIChatColor.colorize("&a你已放置 " + getItemName() + ". &a" + click + " 或 Shift+" + click + "以切换投影层."));
+                    });
+                }
             }
         }
 
         if (ctx.callSuper) {
+            SuperMultiBlockManager.getInstance().markDirty(b.getLocation(), false); // to allow multiblock recursive building check
             if (checkFormed) {
                 SuperMultiBlock smb = SuperMultiBlockManager.getInstance().getSuperMultiBlock(b.getLocation());
                 if (smb == null || !smb.isFullyFormedCached()) {
@@ -173,15 +234,31 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
         return true;
     }
 
-    public void onFormed() {
+    public void onFormed(Location partLocation) {
         if (eval != null) {
-            eval.evalFunction("onFormed", this);
+            eval.evalFunction("onFormed", partLocation, this);
+        } else {
+            SuperMultiBlockManager.findNearbyPlayers(partLocation, 10, p -> {
+                p.sendMessage(CMIChatColor.colorize("&a已搭建完成 " + getItemName()));
+            });
         }
     }
 
-    public void onUnformed() {
+    public void onUnformed(Location partLocation) {
         if (eval != null) {
-            eval.evalFunction("onUnformed", this);
+            eval.evalFunction("onUnformed", partLocation, this);
+        } else {
+            SuperMultiBlockManager.findNearbyPlayers(partLocation, 10, p -> {
+                p.sendMessage(CMIChatColor.colorize("&c" + getItemName() + "&c已被破坏!"));
+            });
+        }
+    }
+
+    public void formedLayer(int layer) {
+        if (eval != null) {
+            Bukkit.getScheduler().runTask(RykenSlimefunCustomizer.INSTANCE, () -> {
+                eval.evalFunction("formedLayer", layer, this);
+            });
         }
     }
 
@@ -191,15 +268,70 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
         }
     }
 
-    public void onInteract(PlayerInteractEvent event, SuperMultiBlock instance) {
+    public void autoSwitchedNewLayer(int layer) {
         if (eval != null) {
-            Value value = eval.evalFunction("onInteract", event, this); // returns `callOrigin`
-            if (value == null || !value.asBoolean()) {
+            eval.evalFunction("autoSwitchedDisplayLayer", layer, this);
+        }
+    }
+
+    public int getCurrentLayerIndex(SuperMultiBlock instance) {
+        String layerS = StorageCacheUtils.getData(instance.getCoreLocation(), "layer");
+        if (layerS == null) {
+            return 0;
+        }
+        int layer;
+        try {
+            layer = Integer.parseInt(layerS);
+        } catch (NumberFormatException ignored) {
+            layer = 0;
+        }
+        return layer;
+    }
+
+    public int clamp(int value, int min, int max) {
+        if (value < min) return min;
+        if (value > max) return max;
+        return value;
+    }
+
+    public void switchLayer(SuperMultiBlock instance, Player p, boolean down) {
+        int layerIndex = getCurrentLayerIndex(instance);
+        if (eval == null || eval.evalFunction("switchDisplayLayer", instance, layerIndex) == null) {
+            // call origin
+            int oldLayer = instance.getLayers()[layerIndex];
+            layerIndex += down ? -1 : 1;
+            if (layerIndex == -1) layerIndex = instance.layerCount() - 1;
+            if (layerIndex == instance.layerCount()) layerIndex = 0;
+            int newLayerIndex = layerIndex;
+            int newLayer = instance.getLayers()[newLayerIndex];
+            StorageCacheUtils.setData(instance.getCoreLocation(), "layer", "" + newLayerIndex);
+            SuperMultiBlockManager.getInstance().updateLayer(instance, oldLayer, newLayer);
+            p.sendMessage(CMIChatColor.colorize("&a已切换多方块显示层为 y=" + newLayer + " (第" + (newLayerIndex + 1) + "/" + (instance.layerCount()) + "层)"));
+        }
+    }
+
+    public void onInteract(PlayerInteractEvent event, SuperMultiBlock instance) {
+        if (eval != null && eval.evalFunction("onInteract", event, this) != null) {
+            return;
+        }
+
+        boolean clickedCore = event.getClickedBlock().getLocation().equals(instance.getCoreLocation());
+        if (allowSwitchDisplayLayer && !instance.isFullyFormedCached() && clickedCore) {
+            boolean left = event.getAction().isLeftClick();
+            boolean right = event.getAction().isRightClick();
+            Player p = event.getPlayer();
+            boolean shift = p.isSneaking();
+            var tp = p.getInventory().getItemInMainHand().getType();
+            boolean holdingBlock = tp.isBlock() && !tp.isAir();
+            if (!holdingBlock && (!noMenuWhenNotFormed && left) || (noMenuWhenNotFormed && right)) {
+                // switch display layer
+                // shift = down, !shift = up
+                switchLayer(instance, p, shift);
                 return;
             }
         }
 
-        if (!instance.getMachine().openMenuWhenClickedParts && !event.getClickedBlock().getLocation().equals(instance.getCoreLocation())) {
+        if (!openMenuWhenClickedParts && !clickedCore) {
             if (eval != null) eval.evalFunction("onClickedPartBlock", event, this);
             return;
         }

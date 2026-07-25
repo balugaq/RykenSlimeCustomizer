@@ -18,6 +18,8 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock;
 
 import java.util.Set;
+
+import it.unimi.dsi.fastutil.ints.IntArraySet;
 import org.bukkit.Location;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.jetbrains.annotations.NotNull;
@@ -30,10 +32,48 @@ import lombok.Getter;
 public class SuperMultiBlock {
     private final CustomSuperMultiBlockMachine machine;
     private final Location coreLocation;
+    private final int minY;
+    private final int maxY;
+    private final int[] layers;
+
+    public int getCoreLayerIndex() {
+        for (int i = 0; i < layers.length; i++) {
+            if (layers[i] == getCoreLocation().getBlockY()) {
+                return i;
+            }
+        }
+        throw new AssertionError("Core location is not in the layers.");
+    }
+
+    public int getCurrentLayerIndex() {
+        return getMachine().getCurrentLayerIndex(this);
+    }
+
+    public int minY() {
+        return minY;
+    }
+
+    public int maxY() {
+        return maxY;
+    }
+
+    public int layerCount() {
+        return getLayers().length;
+    }
 
     public SuperMultiBlock(@NotNull CustomSuperMultiBlockMachine machine, @NotNull Location coreLocation) {
         this.machine = machine;
         this.coreLocation = coreLocation;
+        var layers = new IntArraySet();
+        int minY_ = 9999, maxY_ = -9999;
+        for (Location location : getLocations()) {
+            minY_ = Math.min(minY_, location.getBlockY());
+            maxY_ = Math.max(maxY_, location.getBlockY());
+            layers.add(location.getBlockY());
+        }
+        this.minY = minY_;
+        this.maxY = maxY_;
+        this.layers = layers.intStream().sorted().toArray();
     }
 
     @NotNull
@@ -45,12 +85,20 @@ public class SuperMultiBlock {
         return getDefinition().isFullyFormedCached(coreLocation);
     }
 
+    public boolean isLayerFormed(int layer) {
+        return getLocations().stream().allMatch(l -> l.getBlockY() != layer || l.getBlockY() == layer && isFormedCached(l));
+    }
+
     public void generateCache() {
         for (Location location : getLocations()) {
             if (isFormed(location)) {
                 SuperMultiBlockManager.getInstance().getCorrectLocations().add(location);
             }
         }
+    }
+
+    public boolean isFormedCached(Location location) {
+        return SuperMultiBlockManager.getInstance().getCorrectLocations().contains(location);
     }
 
     public boolean isFormed(Location location) {
@@ -72,19 +120,28 @@ public class SuperMultiBlock {
         return getDefinition().getLocations(coreLocation);
     }
 
-    public void onFormed() {
-        machine.onFormed();
+    public void onFormed(Location location) {
+        machine.onFormed(location);
     }
 
-    public void onUnformed() {
-        machine.onUnformed();
+    public void onUnformed(Location location) {
+        machine.onUnformed(location);
     }
 
     public void onDestroy() {
         machine.onDestroy();
     }
 
+    public void autoSwitchedNewLayer(int layer) {
+        machine.autoSwitchedNewLayer(layer);
+    }
+
+    public void formedLayer(int layer) {
+        machine.formedLayer(layer);
+    }
+
     public void onInteract(PlayerInteractEvent event) {
+        // checked permission
         machine.onInteract(event, this);
     }
 }

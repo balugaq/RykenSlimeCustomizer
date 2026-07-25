@@ -32,18 +32,6 @@ public class MultiBlockMultiBlockPart extends SlimefunMultiBlockPart {
     }
 
     @Override
-    public boolean isOfPart(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
-        SlimefunItem sfItem = StorageCacheUtils.getSfItem(partLocation);
-        return sfItem != null && sfItem.getId().equals(target.getItemId());
-    }
-
-    @Override
-    @Nullable
-    public BlockData getBlockData(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
-        return blockData;
-    }
-
-    @Override
     public boolean isBuilt(@NotNull SuperMultiBlock ancestor, @NotNull Location partLocation) {
         SuperMultiBlock smb = SuperMultiBlockManager.getInstance().getSuperMultiBlock(partLocation);
         return smb != null && smb.isFullyFormedCached(); // 不需要检测是不是正确的多方块，因为一定经过 isOfPart 检测。

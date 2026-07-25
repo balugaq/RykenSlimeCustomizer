@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -42,6 +44,8 @@ public abstract class YamlReader<T> {
     private final List<String> lateInits;
     protected final ProjectAddon addon;
     protected final YamlConfiguration configuration;
+    @Getter
+    protected final List<SlimefunItemStack> preloadedItems = new ArrayList<>();
 
     public YamlReader(YamlConfiguration config, ProjectAddon addon) {
         this.configuration = config;
@@ -51,6 +55,13 @@ public abstract class YamlReader<T> {
 
     public abstract T readEach(String section);
 
+    public List<SlimefunItemStack> getPreloadedItems(String key) {
+        if (preloadedItems.isEmpty()) {
+            preloadedItems.addAll(preloadItems(key));
+        }
+        return getPreloadedItems();
+    }
+
     public final void preload() {
         for (String key : configuration.getKeys(false)) {
             ConfigurationSection section = configuration.getConfigurationSection(key);
@@ -58,7 +69,7 @@ public abstract class YamlReader<T> {
             ConfigurationSection register = section.getConfigurationSection("register");
             if (!checkForRegistration(key, register)) continue;
 
-            List<SlimefunItemStack> items = preloadItems(key);
+            List<SlimefunItemStack> items = getPreloadedItems(key);
 
             if (items == null || items.isEmpty()) continue;
 

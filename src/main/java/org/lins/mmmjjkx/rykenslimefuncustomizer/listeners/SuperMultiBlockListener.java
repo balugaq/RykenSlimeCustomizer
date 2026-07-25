@@ -18,11 +18,16 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.listeners;
 
 import java.util.Set;
+
+import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
+import io.github.thebusybiscuit.slimefun4.libraries.dough.protection.Interaction;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -133,10 +138,15 @@ public class SuperMultiBlockListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerInteract(@NotNull PlayerInteractEvent e) {
-        SuperMultiBlockManager.getInstance().onPlayerInteract(e);
+        if (e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        Block b = e.getClickedBlock();
+        if (b == null) return;
+        if (Slimefun.getProtectionManager().hasPermission(e.getPlayer(), b, Interaction.INTERACT_BLOCK)) {
+            SuperMultiBlockManager.getInstance().onPlayerInteract(e, b);
+        }
     }
 
     private void markDirty(@NotNull Location location) {
-        manager.markDirty(location);
+        manager.markDirty(location, true);
     }
 }

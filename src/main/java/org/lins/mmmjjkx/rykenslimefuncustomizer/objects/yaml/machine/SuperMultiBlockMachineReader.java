@@ -44,6 +44,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSu
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomMachineRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.CustomMultiBlockPart;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.MultiBlockMultiBlockPart;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.MultiBlockPart;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SlimefunMultiBlockPart;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockDefinition;
@@ -144,6 +145,8 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
         boolean checkFormed = section.getBoolean("checkFormed", true);
         boolean openMenuWhenClickedParts = section.getBoolean("openMenuWhenClickedParts", true);
         boolean noMenuWhenNotFormed = section.getBoolean("noMenuWhenNotFormed", true);
+        boolean allowSwitchDisplayLayer = section.getBoolean("allowSwitchDisplayLayer", true);
+        boolean defaultNotice = section.getBoolean("defaultNotice", true);
 
         SuperMultiBlockDefinition definition = readMultiBlockDefinition(section, s, eval);
         if (definition == null) return null;
@@ -166,7 +169,9 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
                 displayProjectiles,
                 checkFormed,
                 openMenuWhenClickedParts,
-                noMenuWhenNotFormed
+                noMenuWhenNotFormed,
+                allowSwitchDisplayLayer,
+                defaultNotice
         );
     }
 
@@ -388,7 +393,11 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
                         ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + part + " 无效");
                         return null;
                     }
-                    return new SlimefunMultiBlockPart(item);
+                    if (getPreloadedItems().contains(item)) {
+                        return new MultiBlockMultiBlockPart(item);
+                    } else {
+                        return new SlimefunMultiBlockPart(item);
+                    }
                 });
                 if (r == null) {
                     ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + material + " 无效");
