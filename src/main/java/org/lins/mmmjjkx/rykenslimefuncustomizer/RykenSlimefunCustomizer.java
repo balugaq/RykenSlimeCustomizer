@@ -19,14 +19,6 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer;
 
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.concurrent.Callable;
-import java.util.function.Supplier;
 import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.Library;
 import net.guizhanss.guizhanlib.updater.GuizhanBuildsUpdater;
@@ -37,7 +29,6 @@ import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Interaction;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -54,6 +45,14 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlock
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.concurrent.Callable;
+
 public final class RykenSlimefunCustomizer extends JavaPlugin implements SlimefunAddon {
     private static boolean runtime = false;
 
@@ -63,7 +62,6 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
     @Override
     public void onLoad() {
         setupLibraries();
-        INSTANCE = this;
         System.setProperty("polyglot.engine.WarnInterpreterOnly", "false");
 
         File cache = new File(getDataFolder(), "cache");
@@ -97,6 +95,8 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
     @Override
     public void onEnable() {
+        INSTANCE = this;
+
         // Plugin startup logic
         CommonUtils.completeFile("config.yml");
 

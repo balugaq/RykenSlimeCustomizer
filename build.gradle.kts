@@ -9,15 +9,15 @@ plugins {
 }
 
 group = "org.lins.mmmjjkx"
-version = "28.3-Modified"
+version = "28.4-Modified"
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 tasks.compileJava {
     options.encoding = "UTF-8"
-    options.release.set(17)
+    options.release.set(21)
 }
 
 repositories {
@@ -63,7 +63,7 @@ dependencies {
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
     compileOnly(libs.item.nbt.api.plugin)
-    compileOnly(files("lib/JustEnoughGuide v2.1.17.jar"))
+    compileOnly(libs.justenoughguide)
 }
 
 tasks.jar {
