@@ -69,6 +69,7 @@ public class AdvancedNestedItemGroup extends NestedItemGroup {
 
     @SuppressWarnings("deprecation")
     private void setup(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
+        // todo: rewrite with JEG api, GuideUtil.commonRender, also try catch
         GuideHistory history = profile.getGuideHistory();
         if (mode == SlimefunGuideMode.SURVIVAL_MODE) {
             history.add(this, page);
@@ -78,9 +79,7 @@ public class AdvancedNestedItemGroup extends NestedItemGroup {
         SurvivalSlimefunGuide guide =
                 (SurvivalSlimefunGuide) Slimefun.getRegistry().getSlimefunGuide(mode);
         menu.setEmptySlotsClickable(false);
-        SoundEffect var10001 = SoundEffect.GUIDE_BUTTON_CLICK_SOUND;
-        Objects.requireNonNull(var10001);
-        menu.addMenuOpeningHandler(var10001::playFor);
+        menu.addMenuOpeningHandler(SoundEffect.GUIDE_BUTTON_CLICK_SOUND::playFor);
         guide.createHeader(p, profile, menu);
         menu.addItem(
                 1,
@@ -97,7 +96,7 @@ public class AdvancedNestedItemGroup extends NestedItemGroup {
         while (target < this.subGroups.size() - 1 && index < 45) {
             ++target;
             SubItemGroup itemGroup = this.subGroups.get(target);
-            if (itemGroup.isVisibleInNested(p)) {
+            if (itemGroup.isVisibleInNested(p) || itemGroup instanceof ItemGroupButton) {
                 menu.addItem(index, itemGroup.getItem(p));
                 menu.addMenuClickHandler(index, (pl, slot, item, action) -> {
                     if (itemGroup instanceof ItemGroupButton button) {

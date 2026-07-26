@@ -58,6 +58,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
     public static RykenSlimefunCustomizer INSTANCE;
     public static ProjectAddonManager addonManager;
+    private static boolean jeg = false;
 
     @Override
     public void onLoad() {
@@ -118,7 +119,8 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
             world.getPopulators().add(new BlockPopulator());
         }
 
-        if (Bukkit.getPluginManager().isPluginEnabled("JustEnoughGuide")) {
+        jeg = Bukkit.getPluginManager().isPluginEnabled("JustEnoughGuide");
+        if (jeg) {
             ExceptionHandler.info("已检测到JustEnoughGuide，正在适配...");
             try {
                 SaveditemsGroup itemGroup = new SaveditemsGroup(
