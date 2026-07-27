@@ -22,6 +22,7 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import org.bukkit.inventory.ItemStack;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroup;
 
 public abstract class CustomItem extends SlimefunItem {
     public CustomItem(
@@ -31,6 +32,15 @@ public abstract class CustomItem extends SlimefunItem {
             ItemStack[] recipe,
             ItemStack recipeOutput) {
         super(itemGroup, item, recipeType, recipe, recipeOutput);
+    }
+
+    @Override
+    public void load() {
+        if (!hidden) {
+            RSCItemGroup.addItemToGroup(getItemGroup(), this);
+        }
+
+        getRecipeType().register(getRecipe(), getRecipeOutput());
     }
 
     public abstract Object[] constructorArgs();

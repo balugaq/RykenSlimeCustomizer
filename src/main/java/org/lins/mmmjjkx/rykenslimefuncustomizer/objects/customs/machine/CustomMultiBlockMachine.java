@@ -17,8 +17,10 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine;
 
+import com.google.common.base.Preconditions;
 import io.github.thebusybiscuit.slimefun4.api.events.MultiBlockCraftEvent;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.multiblocks.MultiBlockMachine;
@@ -44,8 +46,36 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroup;
 
 public class CustomMultiBlockMachine extends MultiBlockMachine {
+    @Override
+    public void load() {
+        if (!hidden) {
+            RSCItemGroup.addItemToGroup(getItemGroup(), this);
+        }
+
+        getRecipeType().register(getRecipe(), getRecipeOutput());
+        Preconditions.checkArgument(
+            displayRecipes.size() % 2 == 0, "This MultiBlockMachine's display recipes were illegally modified!");
+
+        for (int i = 0; i < displayRecipes.size(); i += 2) {
+            ItemStack inputStack = displayRecipes.get(i);
+            ItemStack outputStack = null;
+            if (displayRecipes.size() >= i + 2) {
+                outputStack = displayRecipes.get(i + 1);
+            }
+
+            SlimefunItem inputItem = SlimefunItem.getByItem(inputStack);
+            SlimefunItem outputItem = SlimefunItem.getByItem(outputStack);
+            // If the input/output is not a Slimefun item or it's not disabled then it's valid.
+            if ((inputItem == null || !inputItem.isDisabled()) && (outputItem == null || !outputItem.isDisabled())) {
+                recipes.add(new ItemStack[] {inputStack});
+                recipes.add(new ItemStack[] {outputStack});
+            }
+        }
+    }
+
     private final SoundEffect craftSound;
     private final int workIndex;
     private final ScriptEval eval;

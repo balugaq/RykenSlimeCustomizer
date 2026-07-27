@@ -39,10 +39,20 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroup;
 
 @SuppressWarnings("deprecation")
 public class CustomMaterialGenerator extends SlimefunItem
         implements InventoryBlock, EnergyNetComponent, RecipeDisplayItem {
+    @Override
+    public void load() {
+        if (!hidden) {
+            RSCItemGroup.addItemToGroup(getItemGroup(), this);
+        }
+
+        getRecipeType().register(getRecipe(), getRecipeOutput());
+    }
+
     private final int capacity;
     private final List<Integer> output;
     private final int tickRate;

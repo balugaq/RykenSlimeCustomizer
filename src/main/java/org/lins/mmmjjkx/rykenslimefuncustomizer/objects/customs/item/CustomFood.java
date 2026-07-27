@@ -27,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroup;
 
 public class CustomFood extends SimpleSlimefunItem<ItemConsumptionHandler> {
     private final ScriptEval eval;
@@ -52,5 +53,14 @@ public class CustomFood extends SimpleSlimefunItem<ItemConsumptionHandler> {
                 eval.evalFunction("onEat", e, p, i);
             }
         };
+    }
+
+    @Override
+    public void load() {
+        if (!hidden) {
+            RSCItemGroup.addItemToGroup(getItemGroup(), this);
+        }
+
+        getRecipeType().register(getRecipe(), getRecipeOutput());
     }
 }

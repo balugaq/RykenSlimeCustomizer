@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "org.lins.mmmjjkx"
-version = "28.4-Modified"
+version = "28.5-Modified"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
@@ -64,6 +64,9 @@ dependencies {
     annotationProcessor(libs.lombok)
     compileOnly(libs.item.nbt.api.plugin)
     compileOnly(libs.justenoughguide)
+
+    // System-scoped local JARs
+    compileOnly(fileTree(mapOf("dir" to "lib", "include" to listOf("*.jar"))))
 }
 
 tasks.jar {

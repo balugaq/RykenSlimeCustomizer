@@ -18,7 +18,9 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer;
 
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
+import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
+import me.matl114.logitech.core.Registries.RecipeSupporter;
 import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.Library;
 import net.guizhanss.guizhanlib.updater.GuizhanBuildsUpdater;
@@ -41,6 +43,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SingleItemRecipeGuideL
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SuperMultiBlockListener;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.generations.BlockPopulator;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSuperMultiBlockMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
@@ -50,6 +53,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 
@@ -58,7 +62,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
     public static RykenSlimefunCustomizer INSTANCE;
     public static ProjectAddonManager addonManager;
-    private static boolean jeg = false;
+    public static boolean jeg = false;
 
     @Override
     public void onLoad() {
@@ -188,6 +192,26 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         }
 
         getServer().getScheduler().runTaskLater(this, () -> runtime = true, 1);
+
+        if (Bukkit.getPluginManager().isPluginEnabled("LogiTech")) {
+            // Don't allow CustomSuperMultiBlockMachine to be stackable
+            Bukkit.getScheduler().runTaskLaterAsynchronously(RykenSlimefunCustomizer.INSTANCE, () -> {
+                for (var sf : new ArrayList<>(Slimefun.getRegistry().getAllSlimefunItems())) {
+                    if (!(sf instanceof CustomSuperMultiBlockMachine csmbm)) continue;
+                    try {
+                        RecipeSupporter.STACKMACHINE_LIST.remove(csmbm);
+                        ExceptionHandler.debugLog(() -> "已删除STACKMACHINE_LIST中的" + csmbm);
+                    } catch (Throwable ignored) {
+                        try {
+                            me.matl114.logitech.Utils.RecipeSupporter.STACKMACHINE_LIST.remove(csmbm);
+                            ExceptionHandler.debugLog(() -> "已删除STACKMACHINE_LIST中的" + csmbm);
+                        } catch (Throwable ignored2) {
+                            ExceptionHandler.debugLog(() -> "无法删除STACKMACHINE_LIST中的" + csmbm);
+                        }
+                    }
+                }
+            }, 3L);
+        }
 
         ExceptionHandler.info("============================");
         ExceptionHandler.info("RykenSlimefunCustomizer加载成功！");
