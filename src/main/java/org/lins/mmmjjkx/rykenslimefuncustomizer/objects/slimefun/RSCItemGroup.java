@@ -127,8 +127,11 @@ public class RSCItemGroup extends FlexItemGroup {
         }
     }
 
-    private void jegSetup(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
+    private ChestMenu jegSetup(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
         ChestMenu menu = new ChestMenu(GuideUtil.getGuideTitle(mode));
+
+        profile.getGuideHistory().add(this, page); // no matter survival or cheat mode.
+
         Format format = type == GroupType.nested ? Formats.nested : Formats.sub;
         char c = type == GroupType.nested ? Formats.Char.ITEM_GROUP : Formats.Char.CONTENT;
         List<Object> validContent = this.contents.stream().filter(content -> isContentVisibleInGroup(content, p, profile, mode)).toList();
@@ -139,7 +142,7 @@ public class RSCItemGroup extends FlexItemGroup {
 
         for (int i = 0; i < format.getChars(c).size(); i++) {
             int s = format.getChars(c).get(i);
-            if (page * format.getChars(c).size() + i >= validContent.size()) {
+            if ((page - 1) * format.getChars(c).size() + i >= validContent.size()) {
                 menu.addItem(s, null);
                 menu.addMenuClickHandler(s, (clicker, slot, item, action) -> false);
                 continue;
@@ -148,6 +151,8 @@ public class RSCItemGroup extends FlexItemGroup {
             Object content = validContent.get((page - 1) * format.getChars(c).size() + i);
             handleContent(s, content, menu, p, profile, mode);
         }
+
+        return menu;
     }
 
     protected void handleContent(int s, Object content, ChestMenu menu, Player p, PlayerProfile profile, SlimefunGuideMode mode) {
@@ -180,14 +185,11 @@ public class RSCItemGroup extends FlexItemGroup {
     }
 
     private void setup(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
-        if (RykenSlimefunCustomizer.jeg) {
-            jegSetup(p, profile, mode, page);
-        } else {
-            legacySetup(p, profile, mode, page);
-        }
+        ChestMenu menu = RykenSlimefunCustomizer.jeg ? jegSetup(p, profile, mode, page) : legacySetup(p, profile, mode, page);
+        menu.open(p);
     }
     
-    private void legacySetup(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
+    private ChestMenu legacySetup(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
         GuideHistory history = profile.getGuideHistory();
         if (mode == SlimefunGuideMode.SURVIVAL_MODE) {
             history.add(this, page);
@@ -220,10 +222,13 @@ public class RSCItemGroup extends FlexItemGroup {
                         menu.addItem(index, itemGroup.getItem(p));
                         menu.addMenuClickHandler(index, (pl, slot, item, action) -> {
                             // Don't open the item group, but run the scripts
-                            for (var o : itemGroup.contents) {
-                                if (o instanceof String ac) {
-                                    readAction(ac, mode, pl, slot, item, action);
+                            if (itemGroup.type == GroupType.button) {
+                                for (var o : itemGroup.contents) {
+                                    if (o instanceof String ac) {
+                                        readAction(ac, mode, pl, slot, item, action);
+                                    }
                                 }
+                                return false;
                             }
                             SlimefunGuide.openItemGroup(profile, itemGroup, mode, 1);
                             return false;
@@ -265,7 +270,8 @@ public class RSCItemGroup extends FlexItemGroup {
 
             return false;
         });
-        menu.open(p);
+
+        return menu;
     }
 
     protected void readAction(String action, SlimefunGuideMode mode, Player p, int slot, ItemStack clickedItem, ClickAction clickAction) {

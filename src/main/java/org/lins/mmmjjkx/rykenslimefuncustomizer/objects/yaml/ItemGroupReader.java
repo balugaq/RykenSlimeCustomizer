@@ -75,7 +75,7 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
         RSCItemGroup parent = null;
         var par = section.getString("parent");
         if (par != null) {
-            var parK = NamespacedKey.fromString(par);
+            var parK = NamespacedKey.fromString(par.toLowerCase(), RykenSlimefunCustomizer.INSTANCE);
             ItemGroup raw = CommonUtils.getIf(Slimefun.getRegistry().getAllItemGroups(), ig -> ig.getKey().equals(parK));
             switch (raw) {
                 case null -> {
@@ -105,7 +105,7 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
         if (groupType == GroupType.locked) {
             List<NamespacedKey> parents = new ArrayList<>();
             for (String ig : section.getStringList("parents")) {
-                NamespacedKey nk = NamespacedKey.fromString(ig);
+                NamespacedKey nk = NamespacedKey.fromString(ig.toLowerCase());
                 if (nk == null) {
                     ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载物品组" + s + "时遇到了问题: "
                         + ig + "不是一个有效的NamespacedKey");

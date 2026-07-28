@@ -90,7 +90,7 @@ public class SaveditemsGroup extends MixedGroup<@NotNull SaveditemsGroup> {
                         ItemStack clone = itemStack.clone();
                         String source =
                             clone.getItemMeta().getPersistentDataContainer().get(SOURCE_KEY, PersistentDataType.STRING);
-                        CommonUtils.addLore(clone, true, "源: " + source);
+                        CommonUtils.addLore(clone, true, "&e源: " + source);
                         OnDisplay.Item.display(player, clone, OnDisplay.Item.Normal, impl)
                             .at(chestMenu, contentSlots.get(i), this.page);
 
