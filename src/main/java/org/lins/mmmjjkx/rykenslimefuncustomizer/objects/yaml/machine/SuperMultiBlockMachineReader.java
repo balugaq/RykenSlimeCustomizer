@@ -393,7 +393,7 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
                         ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + part + " 无效");
                         return null;
                     }
-                    if (getPreloadedItems().contains(item)) {
+                    if (getPreloadedItems(s).contains(item)) {
                         return new MultiBlockMultiBlockPart(item);
                     } else {
                         return new SlimefunMultiBlockPart(item);

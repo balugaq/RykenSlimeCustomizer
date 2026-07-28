@@ -44,8 +44,6 @@ public abstract class YamlReader<T> {
     private final List<String> lateInits;
     protected final ProjectAddon addon;
     protected final YamlConfiguration configuration;
-    @Getter
-    protected final List<SlimefunItemStack> preloadedItems = new ArrayList<>();
 
     public YamlReader(YamlConfiguration config, ProjectAddon addon) {
         this.configuration = config;
@@ -56,10 +54,7 @@ public abstract class YamlReader<T> {
     public abstract T readEach(String section);
 
     public List<SlimefunItemStack> getPreloadedItems(String key) {
-        if (preloadedItems.isEmpty()) {
-            preloadedItems.addAll(preloadItems(key));
-        }
-        return getPreloadedItems();
+        return preloadItems(key);
     }
 
     public final void preload() {
