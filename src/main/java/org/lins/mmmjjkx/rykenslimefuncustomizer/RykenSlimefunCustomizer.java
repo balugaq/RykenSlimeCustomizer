@@ -18,9 +18,9 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer;
 
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
-import me.matl114.logitech.core.Registries.RecipeSupporter;
 import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.Library;
 import net.guizhanss.guizhanlib.updater.GuizhanBuildsUpdater;
@@ -50,11 +50,13 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 public final class RykenSlimefunCustomizer extends JavaPlugin implements SlimefunAddon {
@@ -193,25 +195,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
         getServer().getScheduler().runTaskLater(this, () -> runtime = true, 1);
 
-        if (Bukkit.getPluginManager().isPluginEnabled("LogiTech")) {
-            // Don't allow CustomSuperMultiBlockMachine to be stackable
-            Bukkit.getScheduler().runTaskLaterAsynchronously(RykenSlimefunCustomizer.INSTANCE, () -> {
-                for (var sf : new ArrayList<>(Slimefun.getRegistry().getAllSlimefunItems())) {
-                    if (!(sf instanceof CustomSuperMultiBlockMachine csmbm)) continue;
-                    try {
-                        RecipeSupporter.STACKMACHINE_LIST.remove(csmbm);
-                        ExceptionHandler.debugLog(() -> "已删除STACKMACHINE_LIST中的" + csmbm);
-                    } catch (Throwable ignored) {
-                        try {
-                            me.matl114.logitech.Utils.RecipeSupporter.STACKMACHINE_LIST.remove(csmbm);
-                            ExceptionHandler.debugLog(() -> "已删除STACKMACHINE_LIST中的" + csmbm);
-                        } catch (Throwable ignored2) {
-                            ExceptionHandler.debugLog(() -> "无法删除STACKMACHINE_LIST中的" + csmbm);
-                        }
-                    }
-                }
-            }, 3L);
-        }
+        handleLogitech();
 
         ExceptionHandler.info("============================");
         ExceptionHandler.info("RykenSlimefunCustomizer加载成功！");
@@ -219,6 +203,49 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         ExceptionHandler.info("改作者: balugaq");
         ExceptionHandler.info("项目主页: https://github.com/balugaq/RykenSlimeCustomizer");
         ExceptionHandler.info("============================");
+    }
+
+    private void handleLogitech() {
+        if (!Bukkit.getPluginManager().isPluginEnabled("LogiTech")) return;
+
+        // Don't allow CustomSuperMultiBlockMachine to be stackable
+        Field field;
+        try {
+            field = Class.forName("me.matl114.logitech.core.Registries.RecipeSupporter").getDeclaredField("STACKMACHINE_LIST");
+        } catch (ClassNotFoundException | NoSuchFieldException ignored) {
+            try {
+                field = Class.forName("me.matl114.logitech.Utils.RecipeSupporter").getDeclaredField("STACKMACHINE_LIST");
+            } catch (ClassNotFoundException | NoSuchFieldException ignored2) {
+                ExceptionHandler.debugLog(() -> "无法自动禁用超级多方块机器在逻辑工艺中的可堆叠属性!");
+                field = null;
+            }
+        }
+        if (field == null) return;
+        field.setAccessible(true);
+        Map<SlimefunItem, Integer> STACKMACHINE_LIST;
+        try {
+            STACKMACHINE_LIST = (Map<SlimefunItem, Integer>) field.get(null);
+        } catch (IllegalAccessException e) {
+            ExceptionHandler.debugLog(() -> "无法自动禁用超级多方块机器在逻辑工艺中的可堆叠属性!");
+            return;
+        }
+
+        Bukkit.getScheduler().runTaskLaterAsynchronously(RykenSlimefunCustomizer.INSTANCE, () -> {
+            for (var sf : new ArrayList<>(Slimefun.getRegistry().getAllSlimefunItems())) {
+                if (!(sf instanceof CustomSuperMultiBlockMachine csmbm)) continue;
+                try {
+                    STACKMACHINE_LIST.remove(csmbm);
+                    ExceptionHandler.debugLog(() -> "已删除STACKMACHINE_LIST中的" + csmbm);
+                } catch (Throwable ignored) {
+                    try {
+                        STACKMACHINE_LIST.remove(csmbm);
+                        ExceptionHandler.debugLog(() -> "已删除STACKMACHINE_LIST中的" + csmbm);
+                    } catch (Throwable ignored2) {
+                        ExceptionHandler.debugLog(() -> "无法删除STACKMACHINE_LIST中的" + csmbm);
+                    }
+                }
+            }
+        }, 3L);
     }
 
     @Override
