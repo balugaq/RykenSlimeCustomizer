@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import lombok.extern.slf4j.Slf4j;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -80,8 +81,10 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ReflectionUtils;
  * machine = CustomSuperMultiBlockMachine
  * multiblock = SuperMultiBlock
  */
+@Slf4j
 @Getter
 public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
+    public static final int DISPLAY_ALL = -999;
     public static final ItemStack NOT_BUILT_YET = new CustomItemStack(Material.BRICKS, "&c多方块尚未搭建完成!", "");
     private final ScriptEval eval;
     private final SuperMultiBlockDefinition definition;
@@ -288,20 +291,24 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
         return layer;
     }
 
-    public int clamp(int value, int min, int max) {
-        if (value < min) return min;
-        if (value > max) return max;
-        return value;
-    }
-
     public void switchLayer(SuperMultiBlock instance, Player p, boolean down) {
         int layerIndex = getCurrentLayerIndex(instance);
-        if (eval == null || eval.evalFunction("switchDisplayLayer", instance, layerIndex) == null) {
+        if (eval == null || eval.evalFunction("switchDisplayLayer", instance, layerIndex) == null && instance.getLayers().length > 1) {
             // call origin
             int oldLayer = instance.getLayers()[layerIndex];
             layerIndex += down ? -1 : 1;
             if (layerIndex == -1) layerIndex = instance.layerCount() - 1;
-            if (layerIndex == instance.layerCount()) layerIndex = 0;
+            if (layerIndex == instance.layerCount()) {
+                // display all
+                StorageCacheUtils.setData(instance.getCoreLocation(), "layer", "" + DISPLAY_ALL);
+                SuperMultiBlockManager.getInstance().showEntities(SuperMultiBlockManager.getInstance().selectEntities(instance));
+                p.sendMessage(CMIChatColor.colorize("&a已切换多方块显示层为所有层"));
+                return;
+            }
+            if (layerIndex == -999) {
+                SuperMultiBlockManager.getInstance().hideEntities(SuperMultiBlockManager.getInstance().selectEntities(instance));
+                layerIndex = 0;
+            }
             int newLayerIndex = layerIndex;
             int newLayer = instance.getLayers()[newLayerIndex];
             StorageCacheUtils.setData(instance.getCoreLocation(), "layer", "" + newLayerIndex);

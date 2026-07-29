@@ -44,7 +44,7 @@ public class SlimefunMultiBlockPart implements MultiBlockPart {
 
     @Override
     @Nullable
-    public BlockData getBlockData(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
-        return blockData;
+    public DisplayDescriptor getDisplayDescriptor(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
+        return new BlockDisplayDescriptor(blockData);
     }
 }

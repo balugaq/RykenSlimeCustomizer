@@ -20,14 +20,17 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class VanillaMultiBlockPart implements MultiBlockPart {
     private final BlockData blockData;
+    private final DisplayDescriptor descriptor;
 
-    public VanillaMultiBlockPart(BlockData blockData) {
+    public VanillaMultiBlockPart(BlockData blockData, DisplayDescriptor descriptor) {
         this.blockData = blockData;
+        this.descriptor = descriptor;
     }
 
     @Override
@@ -37,7 +40,7 @@ public class VanillaMultiBlockPart implements MultiBlockPart {
 
     @Override
     @Nullable
-    public BlockData getBlockData(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
-        return blockData;
+    public DisplayDescriptor getDisplayDescriptor(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
+        return descriptor;
     }
 }

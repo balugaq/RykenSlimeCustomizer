@@ -26,11 +26,11 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 
 public class CustomMultiBlockPart implements MultiBlockPart {
     private final JavaScriptEval eval;
-    private final BlockData blockData;
+    private final DisplayDescriptor descriptor;
 
-    public CustomMultiBlockPart(@NotNull JavaScriptEval eval, @Nullable BlockData blockData) {
+    public CustomMultiBlockPart(@NotNull JavaScriptEval eval, @Nullable DisplayDescriptor descriptor) {
         this.eval = eval;
-        this.blockData = blockData;
+        this.descriptor = descriptor;
     }
 
     @Override
@@ -41,10 +41,10 @@ public class CustomMultiBlockPart implements MultiBlockPart {
 
     @Override
     @Nullable
-    public BlockData getBlockData(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
-        if(blockData != null) return blockData;
-        Value result = eval.evalFunction("getBlockData", partLocation, superMultiBlockInstance);
+    public DisplayDescriptor getDisplayDescriptor(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
+        if (descriptor != null) return descriptor;
+        Value result = eval.evalFunction("getDisplayDescriptor", partLocation, superMultiBlockInstance);
         if (result == null) return null;
-        return result.as(BlockData.class);
+        return result.as(DisplayDescriptor.class);
     }
 }

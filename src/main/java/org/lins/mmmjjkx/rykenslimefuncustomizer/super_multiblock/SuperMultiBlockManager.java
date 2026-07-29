@@ -30,7 +30,6 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
@@ -59,7 +58,7 @@ public class SuperMultiBlockManager {
 
     private final Map<Location, SuperMultiBlock> monitoringLocations = new ConcurrentHashMap<>();
     private final Set<Location> correctLocations = new CopyOnWriteArraySet<>();
-    private final Map<Location, BlockDisplay> projectiles = new ConcurrentHashMap<>();
+    private final Map<Location, Display> projectiles = new ConcurrentHashMap<>();
     public static final float DEFAULT_DISPLAY_SCALE = 0.8f;
 //    private final Map<Location, Interaction> interactions = new ConcurrentHashMap<>();
 
@@ -107,9 +106,9 @@ public class SuperMultiBlockManager {
                     if (!entity.getPersistentDataContainer().has(RSC_KEY, PersistentDataType.BOOLEAN)) {
                         continue;
                     }
-                    if (entity.getType() == EntityType.BLOCK_DISPLAY) {
+                    if (entity.getType() == EntityType.BLOCK_DISPLAY || entity.getType() == EntityType.ITEM_DISPLAY) {
                         if (superMultiBlock.getMachine().isDisplayProjectiles()) {
-                            projectiles.put(location, (BlockDisplay) entity);
+                            projectiles.put(location, (Display) entity);
                         } else {
                             entity.remove();
                             projectiles.remove(location);
@@ -230,9 +229,9 @@ public class SuperMultiBlockManager {
                     continue;
                 }
 
-                BlockData blockData = part.getBlockData(instance, location);
-                if (blockData != null) {
-                    addProjectile(location, blockData, !instance.getMachine().isAllowSwitchDisplayLayer());
+                DisplayDescriptor descriptor = part.getDisplayDescriptor(instance, location);
+                if (descriptor != null) {
+                    addProjectile(location, descriptor, !instance.getMachine().isAllowSwitchDisplayLayer());
                 } else {
                     ExceptionHandler.handleError("无法展示超大多方块投影: 机器:" + instance.getMachine().getId() + "，位置:" + location);
                 }
@@ -243,11 +242,11 @@ public class SuperMultiBlockManager {
         });
     }
 
-    public void addProjectile(@NotNull Location location, @NotNull BlockData blockData, boolean visible) {
+    public void addProjectile(@NotNull Location location, @NotNull DisplayDescriptor descriptor, boolean visible) {
         for (Entity entity : location.getWorld().getNearbyEntities(location, 0.1, 0.1, 0.1)) {
-            if (entity.getType() == EntityType.BLOCK_DISPLAY) {
+            if (entity.getType() == EntityType.BLOCK_DISPLAY || entity.getType() == EntityType.ITEM_DISPLAY) {
                 if (entity.getPersistentDataContainer().has(RSC_KEY, PersistentDataType.BOOLEAN)) {
-                    projectiles.put(location, (BlockDisplay) entity);
+                    projectiles.put(location, (Display) entity);
                     return;
                 }
             }
@@ -258,8 +257,7 @@ public class SuperMultiBlockManager {
 //                }
 //            }
         }
-        BlockDisplay display = (BlockDisplay) location.getWorld().spawnEntity(location, EntityType.BLOCK_DISPLAY);
-        display.setBlock(blockData);
+        Display display = descriptor.createDisplay(location);
         // 0.0f is a hack, which means invisible.
         display.setTransformation(visible ? getTransformation(DEFAULT_DISPLAY_SCALE) : getTransformation(0.0f));
         display.getPersistentDataContainer().set(RSC_KEY, PersistentDataType.BOOLEAN, true);
@@ -282,7 +280,7 @@ public class SuperMultiBlockManager {
     }
 
     public void removeProjectile(@NotNull Location location) {
-        BlockDisplay display = projectiles.remove(location);
+        Display display = projectiles.remove(location);
         if (display != null && !display.isDead() && display.isValid()) {
             display.remove();
         }
@@ -299,15 +297,19 @@ public class SuperMultiBlockManager {
         }
     }
 
-    private Set<BlockDisplay> selectEntities(@NotNull SuperMultiBlock instance, int layer) {
+    public Set<Display> selectEntities(@NotNull SuperMultiBlock instance) {
+        return instance.getLocations().stream().map(projectiles::get).collect(Collectors.toSet());
+    }
+
+    public Set<Display> selectEntities(@NotNull SuperMultiBlock instance, int layer) {
         return instance.getLocations().stream().filter(l -> l.getBlockY() == layer).map(projectiles::get).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
-    public void showEntities(Set<BlockDisplay> entities) {
+    public void showEntities(Set<Display> entities) {
         entities.forEach(entity -> entity.setTransformation(getTransformation(DEFAULT_DISPLAY_SCALE)));
     }
 
-    public void hideEntities(Set<BlockDisplay> entities) {
+    public void hideEntities(Set<Display> entities) {
         // 0.0f is a hack, which means invisible.
         entities.forEach(entity -> entity.setTransformation(getTransformation(0.0f)));
     }

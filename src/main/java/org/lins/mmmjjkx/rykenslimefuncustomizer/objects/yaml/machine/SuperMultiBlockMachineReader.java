@@ -43,7 +43,10 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSuperMultiBlockMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomMachineRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.BlockDisplayDescriptor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.CustomMultiBlockPart;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.DisplayDescriptor;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.ItemDisplayDescriptor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.MultiBlockMultiBlockPart;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.MultiBlockPart;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SlimefunMultiBlockPart;
@@ -358,10 +361,11 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
                 }
 
                 VanillaMultiBlockPart r = CommonUtils.readPipe(material, part -> {
+
                     if (part.contains("[")) {
                         try {
                             BlockData blockData = Bukkit.createBlockData(part);
-                            return new VanillaMultiBlockPart(blockData);
+                            return new VanillaMultiBlockPart(blockData, readDisplayDescriptor(s, part, mappingLocation));
                         } catch (IllegalArgumentException e) {
                             ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 方块数据 " + part + " 无效");
                             return null;
@@ -369,11 +373,13 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
                     }
 
                     Material m = Material.matchMaterial(part);
-                    if (m == null) {
-                        ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + part + " 无效");
+                    if (m == null || !m.isBlock() || m.isLegacy()) {
+                        ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + part + " 无效");
                         return null;
                     }
-                    return new VanillaMultiBlockPart(m.createBlockData());
+
+                    BlockData blockData = m.createBlockData();
+                    return new VanillaMultiBlockPart(blockData, readDisplayDescriptor(s, part, mappingLocation));
                 });
 
                 if (r == null) {
@@ -405,28 +411,67 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
                 return r;
             }
             case "custom" -> {
-                String material = section.getString("material");
-                BlockData blockData = null;
-                if (material != null) {
-                    blockData = CommonUtils.readPipe(material, part -> {
-                        try {
-                            return Bukkit.createBlockData(material);
-                        } catch (IllegalArgumentException e) {
-                            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + material + " 无效");
-                            return null;
-                        }
-                    });
-                }
                 if (eval == null) {
                     ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 缺少脚本，无法生成多方块结构定义");
                     return null;
                 }
-                return new CustomMultiBlockPart(eval, blockData);
+                return new CustomMultiBlockPart(eval, readDisplayDescriptor(s, section, mappingLocation));
             }
         }
 
         ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 无效的类型: " + type);
         return null;
+    }
+
+    @Nullable
+    private DisplayDescriptor readDisplayDescriptor(String s, String material, String mappingLocation) {
+        return CommonUtils.readPipe(material, part -> {
+            if (material.contains("[")) {
+                // blockdata
+                try {
+                    BlockData blockData = Bukkit.createBlockData(part);
+                    return new BlockDisplayDescriptor(blockData);
+                } catch (IllegalArgumentException e) {
+                    ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 方块数据 " + part + " 无效");
+                    return null;
+                }
+            }
+
+            Material mt = Material.matchMaterial(part);
+            if (mt == null || mt.isLegacy()) {
+                ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + part + " 无效");
+                return null;
+            }
+
+            // fallback
+            if (mt == Material.WATER) return new ItemDisplayDescriptor(new ItemStack(Material.WATER_BUCKET));
+            if (mt == Material.LAVA) return new ItemDisplayDescriptor(new ItemStack(Material.LAVA_BUCKET));
+            if (mt == Material.AIR) return new ItemDisplayDescriptor(new ItemStack(Material.BUCKET));
+
+            if (mt.isBlock()) return new BlockDisplayDescriptor(mt.createBlockData());
+
+            // shouldn't happen
+//            if (mt.isItem()) return new ItemDisplayDescriptor(new ItemStack(mt));
+
+            ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + part + " 不支持");
+            return null;
+        });
+    }
+
+    @Nullable
+    private DisplayDescriptor readDisplayDescriptor(String s, ConfigurationSection section, String mappingLocation) {
+        if (section.get("material") instanceof String material) {
+            return readDisplayDescriptor(s, material, mappingLocation);
+        }
+        return null;
+
+//        // item
+//        ItemStack itemStack = CommonUtils.readItem(section, true, addon);
+//        if (itemStack != null) {
+//            return new ItemDisplayDescriptor(itemStack);
+//        } else {
+//            return null;
+//        }
     }
 
     private List<CustomMachineRecipe> readRecipes(
