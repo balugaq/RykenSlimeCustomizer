@@ -40,13 +40,13 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
-public class GeoResourceReader extends YamlReader<GEOResource> {
+public class GeoResourceReader extends YamlReader<CustomGeoResource> {
     public GeoResourceReader(YamlConfiguration config, ProjectAddon addon) {
         super(config, addon);
     }
 
     @Override
-    public GEOResource readEach(String s) {
+    public CustomGeoResource readEach(String s) {
         ConfigurationSection section = configuration.getConfigurationSection(s);
         if (section != null) {
             String id = addon.getId(s, section.getString("id_alias"));

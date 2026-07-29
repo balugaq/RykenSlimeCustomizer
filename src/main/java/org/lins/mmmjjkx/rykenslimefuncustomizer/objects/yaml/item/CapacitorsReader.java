@@ -29,17 +29,18 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomCapacitor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
-public class CapacitorsReader extends YamlReader<Capacitor> {
+public class CapacitorsReader extends YamlReader<CustomCapacitor> {
     public CapacitorsReader(YamlConfiguration config, ProjectAddon addon) {
         super(config, addon);
     }
 
     @Override
-    public Capacitor readEach(String s) {
+    public CustomCapacitor readEach(String s) {
         ConfigurationSection section = configuration.getConfigurationSection(s);
         if (section == null) return null;
 
@@ -66,7 +67,7 @@ public class CapacitorsReader extends YamlReader<Capacitor> {
             return null;
         }
 
-        Capacitor instance = new Capacitor(
+        CustomCapacitor instance = new CustomCapacitor(
                 Objects.requireNonNull(group.getSecondValue()), capacity, sfis, Objects.requireNonNull(rt), recipe);
 
         instance.register(RykenSlimefunCustomizer.INSTANCE);

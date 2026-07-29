@@ -41,6 +41,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.ScriptableEventListener;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomAddonConfig;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomCapacitor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.generations.GenerationInfo;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.CustomArmorPiece;
@@ -86,7 +87,7 @@ public final class ProjectAddon {
     // menus.yml
     private List<CustomMenu> menus = new ArrayList<>();
     // geo_resources.yml
-    private List<GEOResource> geoResources = new ArrayList<>();
+    private List<CustomGeoResource> geoResources = new ArrayList<>();
     // items.yml
     private List<SlimefunItem> items = new ArrayList<>();
     // machines.yml
@@ -106,7 +107,7 @@ public final class ProjectAddon {
     // mob_drops.yml
     private List<CustomMobDrop> mobDrops = new ArrayList<>();
     // capacitors.yml
-    private List<Capacitor> capacitors = new ArrayList<>();
+    private List<CustomCapacitor> capacitors = new ArrayList<>();
     // recipe_types.yml
     private List<RecipeType> recipeTypes = new ArrayList<>();
     // simple_machines.yml

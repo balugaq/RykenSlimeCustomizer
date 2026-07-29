@@ -27,11 +27,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.implementation.bind.annotation.RuntimeType;
+import net.bytebuddy.implementation.bind.annotation.This;
+import net.bytebuddy.matcher.ElementMatchers;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
@@ -123,12 +130,29 @@ public class SuperReader extends YamlReader<SlimefunItem> {
                 })
                 .filter(Objects::nonNull)
                 .toArray();
+
         SlimefunItem instance;
         try {
             List<Object> newArgs = new ArrayList<>(List.of(originArgs));
             newArgs.addAll(List.of(args));
-            instance = constructor.newInstance(newArgs.toArray());
-        } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
+
+            Class<?> dynamicClass = new ByteBuddy()
+                .subclass(constructor.getDeclaringClass())
+                .name(constructor.getDeclaringClass().getSimpleName() + "$$ByteBuddy")
+                .method(ElementMatchers.named("load").and(ElementMatchers.takesArguments(0)))
+                .intercept(MethodDelegation.to(LoadMethodInterceptor.class))
+                .make()
+                .load(RykenSlimefunCustomizer.INSTANCE.getJavaPlugin().getClass().getClassLoader())
+                .getLoaded();
+
+            Constructor<?> dynamicConstructor = dynamicClass.getDeclaredConstructor(
+                Arrays.stream(constructor.getParameterTypes()).toArray(Class[]::new)
+            );
+            dynamicConstructor.setAccessible(true);
+
+            instance = (SlimefunItem) dynamicConstructor.newInstance(newArgs.toArray());
+
+        } catch (InstantiationException | InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
             ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载继承物品" + s + "时遇到了问题: " + "无法创建类", e);
             return null;
         }
@@ -240,5 +264,20 @@ public class SuperReader extends YamlReader<SlimefunItem> {
         }
 
         return null;
+    }
+
+    public static class LoadMethodInterceptor {
+        @RuntimeType
+        public static Object intercept(@This Object instance) {
+            String className = instance.getClass().getSimpleName();
+            SlimefunItem sf = (SlimefunItem) instance;
+
+            if (!sf.isHidden()) {
+                RSCItemGroup.addItemToGroup(sf.getItemGroup(), sf);
+            }
+
+            sf.getRecipeType().register(sf.getRecipe(), sf.getRecipeOutput());
+            return null;
+        }
     }
 }
