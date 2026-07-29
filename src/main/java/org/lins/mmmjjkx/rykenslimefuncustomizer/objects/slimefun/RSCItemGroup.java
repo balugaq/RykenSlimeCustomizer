@@ -18,6 +18,7 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun;
 
 import com.balugaq.jeg.utils.GuideUtil;
+import com.balugaq.jeg.utils.clickhandler.OnDisplay;
 import com.balugaq.jeg.utils.formatter.Format;
 import com.balugaq.jeg.utils.formatter.Formats;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
@@ -156,9 +157,13 @@ public class RSCItemGroup extends FlexItemGroup {
     }
 
     protected void handleContent(int s, Object content, ChestMenu menu, Player p, PlayerProfile profile, SlimefunGuideMode mode) {
+        var impl = GuideUtil.getLastGuide(p);
         switch (content) {
             case RSCItemGroup itemGroup -> {
-                menu.addItem(s, itemGroup.getItem(p));
+                OnDisplay.ItemGroup.display(p, itemGroup, OnDisplay.ItemGroup.DisplayType.Normal, impl)
+                    .at(menu, s, 1);
+
+                var c = menu.getMenuClickHandler(s);
                 menu.addMenuClickHandler(s, (pl, slot, item, action) -> {
                     if (itemGroup.type == GroupType.button) {
                         // Don't open the item group, but run the scripts
@@ -169,16 +174,13 @@ public class RSCItemGroup extends FlexItemGroup {
                         }
                         return false;
                     }
-                    SlimefunGuide.openItemGroup(profile, itemGroup, mode, 1);
-                    return false;
+
+                    return c.onClick(pl, slot, item, action);
                 });
             }
             case SlimefunItem sf -> {
-                menu.addItem(s, sf.getItem());
-                menu.addMenuClickHandler(s, (pl, slot, item, action) -> {
-                    SlimefunGuide.displayItem(profile, sf, true);
-                    return false;
-                });
+                OnDisplay.Item.display(p, sf, OnDisplay.Item.DisplayType.Normal, impl)
+                    .at(menu, s, 1);
             }
             default -> throw new IllegalStateException("Unexpected value: " + content);
         }
