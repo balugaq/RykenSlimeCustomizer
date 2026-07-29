@@ -18,6 +18,7 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun;
 
 import com.balugaq.jeg.utils.GuideUtil;
+import com.balugaq.jeg.utils.clickhandler.OnClick;
 import com.balugaq.jeg.utils.clickhandler.OnDisplay;
 import com.balugaq.jeg.utils.formatter.Format;
 import com.balugaq.jeg.utils.formatter.Formats;
@@ -50,6 +51,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NonNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
@@ -163,19 +165,27 @@ public class RSCItemGroup extends FlexItemGroup {
                 OnDisplay.ItemGroup.display(p, itemGroup, OnDisplay.ItemGroup.DisplayType.Normal, impl)
                     .at(menu, s, 1);
 
-                var c = menu.getMenuClickHandler(s);
-                menu.addMenuClickHandler(s, (pl, slot, item, action) -> {
-                    if (itemGroup.type == GroupType.button) {
-                        // Don't open the item group, but run the scripts
-                        for (var o : itemGroup.contents) {
-                            if (o instanceof String ac) {
-                                readAction(ac, mode, pl, slot, item, action);
+                OnClick.BaseClickHandler c = (OnClick.BaseClickHandler) menu.getMenuClickHandler(s);
+                menu.addMenuClickHandler(s, new ChestMenu.AdvancedMenuClickHandler() {
+                    @Override
+                    public boolean onClick(InventoryClickEvent e, Player p, int slot, ItemStack cursor, ClickAction action) {
+                        if (itemGroup.type == GroupType.button) {
+                            // Don't open the item group, but run the scripts
+                            for (var o : itemGroup.contents) {
+                                if (o instanceof String ac) {
+                                    readAction(ac, mode, p, slot, cursor, action);
+                                }
                             }
+                            return false;
                         }
-                        return false;
+
+                        return c.onClick(e, p, slot, item, action);
                     }
 
-                    return c.onClick(pl, slot, item, action);
+                    @Override
+                    public boolean onClick(Player p, int slot, ItemStack item, ClickAction action) {
+                        return false;
+                    }
                 });
             }
             case SlimefunItem sf -> {
