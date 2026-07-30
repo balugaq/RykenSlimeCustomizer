@@ -29,6 +29,7 @@ import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.AContainer;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.sf.*;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.SimpleMachineType;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroup;
 
 public class SimpleMachineFactory {
     public static SlimefunItem create(
@@ -44,29 +45,124 @@ public class SimpleMachineFactory {
             int repairFactor) {
         SlimefunItem instance =
                 switch (machineType) {
-                    case ELECTRIC_FURNACE -> new ElectricFurnace(group, slimefunItemStack, recipeType, recipe);
-                    case ELECTRIC_GOLD_PAN -> new ElectricGoldPan(group, slimefunItemStack, recipeType, recipe);
-                    case ELECTRIC_SMELTERY -> new ElectricSmeltery(group, slimefunItemStack, recipeType, recipe);
-                    case ELECTRIC_DUST_WASHER -> new ElectricDustWasher(group, slimefunItemStack, recipeType, recipe);
-                    case ELECTRIC_ORE_GRINDER -> new ElectricOreGrinder(group, slimefunItemStack, recipeType, recipe);
+                    case ELECTRIC_FURNACE -> new ElectricFurnace(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
+                    case ELECTRIC_GOLD_PAN -> new ElectricGoldPan(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
+                    case ELECTRIC_SMELTERY -> new ElectricSmeltery(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
+                    case ELECTRIC_DUST_WASHER -> new ElectricDustWasher(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
+                    case ELECTRIC_ORE_GRINDER -> new ElectricOreGrinder(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
                     case ELECTRIC_INGOT_FACTORY ->
-                        new ElectricIngotFactory(group, slimefunItemStack, recipeType, recipe);
+                        new ElectricIngotFactory(group, slimefunItemStack, recipeType, recipe) {
+                            @Override
+                            public void load() {
+                                SimpleMachineFactory.load(this);
+                            }
+                        };
                     case ELECTRIC_INGOT_PULVERIZER ->
-                        new ElectricIngotPulverizer(group, slimefunItemStack, recipeType, recipe);
-                    case CHARGING_BENCH -> new ChargingBench(group, slimefunItemStack, recipeType, recipe);
-                    case FREEZER -> new Freezer(group, slimefunItemStack, recipeType, recipe);
-                    case CARBON_PRESS -> new CarbonPress(group, slimefunItemStack, recipeType, recipe);
-                    case ELECTRIC_PRESS -> new ElectricPress(group, slimefunItemStack, recipeType, recipe);
-                    case ELECTRIC_CRUCIBLE -> new ElectrifiedCrucible(group, slimefunItemStack, recipeType, recipe);
-                    case FOOD_FABRICATOR -> new FoodFabricator(group, slimefunItemStack, recipeType, recipe);
+                        new ElectricIngotPulverizer(group, slimefunItemStack, recipeType, recipe) {
+                            @Override
+                            public void load() {
+                                SimpleMachineFactory.load(this);
+                            }
+                        };
+                    case CHARGING_BENCH -> new ChargingBench(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
+                    case FREEZER -> new Freezer(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
+                    case CARBON_PRESS -> new CarbonPress(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
+                    case ELECTRIC_PRESS -> new ElectricPress(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
+                    case ELECTRIC_CRUCIBLE -> new ElectrifiedCrucible(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
+                    case FOOD_FABRICATOR -> new FoodFabricator(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
                     case HEATED_PRESSURE_CHAMBER ->
-                        new HeatedPressureChamber(group, slimefunItemStack, recipeType, recipe);
-                    case BOOK_BINDER -> new BookBinder(group, slimefunItemStack, recipeType, recipe);
-                    case AUTO_ENCHANTER -> new AutoEnchanter(group, slimefunItemStack, recipeType, recipe);
-                    case AUTO_DISENCHANTER -> new AutoDisenchanter(group, slimefunItemStack, recipeType, recipe);
-                    case AUTO_DRIER -> new AutoDrier(group, slimefunItemStack, recipeType, recipe);
+                        new HeatedPressureChamber(group, slimefunItemStack, recipeType, recipe) {
+                            @Override
+                            public void load() {
+                                SimpleMachineFactory.load(this);
+                            }
+                        };
+                    case BOOK_BINDER -> new BookBinder(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
+                    case AUTO_ENCHANTER -> new AutoEnchanter(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
+                    case AUTO_DISENCHANTER -> new AutoDisenchanter(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
+                    case AUTO_DRIER -> new AutoDrier(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
                     case AUTO_BREWER -> new AdvancedAutoBrewer(group, slimefunItemStack, recipeType, recipe, speed);
-                    case REFINERY -> new Refinery(group, slimefunItemStack, recipeType, recipe);
+                    case REFINERY -> new Refinery(group, slimefunItemStack, recipeType, recipe) {
+                        @Override
+                        public void load() {
+                            SimpleMachineFactory.load(this);
+                        }
+                    };
                     case PRODUCE_COLLECTOR ->
                         new AdvancedProduceCollector(group, slimefunItemStack, recipeType, recipe, speed);
                     case TREE_GROWTH_ACCELERATOR ->
@@ -89,5 +185,13 @@ public class SimpleMachineFactory {
         }
 
         return instance;
+    }
+
+    public static void load(SlimefunItem sf) {
+        if (!sf.isHidden()) {
+            RSCItemGroup.addItemToGroup(sf.getItemGroup(), sf);
+        }
+
+        sf.getRecipeType().register(sf.getRecipe(), sf.getRecipeOutput());
     }
 }

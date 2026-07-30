@@ -33,6 +33,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomAddonConfig;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
@@ -62,7 +63,8 @@ public abstract class YamlReader<T> {
             ConfigurationSection section = configuration.getConfigurationSection(key);
             if (section == null) continue;
             ConfigurationSection register = section.getConfigurationSection("register");
-            if (!checkForRegistration(key, register)) continue;
+            String id = addon.getId(key, section.getString("id_alias"));
+            if (!checkForRegistration(key, register, id)) continue;
 
             List<SlimefunItemStack> items = getPreloadedItems(key);
 
@@ -117,7 +119,8 @@ public abstract class YamlReader<T> {
             ExceptionHandler.debugLog("开始读取配置: " + key);
 
             ConfigurationSection register = section.getConfigurationSection("register");
-            if (!checkForRegistration(key, register)) continue;
+            String id = addon.getId(key, section.getString("id_alias"));
+            if (!checkForRegistration(key, register, id)) continue;
 
             if (section.getBoolean("lateInit", false)) {
                 putLateInit(key);
@@ -168,14 +171,19 @@ public abstract class YamlReader<T> {
 
     public abstract List<SlimefunItemStack> preloadItems(String s);
 
-    private boolean checkForRegistration(String key, ConfigurationSection section) {
+    private boolean checkForRegistration(String key, ConfigurationSection section, String id) {
         if (section == null) return true;
 
         List<String> conditions = section.getStringList("conditions");
         boolean warn = section.getBoolean("warn", false);
         boolean unfinished = section.getBoolean("unfinished", false);
+        boolean logitech_stackable = section.getBoolean("logitech_stackable", true);
 
         if (unfinished) return false;
+        if (!logitech_stackable && RykenSlimefunCustomizer.logitechNotStackableIds != null) {
+            RykenSlimefunCustomizer.logitechNotStackableIds.add(id);
+            ExceptionHandler.debugLog(() -> "物品 " + id + " 将不能被逻辑工艺-堆叠机器堆叠!");
+        }
 
         for (String condition : conditions) {
             String[] splits = condition.split(" ");
@@ -198,9 +206,9 @@ public abstract class YamlReader<T> {
                     continue;
                 }
 
-                String id = splits[1];
+                String itemId = splits[1];
 
-                if (SlimefunItem.getById(id) == null || addon.getPreloadItems().get(id) == null) {
+                if (SlimefunItem.getById(itemId) == null || addon.getPreloadItems().get(itemId) == null) {
                     if (warn) {
                         ExceptionHandler.handleError(key + "需要物品" + splits[1] + "才能被注册");
                     }
@@ -213,9 +221,9 @@ public abstract class YamlReader<T> {
                     continue;
                 }
 
-                String id = splits[1];
+                String itemId = splits[1];
 
-                if (SlimefunItem.getById(id) != null || addon.getPreloadItems().get(id) != null) {
+                if (SlimefunItem.getById(itemId) != null || addon.getPreloadItems().get(itemId) != null) {
                     if (warn) {
                         ExceptionHandler.handleError(key + "需要物品" + splits[1] + "不存在才能被注册");
                     }

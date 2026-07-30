@@ -35,6 +35,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SaveditemsGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.commands.MainCommand;
@@ -56,7 +57,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 public final class RykenSlimefunCustomizer extends JavaPlugin implements SlimefunAddon {
@@ -65,6 +68,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
     public static RykenSlimefunCustomizer INSTANCE;
     public static ProjectAddonManager addonManager;
     public static boolean jeg = false;
+    public static @Nullable Set<String> logitechNotStackableIds = new HashSet<>();
 
     @Override
     public void onLoad() {
@@ -209,43 +213,51 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         if (!Bukkit.getPluginManager().isPluginEnabled("LogiTech")) return;
 
         // Don't allow CustomSuperMultiBlockMachine to be stackable
-        Field field;
+        Field machineListField;
+        Field materialGeneratorListField;
         try {
-            field = Class.forName("me.matl114.logitech.core.Registries.RecipeSupporter").getDeclaredField("STACKMACHINE_LIST");
+            machineListField = Class.forName("me.matl114.logitech.core.Registries.RecipeSupporter").getDeclaredField("STACKMACHINE_LIST");
+            materialGeneratorListField = Class.forName("me.matl114.logitech.core.Registries.RecipeSupporter").getDeclaredField("STACKMGENERATOR_LIST");
         } catch (ClassNotFoundException | NoSuchFieldException ignored) {
             try {
-                field = Class.forName("me.matl114.logitech.Utils.RecipeSupporter").getDeclaredField("STACKMACHINE_LIST");
+                machineListField = Class.forName("me.matl114.logitech.Utils.RecipeSupporter").getDeclaredField("STACKMACHINE_LIST");
+                materialGeneratorListField = Class.forName("me.matl114.logitech.Utils.RecipeSupporter").getDeclaredField("STACKMGENERATOR_LIST");
             } catch (ClassNotFoundException | NoSuchFieldException ignored2) {
-                ExceptionHandler.debugLog(() -> "无法自动禁用超级多方块机器在逻辑工艺中的可堆叠属性!");
-                field = null;
+                ExceptionHandler.debugLog(() -> "无法自动禁用机器在逻辑工艺中的可堆叠属性!");
+                machineListField = null;
+                materialGeneratorListField = null;
             }
         }
-        if (field == null) return;
-        field.setAccessible(true);
+        if (machineListField == null || materialGeneratorListField == null) return;
+        machineListField.setAccessible(true);
+        materialGeneratorListField.setAccessible(true);
         Map<SlimefunItem, Integer> STACKMACHINE_LIST;
+        Map<SlimefunItem, Integer> STACKMGENERATOR_LIST;
         try {
-            STACKMACHINE_LIST = (Map<SlimefunItem, Integer>) field.get(null);
+            STACKMACHINE_LIST = (Map<SlimefunItem, Integer>) machineListField.get(null);
+            STACKMGENERATOR_LIST = (Map<SlimefunItem, Integer>) materialGeneratorListField.get(null);
         } catch (IllegalAccessException e) {
-            ExceptionHandler.debugLog(() -> "无法自动禁用超级多方块机器在逻辑工艺中的可堆叠属性!");
+            ExceptionHandler.debugLog(() -> "无法自动禁用机器在逻辑工艺中的可堆叠属性!");
             return;
         }
 
         Bukkit.getScheduler().runTaskLaterAsynchronously(RykenSlimefunCustomizer.INSTANCE, () -> {
             for (var sf : new ArrayList<>(Slimefun.getRegistry().getAllSlimefunItems())) {
-                if (!(sf instanceof CustomSuperMultiBlockMachine csmbm)) continue;
-                try {
-                    STACKMACHINE_LIST.remove(csmbm);
-                    ExceptionHandler.debugLog(() -> "已删除STACKMACHINE_LIST中的" + csmbm);
-                } catch (Throwable ignored) {
-                    try {
-                        STACKMACHINE_LIST.remove(csmbm);
-                        ExceptionHandler.debugLog(() -> "已删除STACKMACHINE_LIST中的" + csmbm);
-                    } catch (Throwable ignored2) {
-                        ExceptionHandler.debugLog(() -> "无法删除STACKMACHINE_LIST中的" + csmbm);
-                    }
+                if (!isNotStackable(sf)) continue;
+                if (STACKMACHINE_LIST.remove(sf) != null) {
+                    ExceptionHandler.debugLog(() -> "已删除STACKMACHINE_LIST中的" + sf);
+                }
+                if (STACKMGENERATOR_LIST.remove(sf) != null) {
+                    ExceptionHandler.debugLog(() -> "已删除STACKMGENERATOR_LIST中的" + sf);
                 }
             }
+            logitechNotStackableIds = null; // gc
         }, 3L);
+    }
+
+    private boolean isNotStackable(SlimefunItem sf) {
+        return (getConfig().getBoolean("super-multi-block-stackable", false) && sf instanceof CustomSuperMultiBlockMachine)
+            || (logitechNotStackableIds != null && logitechNotStackableIds.contains(sf.getId()));
     }
 
     @Override

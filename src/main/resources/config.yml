@@ -14,6 +14,8 @@ update:
   # 请填写附属ID，而不是附属名字
   blocks:
     - ""
+# 超大多方块机器在逻辑工艺-堆叠机器中是否能被堆叠
+super-multi-block-stackable: false
 #依赖下载仓库
 repositories:
   - https://maven.aliyun.com/repository/public
