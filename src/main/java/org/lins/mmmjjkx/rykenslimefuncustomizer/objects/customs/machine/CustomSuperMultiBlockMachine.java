@@ -18,6 +18,7 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine;
 
 import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
+import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
@@ -25,14 +26,7 @@ import io.github.thebusybiscuit.slimefun4.core.handlers.BlockBreakHandler;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockPlaceHandler;
 import io.github.thebusybiscuit.slimefun4.implementation.handlers.SimpleBlockBreakHandler;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
-import lombok.Data;
 import lombok.Getter;
-
-import java.lang.reflect.Field;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import lombok.extern.slf4j.Slf4j;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.Bukkit;
@@ -43,7 +37,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.graalvm.polyglot.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
@@ -55,10 +48,12 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlock;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockDefinition;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
-
-import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ReflectionUtils;
+
+import java.lang.reflect.Field;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * JS:
@@ -182,19 +177,13 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
 
     public static final Set<Location> firstTicks = new HashSet<>();
 
-    @Data
-    public static class TickContext {
-        private boolean callSuper = true;
-        private boolean checkFirstTick = true;
-    }
-
     @Override
     protected void tick(Block b) {
         var ctx = new TickContext();
         if (eval != null) {
             eval.evalFunction("onTick", b, this, ctx);
         }
-        if (ctx.checkFirstTick && firstTicks.add(b.getLocation())) {
+        if (ctx.isCheckFirstTick() && firstTicks.add(b.getLocation())) {
             if (!SuperMultiBlockManager.getInstance().startSuperMultiBlock(new SuperMultiBlock(CustomSuperMultiBlockMachine.this, b.getLocation()))) {
                 if (defaultNotice) {
                     SuperMultiBlockManager.findNearbyPlayers(b.getLocation(), 10, p -> {
@@ -214,7 +203,7 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine {
             }
         }
 
-        if (ctx.callSuper) {
+        if (ctx.isCallSuper()) {
             SuperMultiBlockManager.getInstance().markDirty(b.getLocation(), false); // to allow multiblock recursive building check
             if (checkFormed) {
                 SuperMultiBlock smb = SuperMultiBlockManager.getInstance().getSuperMultiBlock(b.getLocation());
