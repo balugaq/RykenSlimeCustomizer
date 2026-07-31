@@ -35,6 +35,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.GroupType;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupJEG;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.Visible;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
@@ -94,6 +95,7 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
                     return group;
                 }
                 case RSCItemGroupLegacy rsc -> parent = rsc;
+                case RSCItemGroupJEG rsc -> parent = rsc;
                 default -> {
                     ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载物品组" + section.getCurrentPath() + "时遇到了问题: 无法将添加到指定的物品组: " + par);
                     return null;

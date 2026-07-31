@@ -169,6 +169,7 @@ public interface BaseRSCItemGroup {
     default boolean isContentVisibleInGroup(Object content, Player p, PlayerProfile profile, SlimefunGuideMode mode) {
         switch (content) {
             case RSCItemGroupJEG itemGroup -> { return itemGroup.isVisibleInNested(p, profile, mode); }
+            case RSCItemGroupLegacy itemGroup -> { return itemGroup.isVisibleInNested(p, profile, mode); }
             case SlimefunItem sf -> { return !sf.isDisabledIn(p.getWorld()); }
             case String action -> { return true; }
             default -> {

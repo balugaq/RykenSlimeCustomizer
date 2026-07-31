@@ -92,6 +92,12 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
         return visible.apply(p, profile, layout);
     }
 
+    public boolean isVisibleInNested(@NonNull Player p, @NonNull PlayerProfile profile, @NonNull SlimefunGuideMode layout) {
+        if (forceHidden) return false;
+
+        return visible.apply(p, profile, layout);
+    }
+
     @Override
     public void open(Player p, PlayerProfile profile, SlimefunGuideMode mode) {
         setup(p, profile, mode, 1);
@@ -131,7 +137,7 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
             Object content = this.contents.get(target);
             switch (content) {
                 case RSCItemGroupLegacy itemGroup -> {
-                    if (itemGroup.isVisible(p, profile, mode)) {
+                    if (itemGroup.isVisibleInNested(p, profile, mode)) {
                         menu.addItem(index, itemGroup.getItem(p));
                         menu.addMenuClickHandler(index, (pl, slot, item, action) -> {
                             // Don't open the item group, but run the scripts
