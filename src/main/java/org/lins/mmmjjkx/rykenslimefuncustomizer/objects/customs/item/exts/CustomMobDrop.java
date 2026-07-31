@@ -27,7 +27,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.CustomUnplaceableItem;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroup;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -60,7 +60,7 @@ public class CustomMobDrop extends CustomUnplaceableItem implements RandomMobDro
     @Override
     public void load() {
         if (!hidden) {
-            RSCItemGroup.addItemToGroup(getItemGroup(), this);
+            RSCItemGroupLegacy.addItemToGroup(getItemGroup(), this);
         }
 
         Set<ItemStack> dropping = Slimefun.getRegistry().getMobDrops().getOrDefault(entityType, new HashSet<>());

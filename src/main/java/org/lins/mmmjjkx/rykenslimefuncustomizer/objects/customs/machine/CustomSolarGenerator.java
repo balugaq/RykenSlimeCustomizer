@@ -26,13 +26,13 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroup;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
 
 public class CustomSolarGenerator extends SolarGenerator {
     @Override
     public void load() {
         if (!hidden) {
-            RSCItemGroup.addItemToGroup(getItemGroup(), this);
+            RSCItemGroupLegacy.addItemToGroup(getItemGroup(), this);
         }
 
         getRecipeType().register(getRecipe(), getRecipeOutput());

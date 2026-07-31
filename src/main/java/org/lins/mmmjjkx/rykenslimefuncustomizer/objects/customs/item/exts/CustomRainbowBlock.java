@@ -26,7 +26,6 @@ import java.util.List;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.parent.CustomItem;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroup;
 
 public class CustomRainbowBlock extends CustomItem {
     private final Object[] constructorArgs;

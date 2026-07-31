@@ -26,7 +26,7 @@ import io.github.thebusybiscuit.slimefun4.core.machines.MachineOperation;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.interfaces.InventoryBlock;
 import me.mrCookieSlime.Slimefun.Objects.handlers.BlockTicker;
 import org.bukkit.inventory.ItemStack;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroup;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
 
 @SuppressWarnings("deprecation")
 public abstract class AbstractEmptyMachine<O extends MachineOperation> extends SlimefunItem
@@ -34,7 +34,7 @@ public abstract class AbstractEmptyMachine<O extends MachineOperation> extends S
     @Override
     public void load() {
         if (!hidden) {
-            RSCItemGroup.addItemToGroup(getItemGroup(), this);
+            RSCItemGroupLegacy.addItemToGroup(getItemGroup(), this);
         }
 
         getRecipeType().register(getRecipe(), getRecipeOutput());

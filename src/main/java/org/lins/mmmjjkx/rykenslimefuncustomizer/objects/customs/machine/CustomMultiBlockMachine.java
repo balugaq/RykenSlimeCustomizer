@@ -46,13 +46,13 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroup;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
 
 public class CustomMultiBlockMachine extends MultiBlockMachine {
     @Override
     public void load() {
         if (!hidden) {
-            RSCItemGroup.addItemToGroup(getItemGroup(), this);
+            RSCItemGroupLegacy.addItemToGroup(getItemGroup(), this);
         }
 
         getRecipeType().register(getRecipe(), getRecipeOutput());

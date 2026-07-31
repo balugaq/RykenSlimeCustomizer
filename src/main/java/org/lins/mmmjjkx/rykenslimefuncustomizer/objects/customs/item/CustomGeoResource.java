@@ -29,13 +29,13 @@ import org.bukkit.block.Biome;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroup;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
 
 public class CustomGeoResource extends UnplaceableBlock implements GEOResource {
     @Override
     public void load() {
         if (!hidden) {
-            RSCItemGroup.addItemToGroup(getItemGroup(), this);
+            RSCItemGroupLegacy.addItemToGroup(getItemGroup(), this);
         }
 
         getRecipeType().register(getRecipe(), getRecipeOutput());

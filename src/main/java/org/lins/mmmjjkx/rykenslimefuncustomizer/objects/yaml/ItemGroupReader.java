@@ -21,7 +21,6 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.items.groups.LockedItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.groups.NestedItemGroup;
-import io.github.thebusybiscuit.slimefun4.api.items.groups.SeasonalItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.groups.SubItemGroup;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 
@@ -34,8 +33,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.GroupType;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroup;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.Visible;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
@@ -72,7 +72,7 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
 
         boolean forceHidden = section.getBoolean("forceHidden", false);
 
-        RSCItemGroup parent = null;
+        BaseRSCItemGroup parent = null;
         var par = section.getString("parent");
         if (par != null) {
             var parK = NamespacedKey.fromString(par.toLowerCase(), RykenSlimefunCustomizer.INSTANCE);
@@ -93,7 +93,7 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
                     group.register(RykenSlimefunCustomizer.INSTANCE);
                     return group;
                 }
-                case RSCItemGroup rsc -> parent = rsc;
+                case RSCItemGroupLegacy rsc -> parent = rsc;
                 default -> {
                     ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载物品组" + section.getCurrentPath() + "时遇到了问题: 无法将添加到指定的物品组: " + par);
                     return null;
@@ -130,7 +130,7 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
             visible = (a, b, c) -> true;
         }
 
-        RSCItemGroup group = new RSCItemGroup(key, stack, tier, addon, groupType, visible, forceHidden, parent != null);
+        BaseRSCItemGroup group = BaseRSCItemGroup.create(key, stack, tier, addon, groupType, visible, forceHidden, parent != null);
 
         if (parent != null) {
             parent.addContent(group);
@@ -144,7 +144,7 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
 
         group.register(RykenSlimefunCustomizer.INSTANCE);
 
-        return group;
+        return group.getSelf();
     }
 
     // 物品组不需要预加载物品

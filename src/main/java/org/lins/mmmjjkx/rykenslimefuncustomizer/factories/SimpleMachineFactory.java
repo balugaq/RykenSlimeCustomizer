@@ -29,7 +29,7 @@ import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.AContainer;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.sf.*;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.SimpleMachineType;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroup;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
 
 public class SimpleMachineFactory {
     public static SlimefunItem create(
@@ -189,7 +189,7 @@ public class SimpleMachineFactory {
 
     public static void load(SlimefunItem sf) {
         if (!sf.isHidden()) {
-            RSCItemGroup.addItemToGroup(sf.getItemGroup(), sf);
+            RSCItemGroupLegacy.addItemToGroup(sf.getItemGroup(), sf);
         }
 
         sf.getRecipeType().register(sf.getRecipe(), sf.getRecipeOutput());

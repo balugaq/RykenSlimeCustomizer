@@ -54,7 +54,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SingleItemRecipeGuideL
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomLinkedMachineRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroup;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.BlockMenuUtil;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.StackUtils;
@@ -63,7 +63,7 @@ public class CustomWorkbench extends AContainer implements EnergyNetComponent, R
     @Override
     public void load() {
         if (!hidden) {
-            RSCItemGroup.addItemToGroup(getItemGroup(), this);
+            RSCItemGroupLegacy.addItemToGroup(getItemGroup(), this);
         }
 
         getRecipeType().register(getRecipe(), getRecipeOutput());
