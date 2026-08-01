@@ -111,6 +111,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         // Plugin startup logic
         CommonUtils.completeFile("config.yml");
 
+        jeg = Bukkit.getPluginManager().isPluginEnabled("JustEnoughGuide");
         addonManager = new ProjectAddonManager();
 
         if (getConfig().getBoolean("saveExample", false)) {
@@ -129,65 +130,8 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
             world.getPopulators().add(new BlockPopulator());
         }
 
-        jeg = Bukkit.getPluginManager().isPluginEnabled("JustEnoughGuide");
         if (jeg) {
-            ExceptionHandler.info("已检测到JustEnoughGuide，正在适配...");
-            try {
-                SaveditemsGroup itemGroup = new SaveditemsGroup(
-                        new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "saveditems"),
-                        new CustomItemStack(Material.COMMAND_BLOCK, "&c保存的物品 (RSC saveditems)"));
-
-                SaveditemsGroup.instance = itemGroup;
-
-                for (ProjectAddon addon : addonManager.getAllAddons()) {
-                    File savedItemsFolder = addon.getSavedItemsFolder();
-                    if (!savedItemsFolder.exists()) continue;
-
-                    String prjId = addon.getAddonId();
-
-                    try (var stream = Files.walk(savedItemsFolder.toPath())) {
-                        stream.filter(path -> path.toFile().isFile()
-                                        && (path.toString().endsWith(".yml")
-                                                || path.toString().endsWith(".yaml")))
-                                .forEach(path -> {
-                                    try {
-                                        File file = path.toFile();
-                                        debug(() -> "Loading saveditem: "+ file.toPath().toAbsolutePath());
-                                        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                                        ItemStack item = config.getItemStack("item");
-                                        if (item == null) {
-                                            return;
-                                        }
-
-                                        // 计算相对于saveditems文件夹的路径
-                                        String relativePath = savedItemsFolder
-                                                .toPath()
-                                                .relativize(path)
-                                                .toString();
-                                        // 移除文件扩展名
-                                        String pathWithoutExt =
-                                                relativePath.substring(0, relativePath.lastIndexOf("."));
-                                        // 格式: prjId;相对路径
-                                        String source = prjId + ";" + pathWithoutExt;
-
-                                        item.editMeta(meta -> {
-                                            meta.getPersistentDataContainer()
-                                                    .set(SaveditemsGroup.SOURCE_KEY, PersistentDataType.STRING, source);
-                                        });
-                                        itemGroup.addItem(item);
-                                    } catch (Exception e) {
-                                        ExceptionHandler.handleError("无法读取 " + path, e);
-                                    }
-                                });
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                itemGroup.register(this);
-            } catch (Exception e) {
-                ExceptionHandler.handleError("JustEnoughGuide版本过低，无法适配", e);
-            }
+            handleJEG();
         }
 
         if (getConfig().getBoolean("pluginUpdate", false)
@@ -207,6 +151,66 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         ExceptionHandler.info("改作者: balugaq");
         ExceptionHandler.info("项目主页: https://github.com/balugaq/RykenSlimeCustomizer");
         ExceptionHandler.info("============================");
+    }
+
+    private void handleJEG() {
+        ExceptionHandler.info("已检测到JustEnoughGuide，正在适配...");
+        try {
+            SaveditemsGroup itemGroup = new SaveditemsGroup(
+                new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "saveditems"),
+                new CustomItemStack(Material.COMMAND_BLOCK, "&c保存的物品 (RSC saveditems)"));
+
+            SaveditemsGroup.instance = itemGroup;
+
+            for (ProjectAddon addon : addonManager.getAllAddons()) {
+                File savedItemsFolder = addon.getSavedItemsFolder();
+                if (!savedItemsFolder.exists()) continue;
+
+                String prjId = addon.getAddonId();
+
+                try (var stream = Files.walk(savedItemsFolder.toPath())) {
+                    stream.filter(path -> path.toFile().isFile()
+                            && (path.toString().endsWith(".yml")
+                            || path.toString().endsWith(".yaml")))
+                        .forEach(path -> {
+                            try {
+                                File file = path.toFile();
+                                debug(() -> "Loading saveditem: "+ file.toPath().toAbsolutePath());
+                                YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+                                ItemStack item = config.getItemStack("item");
+                                if (item == null) {
+                                    return;
+                                }
+
+                                // 计算相对于saveditems文件夹的路径
+                                String relativePath = savedItemsFolder
+                                    .toPath()
+                                    .relativize(path)
+                                    .toString();
+                                // 移除文件扩展名
+                                String pathWithoutExt =
+                                    relativePath.substring(0, relativePath.lastIndexOf("."));
+                                // 格式: prjId;相对路径
+                                String source = prjId + ";" + pathWithoutExt;
+
+                                item.editMeta(meta -> {
+                                    meta.getPersistentDataContainer()
+                                        .set(SaveditemsGroup.SOURCE_KEY, PersistentDataType.STRING, source);
+                                });
+                                itemGroup.addItem(item);
+                            } catch (Exception e) {
+                                ExceptionHandler.handleError("无法读取 " + path, e);
+                            }
+                        });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            itemGroup.register(this);
+        } catch (Exception e) {
+            ExceptionHandler.handleError("JustEnoughGuide版本过低，无法适配", e);
+        }
     }
 
     private void handleLogitech() {
