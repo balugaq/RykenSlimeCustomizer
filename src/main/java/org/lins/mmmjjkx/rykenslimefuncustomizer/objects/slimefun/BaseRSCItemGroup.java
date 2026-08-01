@@ -34,6 +34,8 @@ public interface BaseRSCItemGroup {
 
     void register(SlimefunAddon plugin);
 
+    void addContent(SlimefunItem sf);
+
     void addContent(String action);
 
     void addContent(ItemGroup itemGroup);
@@ -153,7 +155,7 @@ public interface BaseRSCItemGroup {
     ProjectAddon getProjectAddon();
 
     static void addItemToGroup(ItemGroup itemGroup, SlimefunItem sf) {
-        if (itemGroup instanceof RSCItemGroupLegacy group) {
+        if (itemGroup instanceof BaseRSCItemGroup group) {
             ExceptionHandler.debugLog(() -> "添加物品 " + sf + " 到物品组 " + group.getKey());
             group.addContent(sf);
             return;
