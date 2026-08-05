@@ -23,7 +23,6 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.attributes.EnergyNetProvider;
 import io.github.thebusybiscuit.slimefun4.core.networks.energy.EnergyNetComponentType;
-import java.util.List;
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
 import org.graalvm.polyglot.Value;
@@ -32,7 +31,10 @@ import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.MachineRecord;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import java.util.List;
 
 public class CustomEnergyGenerator extends CustomMachine implements EnergyNetProvider {
     private final ScriptEval eval;
@@ -58,6 +60,7 @@ public class CustomEnergyGenerator extends CustomMachine implements EnergyNetPro
 
     @Override
     public int getGeneratedOutput(@NotNull Location l, @NotNull SlimefunBlockData data) {
+        if (!SuperMultiBlockManager.canTick(l)) return 0;
         if (eval == null) {
             return defaultOutput;
         } else {

@@ -32,11 +32,6 @@ import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
 import io.github.thebusybiscuit.slimefun4.utils.itemstack.ItemStackWrapper;
 import it.unimi.dsi.fastutil.ints.IntList;
-import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import lombok.Getter;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.AContainer;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe;
@@ -53,8 +48,15 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomCraftingOperation;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomMachineRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class CustomRecipeMachine extends AContainer implements RecipeDisplayItem {
     @Override
@@ -241,18 +243,11 @@ public class CustomRecipeMachine extends AContainer implements RecipeDisplayItem
     @Override
     protected void constructMenu(BlockMenuPreset preset) {}
 
-    protected boolean preTick(Block b, BlockMenu inv, int progressSlot) {
-        return true;
-    }
-
     @Override
     protected void tick(Block b) {
+        if (!SuperMultiBlockManager.canTick(b.getLocation())) return;
         BlockMenu inv = StorageCacheUtils.getMenu(b.getLocation());
         int progressSlot = this.menu == null || this.menu.getProgressSlot() == -1 ? 22 : this.menu.getProgressSlot();
-
-        if (!preTick(b, inv, progressSlot)) {
-            return;
-        }
 
         CustomCraftingOperation currentOperation = (CustomCraftingOperation) this.processor.getOperation(b);
         if (inv == null) return;

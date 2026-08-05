@@ -21,8 +21,10 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.implementation.items.electric.machines.accelerators.CropGrowthAccelerator;
+import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 
 public class AdvancedCropGrowthAccelerator extends CropGrowthAccelerator {
     @Override
@@ -54,6 +56,12 @@ public class AdvancedCropGrowthAccelerator extends CropGrowthAccelerator {
         this.radius = radius;
         this.energy_consumption = energy_consumption;
         this.speed = speed;
+    }
+
+    @Override
+    public void tick(Block b) {
+        if (!SuperMultiBlockManager.canTick(b.getLocation())) return;
+        super.tick(b);
     }
 
     @Override

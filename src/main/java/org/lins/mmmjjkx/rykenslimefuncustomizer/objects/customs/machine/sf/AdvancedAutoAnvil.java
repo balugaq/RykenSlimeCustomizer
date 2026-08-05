@@ -29,6 +29,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 
 public class AdvancedAutoAnvil extends AutoAnvil {
     @Override
@@ -57,6 +58,8 @@ public class AdvancedAutoAnvil extends AutoAnvil {
     }
 
     protected MachineRecipe findNextRecipe(BlockMenu menu) {
+        if (!SuperMultiBlockManager.canTick(menu.getLocation())) return null;
+
         for (int slot : this.getInputSlots()) {
             ItemStack ductTape = menu.getItemInSlot(
                     slot == this.getInputSlots()[0] ? this.getInputSlots()[1] : this.getInputSlots()[0]);

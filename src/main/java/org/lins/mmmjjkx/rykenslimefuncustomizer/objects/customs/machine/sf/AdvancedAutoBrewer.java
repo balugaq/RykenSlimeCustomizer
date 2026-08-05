@@ -22,11 +22,6 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.implementation.items.electric.machines.AutoBrewer;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.inventory.InvUtils;
-import java.util.EnumMap;
-import java.util.Map;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.Material;
@@ -35,6 +30,13 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.EnumMap;
+import java.util.Map;
 
 public class AdvancedAutoBrewer extends AutoBrewer {
     @Override
@@ -59,6 +61,8 @@ public class AdvancedAutoBrewer extends AutoBrewer {
     }
 
     @Nullable protected MachineRecipe findNextRecipe(BlockMenu menu) {
+        if (!SuperMultiBlockManager.canTick(menu.getLocation())) return null;
+
         ItemStack input1 = menu.getItemInSlot(this.getInputSlots()[0]);
         ItemStack input2 = menu.getItemInSlot(this.getInputSlots()[1]);
         if (input1 != null && input2 != null) {

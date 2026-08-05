@@ -37,6 +37,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NonNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ReflectionUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +49,7 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
     private final Visible visible;
     private final boolean forceHidden;
     private final boolean hasParent;
+    private final int page;
 
     @Override
     public ProjectAddon getProjectAddon() {
@@ -55,9 +57,13 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
     }
 
     public RSCItemGroupLegacy(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent) {
+        this(key, item, tier, addon, type, visible, forceHidden, hasParent, 1);
+    }
+
+    public RSCItemGroupLegacy(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent, int page) {
         super(key, item, tier);
 
-        ExceptionHandler.debugLog(() -> "创建物品组: " + key + " type=" + type.name());
+        ExceptionHandler.debugLog(() -> "创建物品组: " + key + " type=" + type.name() + ", page=" + page);
 
         contents = new ArrayList<>();
         this.addon = addon;
@@ -65,6 +71,7 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
         this.visible = visible;
         this.forceHidden = forceHidden;
         this.hasParent = hasParent;
+        this.page = page;
     }
 
     public void addContent(SlimefunItem sf) {
@@ -100,15 +107,15 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
 
     @Override
     public void open(Player p, PlayerProfile profile, SlimefunGuideMode mode) {
-        setup(p, profile, mode, 1);
+        setup(p, profile, mode);
     }
 
-    private void setup(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
-        ChestMenu menu = legacySetup(p, profile, mode, page);
+    private void setup(Player p, PlayerProfile profile, SlimefunGuideMode mode) {
+        ChestMenu menu = legacySetup(p, profile, mode);
         menu.open(p);
     }
     
-    private ChestMenu legacySetup(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
+    private ChestMenu legacySetup(Player p, PlayerProfile profile, SlimefunGuideMode mode) {
         GuideHistory history = profile.getGuideHistory();
         if (mode == SlimefunGuideMode.SURVIVAL_MODE) {
             history.add(this, page);
@@ -157,11 +164,8 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
                 }
                 case SlimefunItem sf -> {
                     if (!sf.isDisabledIn(p.getWorld())) {
-                        menu.addItem(index, sf.getItem());
-                        menu.addMenuClickHandler(index, (pl, slot, item, action) -> {
-                            SlimefunGuide.displayItem(profile, sf, true);
-                            return false;
-                        });
+                        var impl = Slimefun.getRegistry().getSlimefunGuide(mode);
+                        ReflectionUtil.invokeMethod(impl, "displaySlimefunItem", menu, this, p, profile, sf, page, index);
                         ++index;
                     }
                 }
@@ -173,9 +177,10 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
         int pages = target == validCount - 1 ? page : validCount / 36 + 1;
         menu.addItem(46, ChestMenuUtils.getPreviousButton(p, page, pages));
         menu.addMenuClickHandler(46, (pl, slot, item, action) -> {
-            int next = page - 1;
-            if (next > 0) {
-                setup(p, profile, mode, next);
+            int previous = page - 1;
+            if (previous > 0) {
+                new RSCItemGroupLegacy(key, item, tier, addon, type, visible, forceHidden, hasParent, previous)
+                    .setup(p, profile, mode);
             }
 
             return false;
@@ -184,7 +189,8 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
         menu.addMenuClickHandler(52, (pl, slot, item, action) -> {
             int next = page + 1;
             if (next <= pages) {
-                setup(p, profile, mode, next);
+                new RSCItemGroupLegacy(key, item, tier, addon, type, visible, forceHidden, hasParent, next)
+                    .setup(p, profile, mode);
             }
 
             return false;

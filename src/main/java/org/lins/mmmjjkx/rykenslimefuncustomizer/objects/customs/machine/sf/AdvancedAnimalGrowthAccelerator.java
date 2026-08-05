@@ -33,6 +33,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 
 public class AdvancedAnimalGrowthAccelerator extends AbstractGrowthAccelerator {
     @Override
@@ -66,6 +67,8 @@ public class AdvancedAnimalGrowthAccelerator extends AbstractGrowthAccelerator {
     }
 
     protected void tick(Block b) {
+        if (!SuperMultiBlockManager.canTick(b.getLocation())) return;
+
         BlockMenu inv = StorageCacheUtils.getMenu(b.getLocation());
 
         if (inv != null) {

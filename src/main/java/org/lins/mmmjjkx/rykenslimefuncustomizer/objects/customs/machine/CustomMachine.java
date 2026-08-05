@@ -35,8 +35,6 @@ import io.github.thebusybiscuit.slimefun4.core.machines.MachineOperation;
 import io.github.thebusybiscuit.slimefun4.core.machines.MachineProcessor;
 import io.github.thebusybiscuit.slimefun4.core.networks.energy.EnergyNetComponentType;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
-import java.util.List;
-import javax.annotation.ParametersAreNonnullByDefault;
 import lombok.Getter;
 import me.mrCookieSlime.Slimefun.Objects.handlers.BlockTicker;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
@@ -56,6 +54,10 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.MachineInfo;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.MachineRecord;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.ScriptedEvalBreakHandler;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.List;
 
 public class CustomMachine extends AbstractEmptyMachine<MachineOperation> implements EnergyNetComponent {
     private final MachineRecord theRecord;
@@ -142,6 +144,7 @@ public class CustomMachine extends AbstractEmptyMachine<MachineOperation> implem
     }
 
     protected void tick(Block b, SlimefunItem item, SlimefunBlockData data) {
+        if (!SuperMultiBlockManager.canTick(b.getLocation())) return;
         if (eval != null) {
             BlockMenu blockMenu = StorageCacheUtils.getMenu(b.getLocation());
             MachineInfo info = new MachineInfo(blockMenu, data, item, b, processor, null, this);

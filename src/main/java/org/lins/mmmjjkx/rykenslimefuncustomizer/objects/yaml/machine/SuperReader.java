@@ -22,12 +22,6 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
-import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
@@ -42,7 +36,17 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLeg
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ReflectionUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ReflectionUtil;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
 @SuppressWarnings("unchecked")
 public class SuperReader extends YamlReader<SlimefunItem> {
@@ -247,7 +251,7 @@ public class SuperReader extends YamlReader<SlimefunItem> {
     }
 
     private Method getMethod(Class<?> clazz, String name, Class<?>... parameterTypes) {
-        for (Method method : ReflectionUtils.getAllMethods(clazz)) {
+        for (Method method : ReflectionUtil.getAllMethods(clazz)) {
             if (method.getName().equals(name) && Arrays.equals(method.getParameterTypes(), parameterTypes)) {
                 return method;
             }
@@ -257,7 +261,7 @@ public class SuperReader extends YamlReader<SlimefunItem> {
     }
 
     private Field getField(Object obj, String name) {
-        for (Field field : ReflectionUtils.getAllFields(obj.getClass())) {
+        for (Field field : ReflectionUtil.getAllFields(obj.getClass())) {
             if (field.getName().equals(name)) {
                 return field;
             }

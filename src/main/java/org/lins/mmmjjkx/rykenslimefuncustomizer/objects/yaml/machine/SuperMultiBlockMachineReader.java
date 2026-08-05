@@ -21,16 +21,6 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Nullable;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
@@ -55,6 +45,14 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.VanillaMultiBlo
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.Vector3i;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import javax.annotation.Nullable;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlockMachine> {
     public SuperMultiBlockMachineReader(YamlConfiguration config, ProjectAddon addon) {
@@ -147,12 +145,29 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
         boolean displayProjectiles = section.getBoolean("displayProjectiles", true);
         boolean checkFormed = section.getBoolean("checkFormed", true);
         boolean openMenuWhenClickedParts = section.getBoolean("openMenuWhenClickedParts", true);
+        boolean noMenu = section.getBoolean("noMenu", false);
         boolean noMenuWhenNotFormed = section.getBoolean("noMenuWhenNotFormed", true);
         boolean allowSwitchDisplayLayer = section.getBoolean("allowSwitchDisplayLayer", true);
         boolean defaultNotice = section.getBoolean("defaultNotice", true);
 
         SuperMultiBlockDefinition definition = readMultiBlockDefinition(section, s, eval);
         if (definition == null) return null;
+
+        String redirectMenu = section.getString("redirectMenu");
+
+        if (redirectMenu != null) {
+            if (definition.getMapping().get(redirectMenu) == null) {
+                ExceptionHandler.handleError(
+                        "在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "重定向菜单中: 不存在指定的映射: " + redirectMenu);
+                return null;
+            }
+
+            if (definition.count(redirectMenu) != 1) {
+                ExceptionHandler.handleError(
+                        "在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "重定向菜单映射 " + redirectMenu + "只能有1个");
+                return null;
+            }
+        }
 
         return new CustomSuperMultiBlockMachine(
                 group.getSecondValue(),
@@ -172,9 +187,11 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
                 displayProjectiles,
                 checkFormed,
                 openMenuWhenClickedParts,
+                noMenu,
                 noMenuWhenNotFormed,
                 allowSwitchDisplayLayer,
-                defaultNotice
+                defaultNotice,
+                redirectMenu
         );
     }
 
@@ -296,7 +313,8 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
             blockParts.put(pos.subtract(corePos), mapping.get(blockDesc));
         }
 
-        return new SuperMultiBlockDefinition(corePart, blockParts);
+        blockParts.remove(corePos.subtract(corePos)); // 移除 core，避免影响多方块嵌套的情况
+        return new SuperMultiBlockDefinition(mapping, blockParts);
     }
 
     public static boolean isValidBlockDesc(String block) {

@@ -67,6 +67,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
     public static RykenSlimefunCustomizer INSTANCE;
     public static ProjectAddonManager addonManager;
+    public SuperMultiBlockManager smbm;
     public static boolean jeg = false;
     public static @Nullable Set<String> logitechNotStackableIds = new HashSet<>();
 
@@ -84,6 +85,10 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         for (ProjectAddon addon : addonManager.getAllAddons()) {
             addon.getScriptEvals().forEach(JavaScriptEval::clearScriptCache);
         }
+    }
+
+    public SuperMultiBlockManager getSuperMultiBlockManager() {
+        return INSTANCE.smbm;
     }
 
     public static void clearDisplayProjectiles() {
@@ -113,6 +118,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
         jeg = Bukkit.getPluginManager().isPluginEnabled("JustEnoughGuide");
         addonManager = new ProjectAddonManager();
+        smbm = new SuperMultiBlockManager();
 
         if (getConfig().getBoolean("saveExample", false)) {
             saveExample();
@@ -270,6 +276,9 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         for (World world : Bukkit.getWorlds()) {
             world.getPopulators().removeIf(x -> x instanceof BlockPopulator);
         }
+
+        addonManager = null;
+        smbm = null;
 
         // Plugin shutdown logic
         getLogger().info("RykenSlimeCustomizer已卸载!");

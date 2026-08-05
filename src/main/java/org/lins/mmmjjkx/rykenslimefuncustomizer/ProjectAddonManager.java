@@ -18,9 +18,6 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer;
 
 import io.github.thebusybiscuit.slimefun4.libraries.commons.lang.Validate;
-import java.io.File;
-import java.util.*;
-import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -33,6 +30,15 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddonLoader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.RecipeTypeMap;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Supplier;
 
 public final class ProjectAddonManager {
     public static File ADDONS_DIRECTORY;
@@ -57,7 +63,7 @@ public final class ProjectAddonManager {
         }
     }
 
-    public void pushProjectAddon(ProjectAddon addon) {
+    public void addProjectAddon(ProjectAddon addon) {
         Validate.notNull(addon, "addon");
         if (!projectAddons.containsKey(addon.getAddonId())) {
             projectIds.put(addon.getAddonId(), addon.getFolder());

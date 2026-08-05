@@ -46,7 +46,6 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.*;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.item.*;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine.*;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlock;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.update.GithubUpdater;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
@@ -441,7 +440,7 @@ public class ProjectAddonLoader {
                 ProjectAddon addon = loader.load();
                 if (addon != null) {
                     addon.setMarkedAsDepend(true);
-                    RykenSlimefunCustomizer.addonManager.pushProjectAddon(addon);
+                    RykenSlimefunCustomizer.addonManager.addProjectAddon(addon);
                 }
             } else {
                 return false;

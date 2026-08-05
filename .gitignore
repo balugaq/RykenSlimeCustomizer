@@ -135,3 +135,4 @@ gradle-app.setting
 .classpath
 
 bin/
+gradle.properties

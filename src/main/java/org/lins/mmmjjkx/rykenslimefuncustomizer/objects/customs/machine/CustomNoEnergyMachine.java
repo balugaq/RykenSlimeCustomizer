@@ -27,9 +27,6 @@ import io.github.thebusybiscuit.slimefun4.core.handlers.BlockPlaceHandler;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockUseHandler;
 import io.github.thebusybiscuit.slimefun4.core.machines.MachineOperation;
 import io.github.thebusybiscuit.slimefun4.core.machines.MachineProcessor;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Consumer;
 import lombok.Getter;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ClickAction;
@@ -47,6 +44,11 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.ScriptedEvalBrea
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.SmallerMachineInfo;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.RSCClickHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
 
 @SuppressWarnings("deprecation")
 public class CustomNoEnergyMachine extends AbstractEmptyMachine<MachineOperation> {
@@ -154,6 +156,7 @@ public class CustomNoEnergyMachine extends AbstractEmptyMachine<MachineOperation
     }
 
     protected void tick(Block b, SlimefunItem item, SlimefunBlockData data) {
+        if (!SuperMultiBlockManager.canTick(b.getLocation())) return;
         if (eval != null) {
             SmallerMachineInfo info = new SmallerMachineInfo(data.getBlockMenu(), data, this, item, b, processor);
             eval.evalFunction("tick", info);

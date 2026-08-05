@@ -17,9 +17,6 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine;
 
-import static org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomRecipeMachine.RECIPE_INPUT;
-import static org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomRecipeMachine.RECIPE_OUTPUT;
-
 import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
@@ -37,10 +34,6 @@ import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
 import io.github.thebusybiscuit.slimefun4.utils.itemstack.ItemStackWrapper;
 import it.unimi.dsi.fastutil.ints.IntList;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import lombok.Getter;
 import me.mrCookieSlime.Slimefun.Objects.handlers.BlockTicker;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
@@ -56,8 +49,17 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.parent.AbstractE
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomMachineRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomTemplateCraftingOperation;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.MachineTemplate;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ItemUtils;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomRecipeMachine.RECIPE_INPUT;
+import static org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomRecipeMachine.RECIPE_OUTPUT;
 
 public class CustomTemplateMachine extends AbstractEmptyMachine<CustomTemplateCraftingOperation>
         implements RecipeDisplayItem, EnergyNetComponent {
@@ -200,6 +202,7 @@ public class CustomTemplateMachine extends AbstractEmptyMachine<CustomTemplateCr
 
     @SuppressWarnings("unused")
     private void tick(Block b, SlimefunItem item, SlimefunBlockData data) {
+        if (!SuperMultiBlockManager.canTick(b.getLocation())) return;
         BlockMenu inv = data.getBlockMenu();
         if (inv != null) {
             ItemStack templateItem = inv.getItemInSlot(templateSlot);

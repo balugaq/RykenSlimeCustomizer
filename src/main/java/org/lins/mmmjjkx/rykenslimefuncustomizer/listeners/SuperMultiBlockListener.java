@@ -17,10 +17,9 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.listeners;
 
-import java.util.Set;
-
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.protection.Interaction;
+import io.papermc.paper.event.block.CompostItemEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -30,40 +29,37 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDamageEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.CauldronLevelChangeEvent;
-import org.bukkit.event.block.LeavesDecayEvent;
-import org.bukkit.event.block.TNTPrimeEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.CauldronLevelChangeEvent;
+import org.bukkit.event.block.LeavesDecayEvent;
+import org.bukkit.event.block.TNTPrimeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.jetbrains.annotations.NotNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlock;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.Asynchronized;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 
-import io.papermc.paper.event.block.CompostItemEvent;
-
-public class SuperMultiBlockListener implements Listener {
-    private final SuperMultiBlockManager manager;
-
+public class SuperMultiBlockListener extends SuperMultiBlockManager implements Listener, Asynchronized {
     public SuperMultiBlockListener() {
-        this.manager = SuperMultiBlockManager.getInstance();
         Bukkit.getPluginManager().registerEvents(this, RykenSlimefunCustomizer.INSTANCE);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace(@NotNull BlockPlaceEvent e) {
         markDirty(e.getBlock().getLocation());
+        runAsyncLater(() -> tryModifyMenu(e.getBlock().getLocation()));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(@NotNull BlockBreakEvent e) {
         markDirty(e.getBlock().getLocation());
+        runAsyncLater(() -> getMenuModified().remove(e.getBlock().getLocation()));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -136,7 +132,7 @@ public class SuperMultiBlockListener implements Listener {
         markDirty(e.getBlock().getLocation());
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onPlayerInteract(@NotNull PlayerInteractEvent e) {
         if (e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         Block b = e.getClickedBlock();
@@ -147,6 +143,6 @@ public class SuperMultiBlockListener implements Listener {
     }
 
     private void markDirty(@NotNull Location location) {
-        manager.markDirty(location, true);
+        markDirty(location, true);
     }
 }

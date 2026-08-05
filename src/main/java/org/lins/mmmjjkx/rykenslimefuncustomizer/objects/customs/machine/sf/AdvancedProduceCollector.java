@@ -22,9 +22,11 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.implementation.items.electric.machines.entities.AnimalProduce;
 import io.github.thebusybiscuit.slimefun4.implementation.items.electric.machines.entities.ProduceCollector;
+import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 
 public class AdvancedProduceCollector extends ProduceCollector {
     @Override
@@ -49,5 +51,11 @@ public class AdvancedProduceCollector extends ProduceCollector {
     public void addProduce(@NotNull AnimalProduce produce) {
         produce.setTicks(produce.getTicks() / speed);
         super.addProduce(produce);
+    }
+
+    @Override
+    public void tick(Block b) {
+        if (!SuperMultiBlockManager.canTick(b.getLocation())) return;
+        super.tick(b);
     }
 }

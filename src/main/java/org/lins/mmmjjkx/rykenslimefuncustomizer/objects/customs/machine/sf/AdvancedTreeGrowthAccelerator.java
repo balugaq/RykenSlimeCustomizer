@@ -27,9 +27,6 @@ import io.github.thebusybiscuit.slimefun4.implementation.SlimefunItems;
 import io.github.thebusybiscuit.slimefun4.implementation.items.electric.machines.accelerators.AbstractGrowthAccelerator;
 import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
 import io.github.thebusybiscuit.slimefun4.utils.itemstack.ItemStackWrapper;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.Particle;
 import org.bukkit.Tag;
@@ -38,6 +35,11 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Sapling;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 public class AdvancedTreeGrowthAccelerator extends AbstractGrowthAccelerator {
     @Override
@@ -76,6 +78,8 @@ public class AdvancedTreeGrowthAccelerator extends AbstractGrowthAccelerator {
     }
 
     protected void tick(@Nonnull Block b) {
+        if (!SuperMultiBlockManager.canTick(b.getLocation())) return;
+
         BlockMenu inv = StorageCacheUtils.getMenu(b.getLocation());
         if (inv != null) {
             if (this.getCharge(b.getLocation()) >= energy_consumption) {

@@ -17,14 +17,10 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock;
 
-import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
-import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import org.bukkit.Location;
-import org.bukkit.block.data.BlockData;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class MultiBlockMultiBlockPart extends SlimefunMultiBlockPart {
     public MultiBlockMultiBlockPart(SlimefunItemStack target) {
@@ -33,7 +29,7 @@ public class MultiBlockMultiBlockPart extends SlimefunMultiBlockPart {
 
     @Override
     public boolean isBuilt(@NotNull SuperMultiBlock ancestor, @NotNull Location partLocation) {
-        SuperMultiBlock smb = SuperMultiBlockManager.getInstance().getSuperMultiBlock(partLocation);
-        return smb != null && smb.isFullyFormedCached(); // 不需要检测是不是正确的多方块，因为一定经过 isOfPart 检测。
+        SuperMultiBlock smb = SuperMultiBlockManager.getInstance().getCoreStorage().get(partLocation);
+        return smb != null && smb.isFullyFormedCached();
     }
 }

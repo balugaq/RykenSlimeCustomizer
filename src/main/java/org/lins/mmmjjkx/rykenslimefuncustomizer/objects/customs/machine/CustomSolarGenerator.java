@@ -27,6 +27,7 @@ import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 
 public class CustomSolarGenerator extends SolarGenerator {
     @Override
@@ -60,6 +61,7 @@ public class CustomSolarGenerator extends SolarGenerator {
     }
 
     public int getGeneratedOutput(Location l, SlimefunBlockData data) {
+        if (!SuperMultiBlockManager.canTick(l)) return 0;
         World world = l.getWorld();
 
         if (world.getEnvironment() != World.Environment.NORMAL) {

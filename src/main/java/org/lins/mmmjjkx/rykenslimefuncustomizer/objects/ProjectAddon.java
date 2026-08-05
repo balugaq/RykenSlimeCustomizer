@@ -25,12 +25,6 @@ import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.api.researches.Research;
 import io.github.thebusybiscuit.slimefun4.core.attributes.Radioactive;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
-import io.github.thebusybiscuit.slimefun4.implementation.items.electric.Capacitor;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -48,11 +42,25 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.CustomArmor
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.CustomFood;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.CustomGeoResource;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.exts.CustomMobDrop;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.*;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomGenerator;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomLinkedRecipeMachine;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomMaterialGenerator;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomMultiBlockMachine;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomRecipeMachine;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSolarGenerator;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSuperMultiBlockMachine;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomTemplateMachine;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomWorkbench;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.parent.AbstractEmptyMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.DropFromBlock;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.RecipeTypeMap;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @Getter
@@ -172,9 +180,7 @@ public final class ProjectAddon {
         solarGenerators.forEach(this::unregisterItem);
         generators.forEach(this::unregisterItem);
         geoResources.forEach(g -> {
-            if (g instanceof CustomGeoResource cgr) {
-                unregisterItem(cgr);
-            }
+            unregisterItem(g);
             unregisterGeo(g);
         });
         materialGenerators.forEach(this::unregisterItem);
@@ -186,6 +192,7 @@ public final class ProjectAddon {
         templateMachines.forEach(this::unregisterItem);
         linkedRecipeMachines.forEach(this::unregisterItem);
         workbenches.forEach(this::unregisterItem);
+        superMultiBlockMachines.forEach(this::unregisterItem);
 
         recipeTypes.forEach(r -> RecipeTypeMap.removeRecipeTypes(r.getKey().getKey()));
 
@@ -211,6 +218,7 @@ public final class ProjectAddon {
         templateMachines.clear();
         linkedRecipeMachines.clear();
         workbenches.clear();
+        superMultiBlockMachines.clear();
         generationInfos.clear();
 
         preloadItems.clear();

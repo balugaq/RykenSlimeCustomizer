@@ -18,13 +18,9 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.commands;
 
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
 import org.bukkit.Bukkit;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -46,8 +42,16 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SaveditemsGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddonLoader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlock;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
 public class MainCommand implements TabExecutor {
     @Override
@@ -141,6 +145,33 @@ public class MainCommand implements TabExecutor {
                 RykenSlimefunCustomizer.clearDisplayProjectiles();
                 sender.sendMessage(CMIChatColor.translate("&a清除多方块显示实体成功！"));
                 return true;
+            } else if (args[0].equalsIgnoreCase("buildSuperMultiBlock")) {
+                if (!sender.hasPermission("rsc.command") || !sender.hasPermission("rsc.command.buildSuperMultiBlock")) {
+                    sender.sendMessage(CMIChatColor.translate("&4你没有权限去做这些！"));
+                    return false;
+                }
+
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(CMIChatColor.translate("&4只有玩家才能执行此命令！"));
+                    return false;
+                }
+
+                Block b = player.getTargetBlockExact(8, FluidCollisionMode.NEVER);
+                if (b == null || b.getType().isAir()) {
+                    player.sendMessage(CMIChatColor.translate("&4你必须要看向一个超大多方块才能执行此指令"));
+                    return false;
+                }
+
+                SuperMultiBlock smb = SuperMultiBlockManager.getInstance().getSuperMultiBlock(b.getLocation());
+                if (smb == null) {
+                    smb = SuperMultiBlockManager.getInstance().getCoreStorage().get(b.getLocation());
+                    if (smb == null) {
+                        player.sendMessage(CMIChatColor.translate("&4你必须要看向一个超大多方块才能执行此指令"));
+                        return false;
+                    }
+                }
+
+                smb.buildMultiBlock(player);
             } else {
                 sender.sendMessage(CMIChatColor.translate("&4找不到此子指令！"));
                 return false;
@@ -174,7 +205,7 @@ public class MainCommand implements TabExecutor {
                 ProjectAddonLoader loader =
                         new ProjectAddonLoader(file, RykenSlimefunCustomizer.addonManager.getProjectIds(), id);
                 ProjectAddon addon = loader.load();
-                RykenSlimefunCustomizer.addonManager.pushProjectAddon(addon);
+                RykenSlimefunCustomizer.addonManager.addProjectAddon(addon);
 
                 sender.sendMessage(CMIChatColor.translate("&a加载此附属成功！"));
                 return true;
@@ -280,7 +311,7 @@ public class MainCommand implements TabExecutor {
                         new ProjectAddonLoader(folder, RykenSlimefunCustomizer.addonManager.getProjectIds(), prjId);
                 ProjectAddon addonNew = pal.load();
 
-                RykenSlimefunCustomizer.addonManager.pushProjectAddon(addonNew);
+                RykenSlimefunCustomizer.addonManager.addProjectAddon(addonNew);
 
                 sender.sendMessage(CMIChatColor.translate("&a重载成功！"));
                 return true;
@@ -500,7 +531,8 @@ public class MainCommand implements TabExecutor {
                     "menupreview",
                     "getsaveditem",
                     "resaveitems",
-                    "clearScriptCache");
+                    "clearScriptCache",
+                    "buildSuperMultiBlock");
         } else if (args.length == 2) {
             return switch (args[0]) {
                 case "enable" ->

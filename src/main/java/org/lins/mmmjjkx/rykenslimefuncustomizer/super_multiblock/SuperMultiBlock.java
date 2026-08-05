@@ -17,24 +17,34 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock;
 
-import java.util.Set;
-
+import com.xzavier0722.mc.plugin.slimefun4.storage.controller.attributes.UniversalBlock;
+import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
+import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
+import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSuperMultiBlockMachine;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.HorizonDirection;
 
-import lombok.Getter;
+import java.util.Set;
 
 @Getter
-public class SuperMultiBlock {
+public class SuperMultiBlock extends SuperMultiBlockManager implements Asynchronized {
     private final CustomSuperMultiBlockMachine machine;
     private final Location coreLocation;
     private final int minY;
     private final int maxY;
     private final int[] layers;
+    private boolean ticked = false;
+    private final HorizonDirection direction;
 
     public int getCoreLayerIndex() {
         for (int i = 0; i < layers.length; i++) {
@@ -49,6 +59,10 @@ public class SuperMultiBlock {
         return getMachine().getCurrentLayerIndex(this);
     }
 
+    public void setLayerIndex(int layerIndex) {
+        getMachine().setLayerIndex(this, layerIndex);
+    }
+
     public int minY() {
         return minY;
     }
@@ -61,9 +75,11 @@ public class SuperMultiBlock {
         return getLayers().length;
     }
 
-    public SuperMultiBlock(@NotNull CustomSuperMultiBlockMachine machine, @NotNull Location coreLocation) {
+    public SuperMultiBlock(@NotNull CustomSuperMultiBlockMachine machine, @NotNull Location coreLocation, @NotNull HorizonDirection direction) {
         this.machine = machine;
         this.coreLocation = coreLocation;
+        this.direction = direction;
+
         var layers = new IntArraySet();
         int minY_ = 9999, maxY_ = -9999;
         for (Location location : getLocations()) {
@@ -82,7 +98,7 @@ public class SuperMultiBlock {
     }
 
     public boolean isFullyFormedCached() {
-        return getDefinition().isFullyFormedCached(coreLocation);
+        return getDefinition().isFullyFormedCached(coreLocation, direction);
     }
 
     public boolean isLayerFormed(int layer) {
@@ -108,16 +124,13 @@ public class SuperMultiBlock {
 
     @Nullable
     public MultiBlockPart getPart(@NotNull Location location) {
-        if (location.equals(coreLocation)) {
-            return getDefinition().getCore();
-        }
         Vector3i offset = new Vector3i(location.toVector().subtract(coreLocation.toVector()));
-        return getDefinition().getMap().get(offset);
+        return getDefinition().getMap(direction).get(offset);
     }
 
     @NotNull
     public Set<Location> getLocations() {
-        return getDefinition().getLocations(coreLocation);
+        return getDefinition().getLocations(coreLocation, direction);
     }
 
     public void onFormed(Location location) {
@@ -140,8 +153,119 @@ public class SuperMultiBlock {
         machine.formedLayer(layer);
     }
 
-    public void onInteract(PlayerInteractEvent event) {
+    public void onInteract(PlayerInteractEvent event, boolean clickedCore) {
         // checked permission
-        machine.onInteract(event, this);
+        machine.onInteract(event, clickedCore, this);
+    }
+
+    public void buildMultiBlock(Player player) {
+        // checked permission
+        int created = 0, built = 0;
+        for (var l : getLocations()) {
+            var part = getPart(l);
+            if (part == null) continue;
+            if (this.isFormedCached(l)) {
+                built ++;
+                continue;
+            }
+            SuperMultiBlockManager.getInstance().markDirty(l, true);
+
+            var b = l.getBlock();
+            if (part instanceof VanillaMultiBlockPart vanilla) {
+                BlockData data = vanilla.getBlockData();
+                b.setType(data.getMaterial());
+                b.setBlockData(data, true);
+                created++;
+                continue;
+            }
+
+            if (part instanceof SlimefunMultiBlockPart sf) {
+                var sfItem = sf.target.getItem();
+                if (sfItem == null) {
+                    fail(player, l, "未知的粘液方块: " + sfItem);
+                    continue;
+                }
+                var mt = sf.blockData.getPlacementMaterial();
+                if (!mt.isBlock()) {
+                    fail(player, l, "未知的粘液方块: " + sfItem + "/" + mt);
+                    continue;
+                }
+
+                if (StorageCacheUtils.getSfItem(l) != null) {
+                    Slimefun.getDatabaseManager().getBlockDataController().removeBlock(l);
+                }
+
+                if (Slimefun.getBlockDataService().isTileEntity(mt)) {
+                    Slimefun.getBlockDataService().setBlockData(b, sfItem.getId());
+                }
+
+                if (sfItem instanceof UniversalBlock) {
+                    var data = Slimefun.getDatabaseManager()
+                        .getBlockDataController()
+                        .createUniversalBlock(l, sfItem.getId());
+
+                    if (Slimefun.getBlockDataService().isTileEntity(mt)) {
+                        Slimefun.getBlockDataService().updateUniversalDataUUID(b, data.getKey());
+                    }
+                } else {
+                    Slimefun.getDatabaseManager()
+                        .getBlockDataController()
+                        .createBlock(l, sfItem.getId());
+                }
+                created++;
+            }
+
+            if (part instanceof CustomMultiBlockPart) {
+                fail(player, l, "该方块由脚本检测，无法自动放置");
+                continue;
+            }
+        }
+
+        String color;
+        if (created + built == 0) color = "&c";
+        else if (created + built < getLocations().size()) color = "&e";
+        else color = "&a";
+
+        Bukkit.getScheduler().runTaskLaterAsynchronously(RykenSlimefunCustomizer.INSTANCE, () -> {
+            for (var l : getLocations()) {
+                if (!isFormedCached(l)) {
+                    player.sendMessage(CMIChatColor.translate("&c方块 (" + l.getBlockX() + ", " + l.getBlockY() + ", " + l.getBlockZ() + ") 未搭建完成"));
+                }
+            }
+            player.sendMessage(CMIChatColor.translate(isFullyFormedCached() ? "&a多方块已搭建完成!" : "&c多方块未搭建完成!"));
+            if (isFullyFormedCached()) {
+                removeProjectiles(this);
+            }
+        }, 3L);
+
+        player.sendMessage(CMIChatColor.translate("&a已搭建 " + color + (created + built) + "/" + getLocations().size() + " &a个方块"));
+    }
+
+    private void fail(Player player, Location l, String reason) {
+        player.sendMessage(CMIChatColor.translate("&c" + reason + " &7(" + l.getBlockX() + ", " + l.getBlockY() + ", " + l.getBlockZ() + ")"));
+    }
+
+    public void tick() {
+        if (ticked) return;
+        ticked = true;
+        runAsyncLater(() -> getLocations().forEach(this::tryModifyMenu));
+    }
+
+    public void hideAllEntities() {
+        hideEntities(selectEntities(this));
+    }
+
+    public void showAllEntities() {
+        showEntities(selectEntities(this));
+    }
+
+    public void showEntities(int layer) {
+        showEntities(selectEntities(this, layer));
+    }
+
+    public void markDirty() {
+        for (var l : getLocations()) {
+            markDirty(l, false);
+        }
     }
 }

@@ -17,13 +17,13 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock;
 
+import lombok.Getter;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@Getter
 public class VanillaMultiBlockPart implements MultiBlockPart {
     private final BlockData blockData;
     private final DisplayDescriptor descriptor;

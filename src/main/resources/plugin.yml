@@ -216,6 +216,7 @@ permissions:
       rsc.command.resaveitems: true
       rsc.command.clearscriptcache: true
       rsc.command.cleardisplayprojectiles: true
+      rsc.command.buildSuperMultiBlock: true
   rsc.command.help:
     default: op
   rsc.command.reload:
@@ -241,4 +242,6 @@ permissions:
   rsc.command.clearscriptcache:
     default: op
   rsc.command.cleardisplayprojectiles:
+    default: op
+  rsc.command.buildSuperMultiBlock:
     default: op

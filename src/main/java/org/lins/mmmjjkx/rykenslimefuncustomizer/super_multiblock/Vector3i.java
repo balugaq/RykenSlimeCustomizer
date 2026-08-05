@@ -17,12 +17,13 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock;
 
-import java.util.Objects;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
-public final class Vector3i {
+import java.util.Objects;
+
+public final class Vector3i extends org.joml.Vector3i {
     public final int x;
     public final int y;
     public final int z;
@@ -75,5 +76,17 @@ public final class Vector3i {
     @Override
     public String toString() {
         return "Vector3i{" + "x=" + x + ", y=" + y + ", z=" + z + '}';
+    }
+
+    public Vector3i rotateY(float angleDegrees) {
+        float angleRadians = (float) Math.toRadians(angleDegrees);
+        float cos = (float) Math.cos(angleRadians);
+        float sin = (float) Math.sin(angleRadians);
+
+        return new Vector3i(
+            Math.round(x * cos - z * sin),
+            y,
+            Math.round(x * sin + z * cos)
+        );
     }
 }

@@ -17,41 +17,87 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock;
 
+import lombok.Getter;
+import org.bukkit.Location;
+import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.HorizonDirection;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.bukkit.Location;
-import org.jetbrains.annotations.NotNull;
+import java.util.stream.Collectors;
 
-public class SuperMultiBlockDefinition {
-    private final MultiBlockPart core;
+@Getter
+public class SuperMultiBlockDefinition extends SuperMultiBlockManager {
+    private final Map<String, MultiBlockPart> mapping;
     private final Map<Vector3i, MultiBlockPart> map;
 
-    public SuperMultiBlockDefinition(@NotNull MultiBlockPart core, @NotNull Map<Vector3i, MultiBlockPart> map) {
-        this.core = core;
+    public SuperMultiBlockDefinition(@NotNull Map<String, MultiBlockPart> mapping, @NotNull Map<Vector3i, MultiBlockPart> map) {
+        this.mapping = Map.copyOf(mapping);
         this.map = Map.copyOf(map);
     }
 
-    @NotNull
-    public MultiBlockPart getCore() {
-        return core;
+    public int count(@NotNull String mappingName) {
+        var part = getPart(mappingName);
+        if (part == null) return 0;
+        return Math.toIntExact(map.values().stream().filter(p -> p == part).count());
+    }
+
+    public @Nullable MultiBlockPart getPart(String mappingName) {
+        return mapping.get(mappingName);
+    }
+
+    @Nullable
+    public Vector findFirstValue(@NotNull HorizonDirection direction, @NotNull String mappingName) {
+        var part = getPart(mappingName);
+        if (part == null) return null;
+        for (var e : getMap(direction).entrySet()) {
+            if (e.getValue() == part) {
+                return e.getKey().toVector();
+            }
+        }
+        return null;
     }
 
     @NotNull
-    public Map<Vector3i, MultiBlockPart> getMap() {
+    public Map<Vector3i, MultiBlockPart> getOriginMap() {
         return map;
     }
 
     @NotNull
-    public Set<Location> getLocations(@NotNull Location coreLocation) {
+    public Map<Vector3i, MultiBlockPart> getMap(@NotNull HorizonDirection direction) {
+        return switch (direction) {
+            case NORTH -> map;
+            case EAST -> map.entrySet().stream().collect(Collectors.toMap(
+                e -> new Vector3i(-e.getKey().z, e.getKey().y, e.getKey().x),  // 90°
+                Map.Entry::getValue,
+                (v1, v2) -> v1  // 合并策略：如果冲突保留第一个
+            ));
+            case SOUTH -> map.entrySet().stream().collect(Collectors.toMap(
+                e -> new Vector3i(-e.getKey().x, e.getKey().y, -e.getKey().z), // 180°
+                Map.Entry::getValue,
+                (v1, v2) -> v1
+            ));
+            case WEST -> map.entrySet().stream().collect(Collectors.toMap(
+                e -> new Vector3i(e.getKey().z, e.getKey().y, -e.getKey().x),  // 270°
+                Map.Entry::getValue,
+                (v1, v2) -> v1
+            ));
+        };
+    }
+
+    @NotNull
+    public Set<Location> getLocations(@NotNull Location coreLocation, HorizonDirection direction) {
         Set<Location> locations = new HashSet<>();
-        for (Vector3i offset : map.keySet()) {
+        for (Vector3i offset : getMap(direction).keySet()) {
             locations.add(offset.addTo(coreLocation));
         }
         return locations;
     }
 
-    public boolean isFullyFormedCached(Location coreLocation) {
-        return SuperMultiBlockManager.getInstance().getCorrectLocations().containsAll(getLocations(coreLocation));
+    public boolean isFullyFormedCached(Location coreLocation, HorizonDirection direction) {
+        return getCorrectLocations().containsAll(getLocations(coreLocation, direction));
     }
 }

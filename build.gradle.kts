@@ -6,10 +6,12 @@ plugins {
     `maven-publish`
     // alias(libs.plugins.spotless)
     alias(libs.plugins.shadow)
+    id("xyz.jpenilla.run-paper") version "3.0.2"
 }
 
 group = "org.lins.mmmjjkx"
-version = "28.9-Modified"
+val archiveName = "RykenSlimeCustomizer"
+version = "29.0-Modified"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
@@ -96,7 +98,7 @@ tasks.named<ProcessResources>("processResources") {
 
 tasks.named<ShadowJar>("shadowJar") {
 
-    archiveBaseName.set("RykenSlimeCustomizer") // Don't change it, it's used to fix build station identifier issue
+    archiveBaseName.set(archiveName) // Don't change it, it's used to fix build station identifier issue
     archiveVersion.set(project.version.toString())
     archiveClassifier.set("")
     relocate("io.github.projectunified.uniitem", "org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.uniitem")
@@ -105,4 +107,35 @@ tasks.named<ShadowJar>("shadowJar") {
 
 tasks.build {
     dependsOn(tasks.named("shadowJar"))
+}
+
+tasks.runServer {
+    dependsOn(tasks.named("shadowJar"))
+
+    systemProperty("file.encoding", "UTF-8")
+    systemProperty("sun.stdout.encoding", "UTF-8")
+    systemProperty("sun.stderr.encoding", "UTF-8")
+
+    doFirst {
+        val run = projectDir.resolve("run")
+        run.mkdirs()
+        run.resolve("eula.txt").writeText("eula=true")
+
+        val pl = run.resolve("plugins")
+        pl.mkdirs()
+        copy {
+            from(projectDir.resolve("build/libs")) {
+                include("${archiveName}-${version}.jar")
+            }
+            into(pl)
+        }
+    }
+
+    jvmArgs(
+        "-Dfile.encoding=UTF-8",
+        "-Dsun.jnu.encoding=UTF-8",
+        "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5001"
+    )
+    maxHeapSize = "4G"
+    minecraftVersion("1.20.1")
 }
