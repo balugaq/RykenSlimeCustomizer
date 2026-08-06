@@ -306,7 +306,7 @@ public class ReflectionUtil {
                     if (!match) {
                         match = true;
                         for (int i = 0; i < parameterTypes.length; i++) {
-                            if (!method.getParameterTypes()[i].isAssignableFrom(parameterTypes[i])) {
+                            if (!wrapClass(method.getParameterTypes()[i]).isAssignableFrom(wrapClass(parameterTypes[i]))) {
                                 match = false;
                                 break;
                             }

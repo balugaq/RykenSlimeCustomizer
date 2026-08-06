@@ -17,6 +17,9 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun;
 
+import com.balugaq.jeg.api.objects.enums.PatchScope;
+import com.balugaq.jeg.api.objects.events.GuideEvents;
+import com.balugaq.jeg.utils.EventUtil;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.groups.FlexItemGroup;
@@ -127,12 +130,28 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
         menu.setEmptySlotsClickable(false);
         menu.addMenuOpeningHandler(SoundEffect.GUIDE_BUTTON_CLICK_SOUND::playFor);
         guide.createHeader(p, profile, menu);
-        menu.addItem(
-            1,
-            new CustomItemStack(ChestMenuUtils.getBackButton(
-                p, "", ChatColor.GRAY + Slimefun.getLocalization().getMessage(p, "guide.back.guide"))));
-        menu.addMenuClickHandler(1, (pl, s, is, action) -> {
-            SlimefunGuide.openMainMenu(profile, mode, history.getMainMenuPage());
+        ItemStack backIcon;
+        if (history.size() > 1) {
+            backIcon = ChestMenuUtils.getBackButton(
+                p,
+                "",
+                ChatColor.GRAY + Slimefun.getLocalization().getMessage(p, "guide.back.guide"));
+        } else {
+            backIcon = ChestMenuUtils.getBackButton(
+                p,
+                "",
+                "&f左键: &7返回上一页",
+                "&fShift + 左键: &7返回主菜单"
+            );
+        }
+        menu.addItem(1, backIcon, (pl, s, is, action) -> {
+            GuideHistory guideHistory = profile.getGuideHistory();
+            if (history.size() == 1 || action.isShiftClicked()) {
+                SlimefunGuide.openMainMenu(profile, mode, history.getMainMenuPage());
+                return false;
+            }
+
+            guideHistory.goBack(guide);
             return false;
         });
 

@@ -3,7 +3,6 @@ import org.gradle.language.jvm.tasks.ProcessResources
 
 plugins {
     java
-    `maven-publish`
     // alias(libs.plugins.spotless)
     alias(libs.plugins.shadow)
     id("xyz.jpenilla.run-paper") version "3.0.2"
@@ -11,7 +10,7 @@ plugins {
 
 group = "org.lins.mmmjjkx"
 val archiveName = "RykenSlimeCustomizer"
-version = "29.0-Modified"
+version = "29.1-Modified"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))

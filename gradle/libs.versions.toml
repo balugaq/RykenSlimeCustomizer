@@ -1,5 +1,5 @@
 [versions]
-spotless = "7.0.2"
+#spotless = "7.0.2"
 shadow = "9.3.2"
 lombok = "1.18.46"
 
@@ -31,5 +31,5 @@ item-nbt-api-plugin = { module = "de.tr7zw:item-nbt-api-plugin", version = "2.15
 justenoughguide = { module = "com.github.balugaq:JustEnoughGuide", version = "4d4e3e607b" }
 
 [plugins]
-spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+#spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
