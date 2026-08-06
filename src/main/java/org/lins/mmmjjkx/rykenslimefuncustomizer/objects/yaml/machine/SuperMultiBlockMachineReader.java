@@ -18,8 +18,10 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine;
 
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
+import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -379,20 +381,19 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
                 }
 
                 VanillaMultiBlockPart r = CommonUtils.readPipe(material, part -> {
-
                     if (part.contains("[")) {
                         try {
                             BlockData blockData = Bukkit.createBlockData(part);
                             return new VanillaMultiBlockPart(blockData, readDisplayDescriptor(s, part, mappingLocation));
                         } catch (IllegalArgumentException e) {
-                            ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 方块数据 " + part + " 无效");
+                            ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 原版方块数据 " + part + " 无效");
                             return null;
                         }
                     }
 
                     Material m = Material.matchMaterial(part);
                     if (m == null || !m.isBlock() || m.isLegacy()) {
-                        ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + part + " 无效");
+                        ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 原版材料 " + part + " 无效");
                         return null;
                     }
 
@@ -402,19 +403,29 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
 
                 if (r == null) {
                     ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + material + " 无效");
+                    return null;
                 }
+
                 return r;
             }
             case "slimefun" -> {
                 String material = section.getString("material");
                 if (material == null) {
-                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料为空");
+                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 粘液材料为空");
                     return null;
                 }
                 SlimefunMultiBlockPart r = CommonUtils.readPipe(material, part -> {
                     SlimefunItemStack item = getPreloadItem(part.toUpperCase());
-                    if (item == null || !item.getType().isBlock()) {
-                        ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + part + " 无效");
+                    if (item == null) {
+                        var sf = SlimefunItem.getById(part.toUpperCase());
+                        if (sf == null) {
+                            ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 未找到粘液材料: " + part);
+                            return null;
+                        }
+                        item = (SlimefunItemStack) sf.getItem();
+                    }
+                    if (!item.getType().isBlock()) {
+                        ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 粘液材料不是方块: " + part);
                         return null;
                     }
                     if (getPreloadedItems(s).contains(item)) {
@@ -425,6 +436,7 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
                 });
                 if (r == null) {
                     ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + material + " 无效");
+                    return null;
                 }
                 return r;
             }

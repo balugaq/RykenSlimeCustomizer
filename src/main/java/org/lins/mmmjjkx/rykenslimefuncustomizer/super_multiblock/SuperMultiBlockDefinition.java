@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.HorizonDirection;
 
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 public class SuperMultiBlockDefinition extends SuperMultiBlockManager {
     private final Map<String, MultiBlockPart> mapping;
     private final Map<Vector3i, MultiBlockPart> map;
+    private final EnumMap<HorizonDirection, Map<Vector3i, MultiBlockPart>> rotatedMap = new EnumMap<>(HorizonDirection.class);
 
     public SuperMultiBlockDefinition(@NotNull Map<String, MultiBlockPart> mapping, @NotNull Map<Vector3i, MultiBlockPart> map) {
         this.mapping = Map.copyOf(mapping);
@@ -68,7 +70,9 @@ public class SuperMultiBlockDefinition extends SuperMultiBlockManager {
 
     @NotNull
     public Map<Vector3i, MultiBlockPart> getMap(@NotNull HorizonDirection direction) {
-        return switch (direction) {
+        if (rotatedMap.containsKey(direction)) return rotatedMap.get(direction);
+
+        var rotated = switch (direction) {
             case NORTH -> map;
             case EAST -> map.entrySet().stream().collect(Collectors.toMap(
                 e -> new Vector3i(-e.getKey().z, e.getKey().y, e.getKey().x),  // 90°
@@ -86,6 +90,8 @@ public class SuperMultiBlockDefinition extends SuperMultiBlockManager {
                 (v1, v2) -> v1
             ));
         };
+        rotatedMap.put(direction, rotated);
+        return rotated;
     }
 
     @NotNull
