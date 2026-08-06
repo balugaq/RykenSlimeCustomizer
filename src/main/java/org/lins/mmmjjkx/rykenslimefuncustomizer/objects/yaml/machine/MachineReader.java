@@ -22,10 +22,6 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.networks.energy.EnergyNetComponentType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -41,6 +37,11 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.MachineRecord;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class MachineReader extends YamlReader<AbstractEmptyMachine<?>> {
     public MachineReader(YamlConfiguration config, ProjectAddon addon) {

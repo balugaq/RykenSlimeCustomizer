@@ -18,10 +18,6 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.utils;
 
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
-import java.util.Objects;
-import java.util.Optional;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 import org.bukkit.Material;
 import org.bukkit.Tag;
@@ -47,6 +43,11 @@ import org.bukkit.inventory.meta.Repairable;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.inventory.meta.SuspiciousStewMeta;
 import org.bukkit.inventory.meta.TropicalFishBucketMeta;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Objects;
+import java.util.Optional;
 
 @UtilityClass
 @SuppressWarnings("deprecation")

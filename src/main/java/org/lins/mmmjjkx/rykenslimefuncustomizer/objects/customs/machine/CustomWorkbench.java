@@ -33,9 +33,6 @@ import io.github.thebusybiscuit.slimefun4.implementation.handlers.SimpleBlockBre
 import io.github.thebusybiscuit.slimefun4.implementation.operations.CraftingOperation;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.protection.Interaction;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import lombok.Getter;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.AContainer;
 import me.mrCookieSlime.Slimefun.Objects.handlers.BlockTicker;
@@ -58,6 +55,10 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLeg
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.BlockMenuUtil;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.StackUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class CustomWorkbench extends AContainer implements EnergyNetComponent, RecipeDisplayItem {
     @Override

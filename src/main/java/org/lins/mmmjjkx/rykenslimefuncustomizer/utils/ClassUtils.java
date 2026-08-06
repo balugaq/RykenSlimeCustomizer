@@ -17,13 +17,13 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.utils;
 
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.dynamic.DynamicType;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.dynamic.DynamicType;
-import net.bytebuddy.implementation.bind.annotation.*;
-import org.jetbrains.annotations.Nullable;
 
 public class ClassUtils {
     private static final Map<String, Class<?>> cache = new HashMap<>();

@@ -22,9 +22,6 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.BiFunction;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -39,6 +36,10 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.DropFromBlock;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.function.BiFunction;
 
 public class GeoResourceReader extends YamlReader<CustomGeoResource> {
     public GeoResourceReader(YamlConfiguration config, ProjectAddon addon) {

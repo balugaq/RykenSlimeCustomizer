@@ -18,10 +18,6 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml;
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import javax.annotation.Nonnull;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
@@ -30,6 +26,11 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.Range;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.generations.GenerationArea;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.generations.GenerationInfo;
+
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class GenerationReader extends YamlReader<GenerationInfo> {
     public GenerationReader(YamlConfiguration config, ProjectAddon addon) {

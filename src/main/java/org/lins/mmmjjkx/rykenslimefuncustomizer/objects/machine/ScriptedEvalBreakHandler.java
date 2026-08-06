@@ -19,7 +19,6 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine;
 
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockBreakHandler;
-import java.util.List;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.interfaces.InventoryBlock;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.Location;
@@ -28,6 +27,8 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
+
+import java.util.List;
 
 @SuppressWarnings("deprecation")
 public class ScriptedEvalBreakHandler extends BlockBreakHandler {

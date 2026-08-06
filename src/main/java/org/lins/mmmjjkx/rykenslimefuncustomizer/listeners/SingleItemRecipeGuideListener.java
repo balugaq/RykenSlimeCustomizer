@@ -25,10 +25,6 @@ import io.github.thebusybiscuit.slimefun4.implementation.guide.SurvivalSlimefunG
 import io.github.thebusybiscuit.slimefun4.libraries.dough.data.persistent.PersistentDataAPI;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ClickAction;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.AContainer;
@@ -60,6 +56,11 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomMachineRec
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.MachineTemplate;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.AsyncChanceRecipeTask;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @SuppressWarnings("deprecation")
 public class SingleItemRecipeGuideListener implements Listener {

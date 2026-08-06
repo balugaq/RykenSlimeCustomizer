@@ -21,10 +21,6 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.core.services.sounds.SoundEffect;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
-import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -36,6 +32,11 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomMu
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MultiBlockMachineReader extends YamlReader<CustomMultiBlockMachine> {
     public MultiBlockMachineReader(YamlConfiguration config, ProjectAddon addon) {

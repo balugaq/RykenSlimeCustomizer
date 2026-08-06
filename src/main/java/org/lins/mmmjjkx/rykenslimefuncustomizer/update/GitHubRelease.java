@@ -17,8 +17,9 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.update;
 
-import java.util.List;
 import lombok.Getter;
+
+import java.util.List;
 
 @Getter
 public class GitHubRelease {

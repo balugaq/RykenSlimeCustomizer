@@ -23,8 +23,6 @@ import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.attributes.ProtectionType;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
-import java.util.ArrayList;
-import java.util.List;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -35,6 +33,9 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.CustomArmor
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
     private final List<String> CHECKS = List.of("helmet", "chestplate", "leggings", "boots");

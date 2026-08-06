@@ -19,7 +19,6 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml;
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
-import java.util.List;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -30,6 +29,8 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomRecipeType
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine.MultiBlockMachineReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import java.util.List;
 
 public class RecipeTypesReader extends YamlReader<RecipeType> {
     public RecipeTypesReader(YamlConfiguration config, ProjectAddon addon) {

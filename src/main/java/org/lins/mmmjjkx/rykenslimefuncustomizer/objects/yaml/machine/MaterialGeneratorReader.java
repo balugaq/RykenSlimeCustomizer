@@ -22,9 +22,6 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -34,6 +31,10 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomMa
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class MaterialGeneratorReader extends YamlReader<CustomMaterialGenerator> {
     public MaterialGeneratorReader(YamlConfiguration config, ProjectAddon addon) {

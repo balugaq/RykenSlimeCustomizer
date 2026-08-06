@@ -19,8 +19,6 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs;
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
@@ -41,6 +39,9 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomNo
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomRecipeMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.RSCClickHandler;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.MenuReader;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("deprecation")
 public class CustomMenu {

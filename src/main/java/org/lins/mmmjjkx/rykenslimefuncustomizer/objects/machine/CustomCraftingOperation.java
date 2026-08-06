@@ -19,8 +19,9 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine;
 
 import io.github.thebusybiscuit.slimefun4.implementation.operations.CraftingOperation;
 import io.github.thebusybiscuit.slimefun4.libraries.commons.lang.Validate;
-import javax.annotation.Nonnull;
 import lombok.Getter;
+
+import javax.annotation.Nonnull;
 
 @Getter
 public class CustomCraftingOperation extends CraftingOperation {

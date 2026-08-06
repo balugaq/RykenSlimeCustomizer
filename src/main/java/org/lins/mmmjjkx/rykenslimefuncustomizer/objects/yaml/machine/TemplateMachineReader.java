@@ -22,8 +22,6 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
-import java.util.ArrayList;
-import java.util.List;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -35,6 +33,9 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.MachineTemplate;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class TemplateMachineReader extends YamlReader<CustomTemplateMachine> {
     public TemplateMachineReader(YamlConfiguration config, ProjectAddon addon) {

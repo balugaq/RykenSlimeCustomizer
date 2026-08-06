@@ -17,7 +17,9 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.enhanced;
 
-import de.tr7zw.nbtapi.*;
+import de.tr7zw.nbtapi.NBT;
+import de.tr7zw.nbtapi.NBTBlock;
+import de.tr7zw.nbtapi.NBTCompound;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;

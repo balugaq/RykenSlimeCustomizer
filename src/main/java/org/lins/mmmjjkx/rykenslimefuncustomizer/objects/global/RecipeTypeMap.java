@@ -18,12 +18,13 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global;
 
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
+import org.jetbrains.annotations.Nullable;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
+
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.jetbrains.annotations.Nullable;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 
 public class RecipeTypeMap {
     private static final Map<String, RecipeType> recipeTypes;

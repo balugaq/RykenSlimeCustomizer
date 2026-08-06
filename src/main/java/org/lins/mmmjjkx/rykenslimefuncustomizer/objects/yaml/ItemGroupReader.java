@@ -23,10 +23,6 @@ import io.github.thebusybiscuit.slimefun4.api.items.groups.LockedItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.groups.NestedItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.groups.SubItemGroup;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -40,6 +36,10 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLeg
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.Visible;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ItemGroupReader extends YamlReader<ItemGroup> {
     public ItemGroupReader(YamlConfiguration config, ProjectAddon addon) {

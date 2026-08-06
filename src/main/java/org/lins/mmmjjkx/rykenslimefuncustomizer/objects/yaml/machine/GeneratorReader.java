@@ -21,8 +21,6 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.SneakyThrows;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineFuel;
 import org.bukkit.configuration.ConfigurationSection;
@@ -34,6 +32,9 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomGe
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class GeneratorReader extends YamlReader<CustomGenerator> {
     public GeneratorReader(YamlConfiguration config, ProjectAddon addon) {

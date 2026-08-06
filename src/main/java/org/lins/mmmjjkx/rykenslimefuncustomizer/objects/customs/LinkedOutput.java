@@ -17,10 +17,11 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs;
 
+import org.bukkit.inventory.ItemStack;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.bukkit.inventory.ItemStack;
 
 public record LinkedOutput(
         ItemStack[] freeOutput,

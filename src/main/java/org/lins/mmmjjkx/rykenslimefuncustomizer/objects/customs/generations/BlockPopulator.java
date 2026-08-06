@@ -23,10 +23,6 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerHead;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerSkin;
-import java.net.URL;
-import java.util.List;
-import java.util.Random;
-import javax.annotation.Nonnull;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -37,6 +33,11 @@ import org.bukkit.profile.PlayerTextures;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.Range;
+
+import javax.annotation.Nonnull;
+import java.net.URL;
+import java.util.List;
+import java.util.Random;
 
 @SuppressWarnings("deprecation")
 public class BlockPopulator extends org.bukkit.generator.BlockPopulator {

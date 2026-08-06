@@ -18,11 +18,12 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import java.util.Map;
-import java.util.Set;
 import lombok.Getter;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.LinkedOutput;
+
+import java.util.Map;
+import java.util.Set;
 
 @Getter
 public class CustomLinkedMachineRecipe extends CustomMachineRecipe {

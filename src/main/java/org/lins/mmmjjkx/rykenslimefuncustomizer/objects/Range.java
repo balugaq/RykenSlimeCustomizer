@@ -17,8 +17,8 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects;
 
-import java.util.Random;
 import javax.annotation.Nonnull;
+import java.util.Random;
 
 public record Range(int min, int max) {
 
