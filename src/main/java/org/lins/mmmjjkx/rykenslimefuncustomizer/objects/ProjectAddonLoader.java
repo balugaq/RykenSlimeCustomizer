@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
+
+import lombok.Data;
 import net.bytebuddy.ByteBuddy;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -38,6 +40,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.ProjectAddonManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.events.AddonLoadEvent;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.ScriptableEventListener;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomAddonConfig;
@@ -51,6 +54,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
+@Data
 public class ProjectAddonLoader {
     private final Map<String, File> ids;
     private final File file;
@@ -66,6 +70,7 @@ public class ProjectAddonLoader {
     }
 
     @Nullable public ProjectAddon load() {
+        Bukkit.getPluginManager().callEvent(new AddonLoadEvent(this));
         debug(() -> "Loading addon " + id);
         ProjectAddon addon;
         YamlConfiguration info = doFileLoad(file, Constants.INFO_FILE);

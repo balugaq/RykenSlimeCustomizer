@@ -205,9 +205,12 @@ public class MainCommand implements TabExecutor {
                 ProjectAddonLoader loader =
                         new ProjectAddonLoader(file, RykenSlimefunCustomizer.addonManager.getProjectIds(), id);
                 ProjectAddon addon = loader.load();
-                RykenSlimefunCustomizer.addonManager.addProjectAddon(addon);
-
-                sender.sendMessage(CMIChatColor.translate("&a加载此附属成功！"));
+                if (addon != null) {
+                    RykenSlimefunCustomizer.addonManager.addProjectAddon(addon);
+                    sender.sendMessage(CMIChatColor.translate("&a加载此附属成功！"));
+                } else {
+                    sender.sendMessage(CMIChatColor.translate("&c附属加载失败！"));
+                }
                 return true;
             } else if (args[0].equalsIgnoreCase("disable")) {
                 if (!sender.hasPermission("rsc.command") || !sender.hasPermission("rsc.command.disable")) {

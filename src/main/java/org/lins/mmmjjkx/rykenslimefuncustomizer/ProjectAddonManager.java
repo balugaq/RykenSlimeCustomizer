@@ -20,11 +20,14 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer;
 import io.github.thebusybiscuit.slimefun4.libraries.commons.lang.Validate;
 import lombok.Getter;
 import lombok.Setter;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.events.AddonDisableEvent;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.events.AddonEnableEvent;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddonLoader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.RecipeTypeMap;
@@ -69,6 +72,7 @@ public final class ProjectAddonManager {
             projectIds.put(addon.getAddonId(), addon.getFolder());
             projectAddons.put(addon.getAddonId(), addon);
         }
+        Bukkit.getPluginManager().callEvent(new AddonEnableEvent(addon));
     }
 
     public void removeProjectAddon(ProjectAddon addon) {
@@ -76,6 +80,7 @@ public final class ProjectAddonManager {
 
         projectIds.remove(addon.getAddonId());
         projectAddons.remove(addon.getAddonId());
+        Bukkit.getPluginManager().callEvent(new AddonDisableEvent(addon));
     }
 
     public void setup(Plugin inst) {
