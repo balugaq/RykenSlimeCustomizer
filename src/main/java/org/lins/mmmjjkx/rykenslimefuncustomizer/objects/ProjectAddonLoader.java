@@ -77,14 +77,14 @@ import java.util.function.Supplier;
 @Data
 public class ProjectAddonLoader {
     private final Map<String, File> ids;
-    private final File file;
+    private final File dir;
     private final String id;
 
     public ProjectAddonLoader(File dir, Map<String, File> ids, String id) {
         Validate.notNull(dir, "File cannot be null!");
         Validate.isTrue(dir.isDirectory(), "File must be a directory!");
 
-        this.file = dir;
+        this.dir = dir;
         this.ids = ids;
         this.id = id;
     }
@@ -93,9 +93,9 @@ public class ProjectAddonLoader {
         Bukkit.getPluginManager().callEvent(new AddonLoadEvent(this));
         debug(() -> "Loading addon " + id);
         ProjectAddon addon;
-        YamlConfiguration info = doFileLoad(file, Constants.INFO_FILE);
+        YamlConfiguration info = doFileLoad(dir, Constants.INFO_FILE);
 
-        ExceptionHandler.info("开始读取文件夹 " + file.getName() + " 中的项目信息...");
+        ExceptionHandler.info("开始读取文件夹 " + dir.getName() + " 中的项目信息...");
 
         if (info.contains("name") && info.contains("version") && info.contains("id")) {
             String name = info.getString("name");
@@ -112,9 +112,9 @@ public class ProjectAddonLoader {
                 String[] split = repo.split("/");
                 if (split.length == 2) {
                     if (RykenSlimefunCustomizer.allowUpdate(id)) {
-                        boolean b = GithubUpdater.checkAndUpdate(version, split[0], split[1], id, file.getName());
+                        boolean b = GithubUpdater.checkAndUpdate(version, split[0], split[1], id, dir.getName());
                         if (b) {
-                            YamlConfiguration info2 = doFileLoad(file, Constants.INFO_FILE);
+                            YamlConfiguration info2 = doFileLoad(dir, Constants.INFO_FILE);
                             if (!Objects.equals(info2.getString("version"), version)) {
                                 return load(); // reload
                             }
@@ -124,7 +124,7 @@ public class ProjectAddonLoader {
             }
 
             if (name == null || name.isBlank()) {
-                ExceptionHandler.handleError("在名称为 " + file.getName() + "的文件夹中有无效的项目名称，导致此附属无法加载！");
+                ExceptionHandler.handleError("在名称为 " + dir.getName() + "的文件夹中有无效的项目名称，导致此附属无法加载！");
                 return null;
             }
 
@@ -179,7 +179,7 @@ public class ProjectAddonLoader {
             }
 
             addon = new ProjectAddon(
-                    id, name, version, pluginDepends, depends, description, authors, file, enabledTexts);
+                    id, name, version, pluginDepends, depends, description, authors, dir, enabledTexts);
 
             if (!repo.isBlank()) {
                 addon.setGithubRepo("https://github.com/" + repo);
@@ -232,9 +232,9 @@ public class ProjectAddonLoader {
             }
 
             File customConfigFolder = new File(ProjectAddonManager.CONFIGS_DIRECTORY, id);
-            YamlConfiguration customConfigYaml = doFileLoad(file, Constants.ADDON_CONFIG_FILE);
+            YamlConfiguration customConfigYaml = doFileLoad(dir, Constants.ADDON_CONFIG_FILE);
             if (!customConfigYaml.getKeys(false).isEmpty()) {
-                File configFile = new File(file, Constants.ADDON_CONFIG_FILE);
+                File configFile = new File(dir, Constants.ADDON_CONFIG_FILE);
 
                 File customConfig = new File(customConfigFolder, "config.yml");
                 if (!customConfigFolder.exists()) {
@@ -276,71 +276,47 @@ public class ProjectAddonLoader {
                     addon.setIdPattern(idPattern);
                 } else {
                     ExceptionHandler.handleError(
-                            "在名称为 " + file.getName() + "的文件夹中有无效的配置: idPattern，idPattern 必须包含 %0（原id）");
+                            "在名称为 " + dir.getName() + "的文件夹中有无效的配置: idPattern，idPattern 必须包含 %0（原id）");
                 }
             }
         } else {
-            ExceptionHandler.handleError("在名称为 " + file.getName() + "的文件夹中有无效的项目信息，导致此附属无法加载！");
+            ExceptionHandler.handleError("在名称为 " + dir.getName() + "的文件夹中有无效的项目信息，导致此附属无法加载！");
             return null;
         }
 
         ExceptionHandler.info("读取完成，开始加载附属 " + addon.getAddonId() + " 中的内容...");
 
-        YamlConfiguration groups = doFileLoad(file, Constants.GROUPS_FILE);
-        ItemGroupReader groupReader = new ItemGroupReader(groups, addon);
+        ItemGroupReader groupReader = new ItemGroupReader(dir, addon);
         addon.addTotalObjects(groupReader.getSize());
         addon.setItemGroups(groupReader.readAll());
 
-        YamlConfiguration recipeTypes = doFileLoad(file, Constants.RECIPE_TYPES_FILE);
-        RecipeTypesReader recipeTypesReader = new RecipeTypesReader(recipeTypes, addon);
+        RecipeTypesReader recipeTypesReader = new RecipeTypesReader(dir, addon);
         addon.addTotalObjects(recipeTypesReader.getSize());
         addon.setRecipeTypes(recipeTypesReader.readAll());
         RecipeTypeMap.pushRecipeType(addon.getRecipeTypes());
 
-        YamlConfiguration mob_drops = doFileLoad(file, Constants.MOB_DROPS_FILE);
-        YamlConfiguration geo_resources = doFileLoad(file, Constants.GEO_RES_FILE);
-        YamlConfiguration items = doFileLoad(file, Constants.ITEMS_FILE);
-        YamlConfiguration armors = doFileLoad(file, Constants.ARMORS_FILE);
-        YamlConfiguration capacitors = doFileLoad(file, Constants.CAPACITORS_FILE);
-        YamlConfiguration foods = doFileLoad(file, Constants.FOODS_FILE);
-        YamlConfiguration menus = doFileLoad(file, Constants.MENUS_FILE);
-        YamlConfiguration machines = doFileLoad(file, Constants.MACHINES_FILE);
-        YamlConfiguration generators = doFileLoad(file, Constants.GENERATORS_FILE);
-        YamlConfiguration solarGenerators = doFileLoad(file, Constants.SOLAR_GENERATORS_FILE);
-        YamlConfiguration materialGenerators = doFileLoad(file, Constants.MATERIAL_GENERATORS_FILE);
-        YamlConfiguration recipeMachines = doFileLoad(file, Constants.RECIPE_MACHINES_FILE);
-        YamlConfiguration simpleMachines = doFileLoad(file, Constants.SIMPLE_MACHINES_FILE);
-        YamlConfiguration multiBlockMachines = doFileLoad(file, Constants.MULTI_BLOCK_MACHINES_FILE);
-        YamlConfiguration supers = doFileLoad(file, Constants.SUPERS_FILE);
-        YamlConfiguration templateMachines = doFileLoad(file, Constants.TEMPLATE_MACHINES_FILE);
-        YamlConfiguration linkedRecipeMachines = doFileLoad(file, Constants.LINKED_RECIPE_MACHINES_FILE);
-        YamlConfiguration workbenches = doFileLoad(file, Constants.WORKBENCHES_FILE);
-        YamlConfiguration superMultiBlockMachines = doFileLoad(file, Constants.SUPER_MULTI_BLOCK_MACHINES_FILE);
-        YamlConfiguration generations = doFileLoad(file, Constants.GENERATIONS_FILE);
+        MobDropsReader mobDropsReader = new MobDropsReader(dir, addon);
+        GeoResourceReader resourceReader = new GeoResourceReader(dir, addon);
+        ItemReader itemReader = new ItemReader(dir, addon);
+        ArmorReader armorReader = new ArmorReader(dir, addon);
+        CapacitorsReader capacitorsReader = new CapacitorsReader(dir, addon);
+        FoodReader foodReader = new FoodReader(dir, addon);
+        MenuReader menuReader = new MenuReader(dir, addon);
+        MachineReader machineReader = new MachineReader(dir, addon);
+        GeneratorReader generatorReader = new GeneratorReader(dir, addon);
+        SolarGeneratorReader solarGeneratorReader = new SolarGeneratorReader(dir, addon);
+        MaterialGeneratorReader materialGeneratorReader = new MaterialGeneratorReader(dir, addon);
+        RecipeMachineReader recipeMachineReader = new RecipeMachineReader(dir, addon);
+        SimpleMachineReader simpleMachineReader = new SimpleMachineReader(dir, addon);
+        MultiBlockMachineReader multiBlockMachineReader = new MultiBlockMachineReader(dir, addon);
+        SuperReader superReader = new SuperReader(dir, addon);
+        TemplateMachineReader templateMachineReader = new TemplateMachineReader(dir, addon);
+        LinkedRecipeMachineReader linkedRecipeMachineReader = new LinkedRecipeMachineReader(dir, addon);
+        WorkbenchReader workbenchReader = new WorkbenchReader(dir, addon);
+        SuperMultiBlockMachineReader superMultiBlockMachineReader = new SuperMultiBlockMachineReader(dir, addon);
+        GenerationReader generationReader = new GenerationReader(dir, addon);
 
-        MobDropsReader mobDropsReader = new MobDropsReader(mob_drops, addon);
-        GeoResourceReader resourceReader = new GeoResourceReader(geo_resources, addon);
-        ItemReader itemReader = new ItemReader(items, addon);
-        ArmorReader armorReader = new ArmorReader(armors, addon);
-        CapacitorsReader capacitorsReader = new CapacitorsReader(capacitors, addon);
-        FoodReader foodReader = new FoodReader(foods, addon);
-        MenuReader menuReader = new MenuReader(menus, addon);
-        MachineReader machineReader = new MachineReader(machines, addon);
-        GeneratorReader generatorReader = new GeneratorReader(generators, addon);
-        SolarGeneratorReader solarGeneratorReader = new SolarGeneratorReader(solarGenerators, addon);
-        MaterialGeneratorReader materialGeneratorReader = new MaterialGeneratorReader(materialGenerators, addon);
-        RecipeMachineReader recipeMachineReader = new RecipeMachineReader(recipeMachines, addon);
-        SimpleMachineReader simpleMachineReader = new SimpleMachineReader(simpleMachines, addon);
-        MultiBlockMachineReader multiBlockMachineReader = new MultiBlockMachineReader(multiBlockMachines, addon);
-        SuperReader superReader = new SuperReader(supers, addon);
-        TemplateMachineReader templateMachineReader = new TemplateMachineReader(templateMachines, addon);
-        LinkedRecipeMachineReader linkedRecipeMachineReader =
-                new LinkedRecipeMachineReader(linkedRecipeMachines, addon);
-        WorkbenchReader workbenchReader = new WorkbenchReader(workbenches, addon);
-        SuperMultiBlockMachineReader superMultiBlockMachineReader = new SuperMultiBlockMachineReader(superMultiBlockMachines, addon);
-        GenerationReader generationReader = new GenerationReader(generations, addon);
-
-        ExceptionHandler.info("开始加载 " + file.getName() + " 中的物品内容...");
+        ExceptionHandler.info("开始加载 " + dir.getName() + " 中的物品内容...");
         addon.addTotalObjects(mobDropsReader.getSize()
                 + resourceReader.getSize()
                 + itemReader.getSize()
@@ -382,7 +358,7 @@ public class ProjectAddonLoader {
         superMultiBlockMachineReader.preload();
         generationReader.preload();
 
-        ExceptionHandler.info("开始注册 " + file.getName() + " 存放的内容...");
+        ExceptionHandler.info("开始注册 " + dir.getName() + " 存放的内容...");
 
         addon.setMobDrops(mobDropsReader.readAll());
         addon.setGeoResources(resourceReader.readAll());
@@ -428,8 +404,7 @@ public class ProjectAddonLoader {
         addon.getWorkbenches().addAll(workbenchReader.loadLateInits());
         addon.getSuperMultiBlockMachines().addAll(superMultiBlockMachineReader.loadLateInits());
 
-        YamlConfiguration researches = doFileLoad(file, Constants.RESEARCHES_FILE);
-        ResearchReader researchReader = new ResearchReader(researches, addon);
+        ResearchReader researchReader = new ResearchReader(dir, addon);
         List<Research> researchesList = researchReader.readAll();
         researchesList.addAll(researchReader.loadLateInits());
         addon.setResearches(researchesList);
@@ -474,7 +449,7 @@ public class ProjectAddonLoader {
         return true;
     }
 
-    private YamlConfiguration doFileLoad(File dir, String file) {
+    public static YamlConfiguration doFileLoad(File dir, String file) {
         File dest = new File(dir, file);
         if (!dest.exists()) {
             return new YamlConfiguration();

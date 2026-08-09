@@ -21,6 +21,7 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
+import io.github.thebusybiscuit.slimefun4.core.attributes.NotPlaceable;
 import io.github.thebusybiscuit.slimefun4.core.attributes.PiglinBarterDrop;
 import io.github.thebusybiscuit.slimefun4.core.attributes.Radioactive;
 import io.github.thebusybiscuit.slimefun4.core.attributes.Radioactivity;
@@ -33,14 +34,12 @@ import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.matcher.ElementMatchers;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.CustomDefaultItem;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.CustomUnplaceableItem;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.exts.CustomEnergyItem;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.exts.CustomRainbowBlock;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.parent.CustomItem;
@@ -49,6 +48,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.WitherProofBloc
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ClassUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 import java.io.File;
@@ -57,8 +57,13 @@ import java.util.List;
 import java.util.Optional;
 
 public class ItemReader extends YamlReader<SlimefunItem> {
-    public ItemReader(YamlConfiguration config, ProjectAddon addon) {
-        super(config, addon);
+    @Override
+    public String getFileName() {
+        return Constants.ITEMS_FILE;
+    }
+
+    public ItemReader(File file, ProjectAddon addon) {
+        super(file, addon);
     }
 
     @SneakyThrows
@@ -84,18 +89,7 @@ public class ItemReader extends YamlReader<SlimefunItem> {
         RecipeType rt = recipePair.getFirstValue();
         ItemStack[] itemStacks = recipePair.getSecondValue();
 
-        JavaScriptEval eval = null;
-        if (section.contains("script")) {
-            String script = section.getString("script", "");
-            File file = new File(addon.getScriptsFolder(), script + ".js");
-            if (!file.exists()) {
-                ExceptionHandler.handleWarning(
-                        "在附属" + addon.getAddonId() + "中加载物品" + s + "时遇到了问题: " + "找不到脚本文件" + file.getName());
-            } else {
-                ExceptionHandler.debugLog("加载了附属" + addon.getAddonId() + "中物品" + s + "的脚本文件" + file.getName());
-                eval = JavaScriptEval.create(file, addon);
-            }
-        }
+        JavaScriptEval eval = getScriptOrNull(section, section.getString("script"));
 
         CustomItem instance;
 
@@ -117,8 +111,6 @@ public class ItemReader extends YamlReader<SlimefunItem> {
 
             instance = new CustomEnergyItem(
                     group.getSecondValue(), sfis, rt, itemStacks, (float) energyCapacity, eval, output);
-        } else if (section.getBoolean("placeable", false)) {
-            instance = new CustomDefaultItem(group.getSecondValue(), sfis, rt, itemStacks, output);
         } else if (section.contains("rainbow")) {
             String materialType = section.getString("rainbow", "");
             if (!sfis.getType().isBlock()) {
@@ -161,10 +153,17 @@ public class ItemReader extends YamlReader<SlimefunItem> {
                         new CustomRainbowBlock(group.getSecondValue(), sfis, rt, itemStacks, coloredMaterial, output);
             }
         } else {
-            instance = new CustomUnplaceableItem(group.getSecondValue(), sfis, rt, itemStacks, eval, output);
+            instance = new CustomDefaultItem(group.getSecondValue(), sfis, rt, itemStacks, output);
         }
 
         Object[] constructorArgs = instance.constructorArgs();
+
+        if (section.getBoolean("placeable", false)) {
+            Class<? extends CustomItem> clazz = ClassUtils.generateClass(
+                instance.getClass(), "NotPlaceable", "Item", new Class[] {NotPlaceable.class}, null);
+
+            instance = (CustomItem) clazz.getDeclaredConstructors()[0].newInstance(constructorArgs);
+        }
 
         if (section.getBoolean("anti_wither", false)) {
             if (!sfis.getType().isBlock()) {
@@ -286,18 +285,7 @@ public class ItemReader extends YamlReader<SlimefunItem> {
     }
 
     @Override
-    public List<SlimefunItemStack> preloadItems(String key) {
-        ConfigurationSection section = configuration.getConfigurationSection(key);
-
-        if (section == null) return null;
-
-        ConfigurationSection item = section.getConfigurationSection("item");
-        ItemStack stack = CommonUtils.readItem(item, false, addon);
-        if (stack == null) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载物品" + key + "时遇到了问题: " + "物品为空或格式错误导致无法加载");
-            return null;
-        }
-
-        return List.of(new SlimefunItemStack(addon.getId(key, section.getString("id_alias")), stack));
+    public List<SlimefunItemStack> preloadItems(String s) {
+        return anyPreloadItems(s);
     }
 }

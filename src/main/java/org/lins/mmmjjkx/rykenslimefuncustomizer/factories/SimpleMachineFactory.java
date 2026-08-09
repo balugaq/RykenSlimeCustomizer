@@ -50,19 +50,21 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.sf.Advan
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.sf.AdvancedTreeGrowthAccelerator;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.SimpleMachineType;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 
 public class SimpleMachineFactory {
     public static SlimefunItem create(
-            ItemGroup group,
-            SlimefunItemStack slimefunItemStack,
-            RecipeType recipeType,
-            ItemStack[] recipe,
+            YamlReader.BaseResult base,
             SimpleMachineType machineType,
             int capacity,
             int consumption,
             int speed,
             int radius,
             int repairFactor) {
+        var group = base.itemGroup();
+        var slimefunItemStack = base.sfis();
+        var recipeType = base.recipeType();
+        var recipe = base.recipe();
         SlimefunItem instance =
                 switch (machineType) {
                     case ELECTRIC_FURNACE -> new ElectricFurnace(group, slimefunItemStack, recipeType, recipe) {

@@ -32,11 +32,9 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.CustomMenuHolder;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomMachine;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomNoEnergyMachine;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomRecipeMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.RSCClickHandler;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.MenuReader;
 
@@ -51,6 +49,7 @@ public class CustomMenu {
     @Getter
     private final String title;
 
+    @Getter
     private final String id;
 
     @Getter
@@ -95,23 +94,16 @@ public class CustomMenu {
             String id,
             String title,
             @Nullable BlockMenuPreset preset,
-            @Nullable ItemStack progressBar,
             @Nullable JavaScriptEval eval) {
-        this(id, title, new HashMap<>(), preset == null || preset.isPlayerInventoryClickable(), 22, progressBar, eval);
+        this(id, title, new HashMap<>(), preset == null || preset.isPlayerInventoryClickable(), -1, null, eval);
 
         if (preset != null) {
             cloneFromPresetInventory(preset);
 
             SlimefunItem item = Slimefun.getRegistry().getSlimefunItemIds().get(preset.getID());
-            if (item instanceof CustomMachine cm) {
-                this.progressSlot = cm.getMenu().getProgressSlot();
-                this.progress = cm.getMenu().getProgressBarItem();
-            } else if (item instanceof CustomNoEnergyMachine cnem) {
-                this.progressSlot = cnem.getMenu().getProgressSlot();
-                this.progress = cnem.getMenu().getProgressBarItem();
-            } else if (item instanceof CustomRecipeMachine crm) {
-                this.progressSlot = crm.getMenu() != null ? crm.getMenu().getProgressSlot() : 22;
-                this.progress = crm.getProgressBar();
+            if (item instanceof CustomMenuHolder holder) {
+                this.progressSlot = holder.getCustomMenu() != null ? holder.getCustomMenu().getProgressSlot() : 22;
+                this.progress = holder.getProgressBar();
             } else if (item instanceof AContainer container) {
                 this.progressSlot = 22;
                 this.progress = container.getProgressBar();
@@ -161,10 +153,6 @@ public class CustomMenu {
         }
     }
 
-    public String getId() {
-        return id;
-    }
-
     public CustomMenu setSize(int size) {
         if (size == MenuReader.NOT_SET) {
             this.size = MenuReader.NOT_SET;
@@ -201,10 +189,6 @@ public class CustomMenu {
 
     @Nullable public ItemStack getProgressBarItem() {
         return progress;
-    }
-
-    public String getID() {
-        return id;
     }
 
     private void cloneFromPresetInventory(BlockMenuPreset preset) {

@@ -25,20 +25,26 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.exts.CustomMobDrop;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
+import java.io.File;
 import java.util.List;
 
 public class MobDropsReader extends YamlReader<CustomMobDrop> {
-    public MobDropsReader(YamlConfiguration config, ProjectAddon addon) {
-        super(config, addon);
+
+    @Override
+    public String getFileName() {
+        return Constants.MOB_DROPS_FILE;
+    }
+
+    public MobDropsReader(File file, ProjectAddon addon) {
+        super(file, addon);
     }
 
     @Override
@@ -86,13 +92,12 @@ public class MobDropsReader extends YamlReader<CustomMobDrop> {
                 chance = chance >= 100 ? 100 : 1;
             }
 
-            Component lore = LegacyComponentSerializer.legacyAmpersand()
-                    .deserialize("&a击杀 ")
-                    .append(LegacyComponentSerializer.legacyAmpersand().deserialize("&b"))
+            Component lore = t("&a击杀 ")
+                    .append(t("&b"))
                     .append(Component.translatable(entityType.translationKey()))
-                    .append(LegacyComponentSerializer.legacyAmpersand().deserialize(" &a时会有"))
-                    .append(LegacyComponentSerializer.legacyAmpersand().deserialize(" &b " + chance + "%"))
-                    .append(LegacyComponentSerializer.legacyAmpersand().deserialize(" &a的概率掉落"));
+                    .append(t(" &a时会有"))
+                    .append(t(" &b " + chance + "%"))
+                    .append(t(" &a的概率掉落"));
 
             ItemStack itemStack = new CustomItemStack(eggMaterial, meta -> {
                 meta.lore(List.of(lore));
@@ -104,19 +109,12 @@ public class MobDropsReader extends YamlReader<CustomMobDrop> {
         return null;
     }
 
+    public Component t(String s) {
+        return LegacyComponentSerializer.legacyAmpersand().deserialize(s);
+    }
+
     @Override
-    public List<SlimefunItemStack> preloadItems(String id) {
-        ConfigurationSection section = configuration.getConfigurationSection(id);
-
-        if (section == null) return null;
-
-        ConfigurationSection item = section.getConfigurationSection("item");
-        ItemStack stack = CommonUtils.readItem(item, false, addon);
-        if (stack == null) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载生物掉落物" + id + "时遇到了问题: " + "物品为空或格式错误导致无法加载");
-            return null;
-        }
-
-        return List.of(new SlimefunItemStack(addon.getId(id, section.getString("id_alias")), stack));
+    public List<SlimefunItemStack> preloadItems(String s) {
+        return anyPreloadItems(s);
     }
 }

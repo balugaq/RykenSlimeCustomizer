@@ -21,20 +21,26 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.Range;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.generations.GenerationArea;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.generations.GenerationInfo;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 
 import javax.annotation.Nonnull;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class GenerationReader extends YamlReader<GenerationInfo> {
-    public GenerationReader(YamlConfiguration config, ProjectAddon addon) {
-        super(config, addon);
+    @Override
+    public String getFileName() {
+        return Constants.GENERATIONS_FILE;
+    }
+
+    public GenerationReader(File file, ProjectAddon addon) {
+        super(file, addon);
     }
 
     @Override

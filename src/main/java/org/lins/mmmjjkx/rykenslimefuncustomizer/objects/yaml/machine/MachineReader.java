@@ -23,7 +23,6 @@ import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.networks.energy.EnergyNetComponentType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
@@ -36,6 +35,8 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.parent.AbstractE
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.MachineRecord;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 import java.io.File;
@@ -44,62 +45,42 @@ import java.util.Collections;
 import java.util.List;
 
 public class MachineReader extends YamlReader<AbstractEmptyMachine<?>> {
-    public MachineReader(YamlConfiguration config, ProjectAddon addon) {
-        super(config, addon);
+    @Override
+    public String getFileName() {
+        return Constants.MACHINES_FILE;
+    }
+
+    public MachineReader(File file, ProjectAddon addon) {
+        super(file, addon);
     }
 
     @Override
     public AbstractEmptyMachine<?> readEach(String s) {
         ConfigurationSection section = configuration.getConfigurationSection(s);
         if (section == null) return null;
-        String id = addon.getId(s, section.getString("id_alias"));
+        String id = getId(s);
+        var base = getBase(section, s);
+        if (base == null) return null;
 
-        ExceptionHandler.HandleResult result = ExceptionHandler.handleIdConflict(id);
-
-        if (result == ExceptionHandler.HandleResult.FAILED) return null;
-
-        String igId = section.getString("item_group");
-
-        SlimefunItemStack slimefunItemStack = getPreloadItem(id);
-        if (slimefunItemStack == null) return null;
-
-        Pair<ExceptionHandler.HandleResult, ItemGroup> group = ExceptionHandler.handleItemGroupGet(addon, igId);
-        if (group.getFirstValue() == ExceptionHandler.HandleResult.FAILED) return null;
-
-        Pair<RecipeType, ItemStack[]> recipePair = getRecipe(section, addon);
-        RecipeType rt = recipePair.getFirstValue();
-        ItemStack[] recipe = recipePair.getSecondValue();
-
-        JavaScriptEval eval = null;
-        if (section.contains("script")) {
-            String script = section.getString("script", "");
-            File file = new File(addon.getScriptsFolder(), script + ".js");
-            if (!file.exists()) {
-                ExceptionHandler.handleWarning(
-                        "在附属" + addon.getAddonId() + "中加载机器" + s + "时遇到了问题: " + "找不到脚本文件 " + file.getName());
-            } else {
-                eval = JavaScriptEval.create(file, addon);
-            }
-        }
+        JavaScriptEval eval = getScriptOrNull(section, section.getString("script"));
 
         List<Integer> input = section.getIntegerList("input");
         List<Integer> output = section.getIntegerList("output");
-        CustomMenu menu = CommonUtils.getIf(addon.getMenus(), m -> m.getID().equalsIgnoreCase(id));
+        CustomMenu menu = CommonUtils.getIf(addon.getMenus(), m -> m.getId().equalsIgnoreCase(id));
 
         AbstractEmptyMachine<?> machine;
-        CustomNoEnergyMachine defaultNoEnergyMachine = new CustomNoEnergyMachine(
-                group.getSecondValue(), slimefunItemStack, rt, recipe, menu, input, output, eval, -1);
+        CustomNoEnergyMachine defaultNoEnergyMachine = new CustomNoEnergyMachine(base, menu, input, output, eval, -1);
 
         if (section.contains("energy")) {
             ConfigurationSection energySettings = section.getConfigurationSection("energy");
             if (energySettings == null) {
-                ExceptionHandler.handleWarning("无法读取在附属" + addon.getAddonId() + "中的机器" + s + "的能源设置，已转为无电机器");
-                return defaultNoEnergyMachine;
+                Debug.error(file, section, "缺少或配置错误 '能源设置' (energy)");
+                return null;
             }
-            int capacity = energySettings.getInt("capacity");
-            if (capacity < 0) {
-                ExceptionHandler.handleError("无法读取在附属" + addon.getAddonId() + "中的机器" + s + "的能源设置，已转为无电机器，原因: 容量不能小于0");
-                return defaultNoEnergyMachine;
+            int capacity = energySettings.getInt("capacity", -1);
+            if (capacity < 1) {
+                Debug.error(file, section, "缺少或配置错误 '电容量' (capacity)", 1, Integer.MAX_VALUE);
+                return null;
             }
             MachineRecord record = new MachineRecord(capacity);
             String encType = energySettings.getString("type");
@@ -112,48 +93,15 @@ public class MachineReader extends YamlReader<AbstractEmptyMachine<?>> {
             }
 
             if (energySettings.contains("energyOutput")) {
-                int energyOutput = section.getInt("energyOutput");
-                if (energyOutput < 0) {
-                    ExceptionHandler.handleError(
-                            "无法读取在附属" + addon.getAddonId() + "中的自定义发电机" + s + "的能源设置，已转为普通有电机器，原因: 能量输出不能小于0");
-                    machine = new CustomMachine(
-                            group.getSecondValue(),
-                            slimefunItemStack,
-                            rt,
-                            recipe,
-                            menu,
-                            input,
-                            output,
-                            record,
-                            enc.getSecondValue(),
-                            eval);
-                    return machine;
+                int energyOutput = section.getInt("energyOutput", -1);
+                if (energyOutput < 1) {
+                    Debug.error(file, section, "缺少或配置错误 '能源输出' (energyOutput)");
+                    return null;
                 } else {
-                    machine = new CustomEnergyGenerator(
-                            group.getSecondValue(),
-                            slimefunItemStack,
-                            rt,
-                            recipe,
-                            menu,
-                            input,
-                            output,
-                            record,
-                            enc.getSecondValue(),
-                            eval,
-                            energyOutput);
+                    machine = new CustomEnergyGenerator(base, menu, input, output, record, enc.getSecondValue(), eval, energyOutput);
                 }
             } else {
-                machine = new CustomMachine(
-                        group.getSecondValue(),
-                        slimefunItemStack,
-                        rt,
-                        recipe,
-                        menu,
-                        input,
-                        output,
-                        record,
-                        enc.getSecondValue(),
-                        eval);
+                machine = new CustomMachine(base, menu, input, output, record, enc.getSecondValue(), eval);
             }
         } else {
             List<Integer> workSlots = new ArrayList<>();
@@ -163,8 +111,7 @@ public class MachineReader extends YamlReader<AbstractEmptyMachine<?>> {
                 workSlots = section.getIntegerList("work");
             }
 
-            machine = new CustomNoEnergyMachine(
-                    group.getSecondValue(), slimefunItemStack, rt, recipe, menu, input, output, eval, workSlots);
+            machine = new CustomNoEnergyMachine(base, menu, input, output, eval, workSlots);
         }
 
         machine.register(RykenSlimefunCustomizer.INSTANCE);
@@ -173,17 +120,6 @@ public class MachineReader extends YamlReader<AbstractEmptyMachine<?>> {
 
     @Override
     public List<SlimefunItemStack> preloadItems(String s) {
-        ConfigurationSection section = configuration.getConfigurationSection(s);
-        if (section == null) return null;
-
-        ConfigurationSection item = section.getConfigurationSection("item");
-        ItemStack stack = CommonUtils.readItem(item, false, addon);
-
-        if (stack == null) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载机器" + s + "时遇到了问题: " + "物品为空或格式错误导致无法加载");
-            return null;
-        }
-
-        return List.of(new SlimefunItemStack(addon.getId(s, section.getString("id_alias")), stack));
+        return blockPreloadItems(s);
     }
 }

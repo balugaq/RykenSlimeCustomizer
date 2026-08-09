@@ -44,6 +44,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.ScriptedEvalBrea
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.SmallerMachineInfo;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.RSCClickHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 
 import java.util.Collections;
@@ -61,29 +62,23 @@ public class CustomNoEnergyMachine extends AbstractEmptyMachine<MachineOperation
     private final CustomMenu menu;
 
     public CustomNoEnergyMachine(
-            ItemGroup itemGroup,
-            SlimefunItemStack item,
-            RecipeType recipeType,
-            ItemStack[] recipe,
+            YamlReader.BaseResult base,
             CustomMenu menu,
             List<Integer> input,
             List<Integer> output,
             @Nullable ScriptEval eval,
             int work) {
-        this(itemGroup, item, recipeType, recipe, menu, input, output, eval, Collections.singletonList(work));
+        this(base, menu, input, output, eval, Collections.singletonList(work));
     }
 
     public CustomNoEnergyMachine(
-            ItemGroup itemGroup,
-            SlimefunItemStack item,
-            RecipeType recipeType,
-            ItemStack[] recipe,
+            YamlReader.BaseResult base,
             CustomMenu menu,
             List<Integer> input,
             List<Integer> output,
             @Nullable ScriptEval eval,
             List<Integer> work) {
-        super(itemGroup, item, recipeType, recipe);
+        super(base.itemGroup(), base.sfis(), base.recipeType(), base.recipe());
 
         this.input = input;
         this.output = output;

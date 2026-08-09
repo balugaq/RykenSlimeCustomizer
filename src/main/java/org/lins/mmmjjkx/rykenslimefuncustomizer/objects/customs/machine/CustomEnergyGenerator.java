@@ -31,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.MachineRecord;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
@@ -41,10 +42,7 @@ public class CustomEnergyGenerator extends CustomMachine implements EnergyNetPro
     private final int defaultOutput;
 
     public CustomEnergyGenerator(
-            ItemGroup itemGroup,
-            SlimefunItemStack item,
-            RecipeType recipeType,
-            ItemStack[] recipe,
+            YamlReader.BaseResult base,
             @Nullable CustomMenu menu,
             List<Integer> input,
             List<Integer> output,
@@ -52,7 +50,7 @@ public class CustomEnergyGenerator extends CustomMachine implements EnergyNetPro
             EnergyNetComponentType type,
             @Nullable ScriptEval eval,
             int defaultOutput) {
-        super(itemGroup, item, recipeType, recipe, menu, input, output, record, type, eval);
+        super(base, menu, input, output, record, type, eval);
 
         this.eval = eval;
         this.defaultOutput = defaultOutput;

@@ -23,45 +23,34 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.factories.SimpleMachineFactory;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.SimpleMachineType;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
+import java.io.File;
 import java.util.List;
 
 public class SimpleMachineReader extends YamlReader<SlimefunItem> {
-    public SimpleMachineReader(YamlConfiguration config, ProjectAddon addon) {
-        super(config, addon);
+    @Override
+    public String getFileName() {
+        return Constants.SIMPLE_MACHINES_FILE;
+    }
+
+    public SimpleMachineReader(File file, ProjectAddon addon) {
+        super(file, addon);
     }
 
     @Override
     public SlimefunItem readEach(String s) {
         ConfigurationSection section = configuration.getConfigurationSection(s);
         if (section == null) return null;
-        String id = addon.getId(s, section.getString("id_alias"));
-
-        ExceptionHandler.HandleResult result = ExceptionHandler.handleIdConflict(id);
-
-        if (result == ExceptionHandler.HandleResult.FAILED) return null;
-
-        String igId = section.getString("item_group");
-
-        SlimefunItemStack slimefunItemStack = getPreloadItem(id);
-        if (slimefunItemStack == null) return null;
-
-        Pair<ExceptionHandler.HandleResult, ItemGroup> itemGroupPair = ExceptionHandler.handleItemGroupGet(addon, igId);
-        if (itemGroupPair.getFirstValue() == ExceptionHandler.HandleResult.FAILED
-                || itemGroupPair.getSecondValue() == null) return null;
-
-        Pair<RecipeType, ItemStack[]> recipePair = getRecipe(section, addon);
-        RecipeType rt = recipePair.getFirstValue();
-        ItemStack[] recipe = recipePair.getSecondValue();
+        var base = getBase(section, s);
+        if (base == null) return null;
 
         String machineTypeStr = section.getString("type");
 
@@ -132,10 +121,7 @@ public class SimpleMachineReader extends YamlReader<SlimefunItem> {
         }
 
         SlimefunItem instance = SimpleMachineFactory.create(
-                itemGroupPair.getSecondValue(),
-                slimefunItemStack,
-                rt,
-                recipe,
+                base,
                 machineType,
                 capacity,
                 consumption,
@@ -150,18 +136,7 @@ public class SimpleMachineReader extends YamlReader<SlimefunItem> {
 
     @Override
     public List<SlimefunItemStack> preloadItems(String s) {
-        ConfigurationSection section = configuration.getConfigurationSection(s);
-        if (section == null) return null;
-
-        ConfigurationSection item = section.getConfigurationSection("item");
-        ItemStack stack = CommonUtils.readItem(item, false, addon);
-
-        if (stack == null) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载简单机器" + s + "时遇到了问题: " + "物品为空或格式错误导致无法加载");
-            return null;
-        }
-
-        return List.of(new SlimefunItemStack(addon.getId(s, section.getString("id_alias")), stack));
+        return blockPreloadItems(s);
     }
 
     private boolean isAccelerator(SimpleMachineType type) {

@@ -54,6 +54,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.MachineInfo;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.MachineRecord;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.ScriptedEvalBreakHandler;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -75,17 +76,14 @@ public class CustomMachine extends AbstractEmptyMachine<MachineOperation> implem
     }
 
     public CustomMachine(
-            ItemGroup itemGroup,
-            SlimefunItemStack item,
-            RecipeType recipeType,
-            ItemStack[] recipe,
+            YamlReader.BaseResult base,
             @Nullable CustomMenu menu,
             List<Integer> input,
             List<Integer> output,
             MachineRecord record,
             EnergyNetComponentType type,
             @Nullable ScriptEval eval) {
-        super(itemGroup, item, recipeType, recipe);
+        super(base.itemGroup(), base.sfis(), base.recipeType(), base.recipe());
 
         this.input = input;
         this.output = output;

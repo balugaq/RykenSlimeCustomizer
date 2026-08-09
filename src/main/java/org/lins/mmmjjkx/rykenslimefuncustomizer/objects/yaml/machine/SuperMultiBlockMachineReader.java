@@ -17,22 +17,19 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine;
 
-import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
+import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSuperMultiBlockMachine;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomMachineRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.BlockDisplayDescriptor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.CustomMultiBlockPart;
@@ -45,6 +42,8 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlock
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.VanillaMultiBlockPart;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.Vector3i;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 import javax.annotation.Nullable;
@@ -56,36 +55,24 @@ import java.util.List;
 import java.util.Map;
 
 public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlockMachine> {
-    public SuperMultiBlockMachineReader(YamlConfiguration config, ProjectAddon addon) {
-        super(config, addon);
+    @Override
+    public String getFileName() {
+        return Constants.SUPER_MULTI_BLOCK_MACHINES_FILE;
+    }
+
+    public SuperMultiBlockMachineReader(File file, ProjectAddon addon) {
+        super(file, addon);
     }
 
     @Override
     public CustomSuperMultiBlockMachine readEach(String s) {
         ConfigurationSection section = configuration.getConfigurationSection(s);
         if (section == null) return null;
-        String id = addon.getId(s, section.getString("id_alias"));
+        String id = getId(s);
+        var base = getBase(section, s);
+        if (base == null) return null;
 
-        ExceptionHandler.HandleResult result = ExceptionHandler.handleIdConflict(id);
-
-        if (result == ExceptionHandler.HandleResult.FAILED) return null;
-
-        String igId = section.getString("item_group");
-        Pair<ExceptionHandler.HandleResult, ItemGroup> group = ExceptionHandler.handleItemGroupGet(addon, igId);
-        if (group.getFirstValue() == ExceptionHandler.HandleResult.FAILED) return null;
-
-        SlimefunItemStack slimefunItemStack = getPreloadItem(id);
-        if (slimefunItemStack == null) return null;
-        if (!slimefunItemStack.getType().isBlock()) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "物品类型不是方块");
-            return null;
-        }
-
-        Pair<RecipeType, ItemStack[]> recipePair = getRecipe(section, addon);
-        RecipeType rt = recipePair.getFirstValue();
-        ItemStack[] recipe = recipePair.getSecondValue();
-
-        CustomMenu menu = CommonUtils.getIf(addon.getMenus(), m -> m.getID().equalsIgnoreCase(id));
+        CustomMenu menu = CommonUtils.getIf(addon.getMenus(), m -> m.getId().equalsIgnoreCase(id));
         if (menu == null) {
             ExceptionHandler.handleWarning("未找到菜单 " + id + " 使用默认菜单");
         }
@@ -94,54 +81,39 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
         List<Integer> output = section.getIntegerList("output");
 
         if (input.isEmpty()) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "输入槽为空");
+            Debug.error(file, section, "缺少或配置错误 '输入槽' (input)");
             return null;
         }
 
         if (output.isEmpty()) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "输出槽为空");
+            Debug.error(file, section, "缺少或配置错误 '输出槽' (output)");
             return null;
         }
 
-        ConfigurationSection recipes = section.getConfigurationSection("recipes");
+        if (isInvalidSlots(input, section, ItemTransportFlow.INSERT)
+            || isInvalidSlots(output, section, ItemTransportFlow.WITHDRAW)) {
+            return null;
+        }
 
         int capacity = section.getInt("capacity");
-
-        if (capacity < 0) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "能源容量小于0");
+        if (capacity <= 0) {
+            Debug.error(file, section, "缺少或配置错误 '能源容量' (capacity)", 1, Integer.MAX_VALUE);
             return null;
         }
 
-        int energy = section.getInt("energyPerCraft");
-
+        int energy = section.getInt("energyPerCraft", -1);
         if (energy <= 0) {
-            ExceptionHandler.handleError(
-                    "在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "合成一次的消耗能量未设置或小于等于0");
+            Debug.error(file, section, "缺少或配置错误 '能量消耗' (energyPerCraft)", 1, Integer.MAX_VALUE);
             return null;
         }
 
-        int speed = section.getInt("speed");
-
+        int speed = section.getInt("speed", 1);
         if (speed <= 0) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "合成速度未设置或小于等于0");
+            Debug.error(file, section, "配置错误 '合成速度' (speed)", 1, Integer.MAX_VALUE);
             return null;
         }
 
-        boolean hideAllRecipes = section.getBoolean("hideAllRecipes", false);
-
-        List<CustomMachineRecipe> mr = readRecipes(s, input.size(), output.size(), recipes, addon);
-
-        JavaScriptEval eval = null;
-        if (section.contains("script")) {
-            String script = section.getString("script", "");
-            File file = new File(addon.getScriptsFolder(), script + ".js");
-            if (!file.exists()) {
-                ExceptionHandler.handleWarning(
-                        "在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "找不到脚本文件 " + file.getName());
-            } else {
-                eval = JavaScriptEval.create(file, addon);
-            }
-        }
+        JavaScriptEval eval = getScriptOrNull(section, section.getString("script"));
 
         boolean displayProjectiles = section.getBoolean("displayProjectiles", true);
         boolean checkFormed = section.getBoolean("checkFormed", true);
@@ -158,31 +130,23 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
 
         if (redirectMenu != null) {
             if (definition.getMapping().get(redirectMenu) == null) {
-                ExceptionHandler.handleError(
-                        "在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "重定向菜单中: 不存在指定的映射: " + redirectMenu);
+                Debug.error(file, section, "不存在指定的重定向映射 " + redirectMenu);
                 return null;
             }
 
             if (definition.count(redirectMenu) != 1) {
-                ExceptionHandler.handleError(
-                        "在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "重定向菜单映射 " + redirectMenu + "只能有1个");
+                Debug.error(file, section, "重定向菜单映射 " + redirectMenu + " 至多有 1 个!");
                 return null;
             }
         }
 
         return new CustomSuperMultiBlockMachine(
-                group.getSecondValue(),
-                slimefunItemStack,
-                rt,
-                recipe,
+                base,
                 input.stream().mapToInt(x -> x).toArray(),
                 output.stream().mapToInt(x -> x).toArray(),
-                mr,
                 energy,
                 capacity,
-                menu,
                 speed,
-                hideAllRecipes,
                 eval,
                 definition,
                 displayProjectiles,
@@ -198,18 +162,7 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
 
     @Override
     public List<SlimefunItemStack> preloadItems(String s) {
-        ConfigurationSection section = configuration.getConfigurationSection(s);
-        if (section == null) return null;
-
-        ConfigurationSection item = section.getConfigurationSection("item");
-        ItemStack stack = CommonUtils.readItem(item, false, addon);
-
-        if (stack == null) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + "物品为空或格式错误导致无法加载");
-            return null;
-        }
-
-        return List.of(new SlimefunItemStack(addon.getId(s, section.getString("id_alias")), stack));
+        return blockPreloadItems(s);
     }
 
     @Nullable
@@ -240,7 +193,6 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
         //  - "b1 a1 c1"
         // 考虑到多方块结构不一定是规则图形
         // 需要先确定 o 即core的位置，然后对其他进行向量化 -> Vector3i
-        // 在 o 上面的是 y+1, o下面的是y-1
         //
 
         Pair<Map<String, MultiBlockPart>, String> mappingAndCore = readMapping(section.getConfigurationSection("mapping"), s, eval);
@@ -479,9 +431,6 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
 
             if (mt.isBlock()) return new BlockDisplayDescriptor(mt.createBlockData());
 
-            // shouldn't happen
-//            if (mt.isItem()) return new ItemDisplayDescriptor(new ItemStack(mt));
-
             ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "时遇到了问题: " + mappingLocation + " 材料 " + part + " 不支持");
             return null;
         });
@@ -493,73 +442,5 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
             return readDisplayDescriptor(s, material, mappingLocation);
         }
         return null;
-
-//        // item
-//        ItemStack itemStack = CommonUtils.readItem(section, true, addon);
-//        if (itemStack != null) {
-//            return new ItemDisplayDescriptor(itemStack);
-//        } else {
-//            return null;
-//        }
-    }
-
-    private List<CustomMachineRecipe> readRecipes(
-            String s, int inputSize, int outputSize, ConfigurationSection section, ProjectAddon addon) {
-        List<CustomMachineRecipe> list = new ArrayList<>();
-        if (section == null) {
-            return list;
-        }
-
-        for (String key : section.getKeys(false)) {
-            ConfigurationSection recipes = section.getConfigurationSection(key);
-            if (recipes == null) continue;
-            int seconds = recipes.getInt("seconds");
-            if (seconds < 0) {
-                ExceptionHandler.handleError(
-                        "在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "的工作配方" + key + "时遇到了问题: " + "间隔时间未设置或不能小于0");
-                continue;
-            }
-            ConfigurationSection inputs = recipes.getConfigurationSection("input");
-            if (inputs == null) {
-                ExceptionHandler.handleError(
-                        "在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "的工作配方" + key + "时遇到了问题: " + "没有输入物品");
-                continue;
-            }
-            ItemStack[] input = CommonUtils.readRecipe(inputs, addon, inputSize);
-            if (input == null) {
-                ExceptionHandler.handleError(
-                        "在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "的工作配方" + key + "时遇到了问题: " + "输入物品为空或格式错误");
-                continue;
-            }
-            ConfigurationSection outputs = recipes.getConfigurationSection("output");
-            if (outputs == null) {
-                ExceptionHandler.handleError(
-                        "在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "的工作配方" + key + "时遇到了问题: " + "没有输出物品");
-                continue;
-            }
-
-            List<Integer> chances = new ArrayList<>();
-
-            ItemStack[] output = new ItemStack[outputSize];
-            for (int i = 0; i < outputSize; i++) {
-                ConfigurationSection section1 = outputs.getConfigurationSection(String.valueOf(i + 1));
-                var item = CommonUtils.readItem(section1, true, addon);
-                if (item != null) {
-                    int chance = section1.getInt("chance", 100);
-
-                    if (chance < 1) {
-                        ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载超级多方块机器" + s + "的工作配方" + key
-                                + "时遇到了问题: " + "概率不应该小于1，已转为1");
-                        chance = 1;
-                    }
-
-                    output[i] = item;
-                    chances.add(chance);
-                }
-            }
-
-            RecipeMachineReader.addToList(list, recipes, seconds, input, chances, output);
-        }
-        return list;
     }
 }

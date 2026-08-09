@@ -18,31 +18,24 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine;
 
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
-import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
-import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockBreakHandler;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockPlaceHandler;
 import io.github.thebusybiscuit.slimefun4.implementation.handlers.SimpleBlockBreakHandler;
-import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomMachineRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.Asynchronized;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlock;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockDefinition;
@@ -50,7 +43,6 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlock
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -80,10 +72,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Getter
 @NullMarked
-public class CustomSuperMultiBlockMachine extends CustomRecipeMachine implements Asynchronized {
+public class CustomSuperMultiBlockMachine extends AdvancedCustomMachine implements Asynchronized {
     public static final SuperMultiBlockManager instance = SuperMultiBlockManager.getInstance();
     public static final int DISPLAY_ALL = -999;
-    public static final ItemStack NOT_BUILT_YET = new CustomItemStack(Material.BRICKS, "&c多方块尚未搭建完成!", "");
     private final @Nullable ScriptEval eval;
     private final SuperMultiBlockDefinition definition;
     private final boolean displayProjectiles;
@@ -99,18 +90,12 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine implements
     private static final Map<Location, Integer> ticked = new ConcurrentHashMap<>();
 
     public CustomSuperMultiBlockMachine(
-            ItemGroup itemGroup,
-            SlimefunItemStack item,
-            RecipeType recipeType,
-            ItemStack[] recipe,
+            YamlReader.BaseResult base,
             int[] input,
             int[] output,
-            List<CustomMachineRecipe> recipes,
             int energyPerCraft,
             int capacity,
-            @Nullable CustomMenu menu,
             int speed,
-            boolean hideAllRecipes,
             @Nullable ScriptEval eval,
             SuperMultiBlockDefinition definition,
             boolean displayProjectiles,
@@ -121,7 +106,7 @@ public class CustomSuperMultiBlockMachine extends CustomRecipeMachine implements
             boolean allowSwitchDisplayLayer,
             boolean defaultNotice,
             @Nullable String redirectMenu) {
-        super(itemGroup, item, recipeType, recipe, input, output, recipes, energyPerCraft, capacity, menu, speed, hideAllRecipes);
+        super(base, input, output, energyPerCraft, capacity, speed);
 
         this.eval = eval;
         this.definition = definition;

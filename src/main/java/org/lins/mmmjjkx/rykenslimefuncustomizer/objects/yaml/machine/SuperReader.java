@@ -28,16 +28,17 @@ import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import net.bytebuddy.implementation.bind.annotation.This;
 import net.bytebuddy.matcher.ElementMatchers;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ReflectionUtil;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -50,43 +51,33 @@ import java.util.Objects;
 
 @SuppressWarnings("unchecked")
 public class SuperReader extends YamlReader<SlimefunItem> {
-    public SuperReader(YamlConfiguration config, ProjectAddon addon) {
-        super(config, addon);
+    @Override
+    public String getFileName() {
+        return Constants.SUPERS_FILE;
+    }
+
+    public SuperReader(File file, ProjectAddon addon) {
+        super(file, addon);
     }
 
     @Override
     public SlimefunItem readEach(String s) {
         ConfigurationSection section = configuration.getConfigurationSection(s);
         if (section == null) return null;
-        String id = addon.getId(s, section.getString("id_alias"));
-
-        ExceptionHandler.HandleResult result = ExceptionHandler.handleIdConflict(id);
-
-        if (result == ExceptionHandler.HandleResult.FAILED) return null;
-
-        SlimefunItemStack sfis = getPreloadItem(id);
-        if (sfis == null) return null;
-
-        String igId = section.getString("item_group");
-
-        Pair<ExceptionHandler.HandleResult, ItemGroup> group = ExceptionHandler.handleItemGroupGet(addon, igId);
-        if (group.getFirstValue() == ExceptionHandler.HandleResult.FAILED) return null;
-
-        Pair<RecipeType, ItemStack[]> recipePair = getRecipe(section, addon);
-        RecipeType rt = recipePair.getFirstValue();
-        ItemStack[] recipe = recipePair.getSecondValue();
+        var base = getBase(section, s);
+        if (base == null) return null;
 
         String className = section.getString("class", "");
         Class<?> clazz;
         try {
             clazz = Class.forName(className);
         } catch (ClassNotFoundException e) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载继承物品" + s + "时遇到了问题: " + "未找到基类", e);
+            Debug.error(file, section, "不存在基类", e);
             return null;
         }
 
         if (!SlimefunItem.class.isAssignableFrom(clazz)) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载继承物品" + s + "时遇到了问题: " + "基类不是粘液物品");
+            Debug.error(file, section, "基类不是粘液物品");
             return null;
         }
 
@@ -95,22 +86,19 @@ public class SuperReader extends YamlReader<SlimefunItem> {
         boolean ignoreAccessible = section.getBoolean("ignore_accessible", false);
 
         if (ignoreAccessible) {
-            ExceptionHandler.handleWarning(
-                    "在附属" + addon.getAddonId() + "中加载继承物品" + s + "发现了 ignore_accessible 选项被启用，这可能会导致潜在的安全漏洞!");
+            Debug.warning(file, section, "ignore_accessible 选项被启用，这可能会导致潜在的安全漏洞!");
         }
-        // a zero-based number
+        // 0-based index
         int constructorIndex = section.getInt("ctor", 0);
         if (clazz.getConstructors().length < constructorIndex + 1) {
             if (ignoreAccessible) {
                 // try to find a private constructor
                 if (clazz.getDeclaredConstructors().length < constructorIndex + 1) {
-                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载继承物品" + s + "时遇到了问题: " + "无法找到第 "
-                            + constructorIndex + " 个构造函数");
+                    Debug.error(file, section, "无法找到第 " + constructorIndex + " 个构造函数 (0-based)");
                     return null;
                 }
             } else {
-                ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载继承物品" + s + "时遇到了问题: " + "无法找到第 "
-                        + constructorIndex + " 个构造函数");
+                Debug.error(file, section, "无法找到第 " + constructorIndex + " 个可访问构造函数 (0-based)");
                 return null;
             }
         }
@@ -126,13 +114,12 @@ public class SuperReader extends YamlReader<SlimefunItem> {
                 (List<Object>) section.getList("arg_template", List.of("group", "item", "recipe_type", "recipe"));
         Object[] originArgs = argTemplate.stream()
                 .map(x -> {
-                    if (x.equals("group")) return group.getSecondValue();
-                    if (x.equals("item")) return sfis;
-                    if (x.equals("recipe_type")) return rt;
-                    if (x.equals("recipe")) return recipe;
+                    if (x.equals("group")) return base.itemGroup();
+                    if (x.equals("item")) return base.sfis();
+                    if (x.equals("recipe_type")) return base.recipeType();
+                    if (x.equals("recipe")) return base.recipe();
                     return x;
                 })
-                .filter(Objects::nonNull)
                 .toArray();
 
         SlimefunItem instance;
@@ -157,7 +144,7 @@ public class SuperReader extends YamlReader<SlimefunItem> {
             instance = (SlimefunItem) dynamicConstructor.newInstance(newArgs.toArray());
 
         } catch (InstantiationException | InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载继承物品" + s + "时遇到了问题: " + "无法创建类", e);
+            Debug.error(file, section, "无法创建类", e);
             return null;
         }
 
@@ -177,8 +164,7 @@ public class SuperReader extends YamlReader<SlimefunItem> {
                         methodName,
                         Arrays.stream(args1).map(Object::getClass).toArray(Class<?>[]::new));
                 if (method == null) {
-                    ExceptionHandler.handleError(
-                            "在附属" + addon.getAddonId() + "中加载继承物品" + s + "时遇到了问题: " + "没有找到方法" + methodName);
+                    Debug.warning(file, methodArray, "没有找到方法 " + methodName);
                     continue;
                 }
 
@@ -188,7 +174,8 @@ public class SuperReader extends YamlReader<SlimefunItem> {
                     }
                     method.invoke(instance, args1);
                 } catch (InvocationTargetException | IllegalAccessException e) {
-                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载继承物品" + s + "时遇到了问题: " + "方法调用异常", e);
+                    Debug.warning(file, methodArray, "无法调用方法 " + methodName, e);
+                    continue;
                 }
             }
         }
@@ -200,20 +187,17 @@ public class SuperReader extends YamlReader<SlimefunItem> {
                     Field field = getField(clazz, fieldName);
 
                     if (field == null) {
-                        ExceptionHandler.handleError(
-                                "在附属" + addon.getAddonId() + "中加载继承物品" + s + "时遇到了问题: " + "没有找到字段" + fieldName);
+                        Debug.warning(file, fieldArray, "无法找到字段 " + fieldName);
                         continue;
                     }
                     if (Modifier.isStatic(field.getModifiers())) {
-                        ExceptionHandler.handleError(
-                                "在附属" + addon.getAddonId() + "中加载继承物品" + s + "时遇到了问题: " + "字段" + fieldName + "为static");
-                        return null;
+                        Debug.warning(file, fieldArray, "字段 " + fieldName + " 为 static");
+                        continue;
                     }
 
                     if (Modifier.isFinal(field.getModifiers())) {
-                        ExceptionHandler.handleError(
-                                "在附属" + addon.getAddonId() + "中加载继承物品" + s + "时遇到了问题: " + "字段" + fieldName + "为final");
-                        return null;
+                        Debug.warning(file, fieldArray, "字段 " + fieldName + " 为 final");
+                        continue;
                     }
 
                     if (ignoreAccessible) {
@@ -222,14 +206,16 @@ public class SuperReader extends YamlReader<SlimefunItem> {
                     Object object = fieldArray.getObject(fieldName, field.getType());
                     field.set(instance, object);
                 } catch (Throwable e) {
-                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载继承物品" + s + "时遇到了问题: " + "字段修改异常", e);
+                    Debug.warning(file, fieldArray, "无法修改字段 " + fieldName, e);
+                    continue;
                 }
             }
         }
         try {
             instance.register(RykenSlimefunCustomizer.INSTANCE);
         } catch (Throwable e) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载继承物品" + s + "时遇到了问题: " + "注册失败", e);
+            Debug.error(file, section, "无法注册类", e);
+            return null;
         }
 
         return instance;
@@ -237,17 +223,7 @@ public class SuperReader extends YamlReader<SlimefunItem> {
 
     @Override
     public List<SlimefunItemStack> preloadItems(String s) {
-        ConfigurationSection section = configuration.getConfigurationSection(s);
-        if (section == null) return null;
-
-        ConfigurationSection item = section.getConfigurationSection("item");
-        ItemStack stack = CommonUtils.readItem(item, false, addon);
-
-        if (stack == null) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载继承物品" + s + "时遇到了问题: " + "物品为空或格式错误导致无法加载");
-            return null;
-        }
-        return List.of(new SlimefunItemStack(addon.getId(s, section.getString("id_alias")), stack));
+        return anyPreloadItems(s);
     }
 
     private Method getMethod(Class<?> clazz, String name, Class<?>... parameterTypes) {

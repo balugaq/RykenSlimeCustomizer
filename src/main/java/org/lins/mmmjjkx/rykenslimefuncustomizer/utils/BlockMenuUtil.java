@@ -18,10 +18,12 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.utils;
 
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.experimental.UtilityClass;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.ItemWrapper;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.LinkedOutput;
 
 import javax.annotation.Nonnull;
@@ -115,18 +117,18 @@ public class BlockMenuUtil {
         return itemMap;
     }
 
-    public static boolean fits(@Nonnull BlockMenu blockMenu, @Nonnull ItemStack item, int... slots) {
-        if (item == null || item.getType() == Material.AIR) {
+    public static boolean fits(@Nonnull BlockMenu blockMenu, @Nonnull ItemWrapper wrapper, int... slots) {
+        if (wrapper == null || wrapper.getType() == Material.AIR) {
             return true;
         }
 
-        int incoming = item.getAmount();
+        int incoming = wrapper.getAmount();
         for (int slot : slots) {
             ItemStack stack = blockMenu.getItemInSlot(slot);
 
             if (stack == null || stack.getType() == Material.AIR) {
-                incoming -= item.getMaxStackSize();
-            } else if (stack.getMaxStackSize() > stack.getAmount() && StackUtils.itemsMatch(item, stack, true, false)) {
+                incoming -= wrapper.getMaxStackSize();
+            } else if (stack.getMaxStackSize() > stack.getAmount() && StackUtils.itemsMatch(wrapper.getStack(), stack, true, false)) {
                 incoming -= stack.getMaxStackSize() - stack.getAmount();
             }
 
@@ -138,223 +140,96 @@ public class BlockMenuUtil {
         return false;
     }
 
-    public static boolean fits(@Nonnull BlockMenu blockMenu, @Nonnull ItemStack[] items, int... slots) {
-        if (items == null || items.length == 0) {
-            return false;
-        }
-
-        List<ItemStack> listItems = new ArrayList<>();
-        for (ItemStack item : items) {
-            if (item != null && item.getType() != Material.AIR) {
-                listItems.add(item.clone());
-            }
-        }
-
-        return fits(blockMenu, listItems, slots);
-    }
-
-    public static boolean fits(@Nonnull BlockMenu blockMenu, @Nonnull List<ItemStack> items, int... slots) {
-        if (items == null || items.isEmpty()) {
-            return false;
-        }
-
-        List<ItemStack> cloneMenu = new ArrayList<>();
-        for (int i = 0; i < 54; i++) {
-            cloneMenu.add(null);
-        }
-
+    public static boolean fits(@Nonnull BlockMenu blockMenu, @Nonnull List<ItemWrapper> wrappers, int... slots) {
+        int emptySlots = 0;
         for (int slot : slots) {
             ItemStack stack = blockMenu.getItemInSlot(slot);
-            if (stack != null && stack.getType() != Material.AIR) {
-                cloneMenu.set(slot, stack.clone());
-            } else {
-                cloneMenu.set(slot, null);
-            }
+            if (stack == null || stack.getType() == Material.AIR) emptySlots++;
         }
 
-        for (ItemStack rawItem : items) {
-            ItemStack item = rawItem.clone();
-            int leftAmount = item.getAmount();
+        for (ItemWrapper wrapper : wrappers) {
+            int incoming = wrapper.getAmount();
+            // find existing first
             for (int slot : slots) {
-                if (leftAmount <= 0) {
-                    break;
+                ItemStack stack = blockMenu.getItemInSlot(slot);
+
+                if (stack.getMaxStackSize() > stack.getAmount() && StackUtils.itemsMatch(wrapper.getStack(), stack, true, false)) {
+                    incoming -= stack.getMaxStackSize() - stack.getAmount();
                 }
 
-                ItemStack existing = cloneMenu.get(slot);
-
-                if (existing == null || existing.getType() == Material.AIR) {
-                    int received = Math.min(leftAmount, item.getMaxStackSize());
-                    ItemStack clone = item.clone();
-                    clone.setAmount(leftAmount);
-                    cloneMenu.set(slot, clone);
-                    leftAmount -= received;
-                    item.setAmount(Math.max(0, leftAmount));
-                } else {
-                    int existingAmount = existing.getAmount();
-                    if (existingAmount >= item.getMaxStackSize()) {
-                        continue;
-                    }
-
-                    if (!StackUtils.itemsMatch(item, existing, true, false)) {
-                        continue;
-                    }
-
-                    int received = Math.max(0, Math.min(item.getMaxStackSize() - existingAmount, leftAmount));
-                    leftAmount -= received;
-                    existing.setAmount(existingAmount + received);
-                    item.setAmount(leftAmount);
-                }
+                if (incoming <= 0) break;
             }
 
-            if (leftAmount > 0) {
-                return false;
-            }
+            emptySlots -= wrapper.countStack(incoming);
+            if (emptySlots < 0) return false;
         }
 
         return true;
     }
 
     public static boolean fits(@Nonnull BlockMenu blockMenu, @Nonnull LinkedOutput output, int... slots) {
-        if (output == null) {
-            return false;
+        int emptySlots = 0;
+        for (int slot : slots) {
+            if (output.linkedOutput().containsKey(slot)) continue;
+            ItemStack stack = blockMenu.getItemInSlot(slot);
+            if (stack == null || stack.getType() == Material.AIR) emptySlots++;
         }
 
-        // clone the menu
-        List<ItemStack> cloneMenu = new ArrayList<>();
-        for (int i = 0; i < 54; i++) {
-            cloneMenu.add(null);
-        }
-
-        for (int i = 0; i < 54; i++) {
-            ItemStack stack = blockMenu.getItemInSlot(i);
-            if (stack != null && stack.getType() != Material.AIR) {
-                cloneMenu.set(i, stack.clone());
-            } else {
-                cloneMenu.set(i, null);
-            }
-        }
-
-        // try push linked output
-        for (int pushToSlot : output.linkedOutput().keySet()) {
-            if (pushToSlot < 0 || pushToSlot >= 54) {
-                continue;
-            }
-
-            ItemStack PitemToPush = output.linkedOutput().get(pushToSlot);
-            if (PitemToPush == null || PitemToPush.getType() == Material.AIR) {
-                continue;
-            }
-
-            ItemStack itemToPush = PitemToPush.clone();
-
-            ItemStack existing = cloneMenu.get(pushToSlot);
-            if (existing == null || existing.getType() == Material.AIR) {
-                int received = Math.min(itemToPush.getAmount(), itemToPush.getMaxStackSize());
-                if (received <= 0) {
-                    return false;
-                }
-                ItemStack clone = itemToPush.clone();
-                clone.setAmount(received);
-                cloneMenu.set(pushToSlot, clone);
-                itemToPush.setAmount(itemToPush.getAmount() - received);
-            } else if (StackUtils.itemsMatch(itemToPush, existing, true, false)) {
-                int existingAmount = existing.getAmount();
-                int received = Math.min(itemToPush.getMaxStackSize() - existingAmount, itemToPush.getAmount());
-                if (received <= 0) {
-                    return false;
-                }
-                existing.setAmount(existingAmount + received);
-                itemToPush.setAmount(itemToPush.getAmount() - received);
-            } else {
+        Int2ObjectOpenHashMap<ItemStack> linked = new Int2ObjectOpenHashMap<>();
+        for (var e : output.linkedOutput().entrySet()) {
+            int slot = e.getKey();
+            var item = e.getValue();
+            var exist = blockMenu.getItemInSlot(slot);
+            var ap = exist.getAmount() + item.getAmount();
+            if (!StackUtils.itemsMatch(item, exist, true, false)
+                || ap > item.getMaxStackSize()) {
                 return false;
             }
+            linked.put(slot, item.asQuantity(ap));
         }
 
+
         // try to push free output
-        for (ItemStack PitemToPush : output.freeOutput()) {
-            if (PitemToPush == null || PitemToPush.getType() == Material.AIR) {
-                continue;
-            }
-
-            ItemStack itemToPush = PitemToPush.clone();
-
+        for (ItemWrapper wrapper : output.freeOutputWrappers()) {
+            int incoming = wrapper.getAmount();
+            // find existing first
             for (int slot : slots) {
-                if (itemToPush.getAmount() <= 0) {
-                    break;
+                ItemStack stack = linked.containsKey(slot) ? linked.get(slot) : blockMenu.getItemInSlot(slot);
+
+                if (stack.getMaxStackSize() > stack.getAmount() && StackUtils.itemsMatch(wrapper.getStack(), stack, true, false)) {
+                    incoming -= stack.getMaxStackSize() - stack.getAmount();
                 }
 
-                ItemStack existing = cloneMenu.get(slot);
-                if (existing == null || existing.getType() == Material.AIR) {
-                    int received = Math.min(itemToPush.getAmount(), itemToPush.getMaxStackSize());
-                    ItemStack clone = itemToPush.clone();
-                    clone.setAmount(received);
-                    cloneMenu.set(slot, clone);
-                    itemToPush.setAmount(itemToPush.getAmount() - received);
-                } else if (StackUtils.itemsMatch(itemToPush, existing, true, false)) {
-                    int existingAmount = existing.getAmount();
-                    int received = Math.min(itemToPush.getMaxStackSize() - existingAmount, itemToPush.getAmount());
-                    existing.setAmount(existingAmount + received);
-                    itemToPush.setAmount(itemToPush.getAmount() - received);
-                }
+                if (incoming <= 0) break;
             }
+
+            emptySlots -= wrapper.countStack(incoming);
+            if (emptySlots < 0) return false;
         }
 
         // all items should be pushed successfully
         return true;
     }
 
-    public static void pushItem(
-            @Nonnull BlockMenu blockMenu, @Nonnull LinkedOutput output, boolean chooseOneIfHas, int... slots) {
-        if (output == null) {
-            return;
-        }
-
+    public static List<ItemStack> pushItem(
+            @Nonnull BlockMenu blockMenu, @Nonnull LinkedOutput output, boolean chooseOne, int... slots) {
+        List<ItemStack> failed = new ArrayList<>();
         // push linked output
-        for (int pushToSlot : output.linkedOutput().keySet()) {
-            if (pushToSlot < 0 || pushToSlot >= 54) {
-                continue;
-            }
-
-            ItemStack PitemToPush = output.linkedOutput().get(pushToSlot);
-            if (PitemToPush == null || PitemToPush.getType() == Material.AIR) {
-                continue;
-            }
-
-            ItemStack itemToPush = PitemToPush.clone();
-
-            int chance = output.linkedChances().get(pushToSlot);
-            if (chance > 0 && chance < 100 && Math.random() * 100 > chance) {
-                continue;
-            }
-
+        var result = output.getLinkedMatchChanceResult(chooseOne);
+        for (var e : result.entrySet()) {
             // ignore if not enough space
-            pushItem(blockMenu, itemToPush, pushToSlot);
-
-            if (chooseOneIfHas) {
-                break;
-            }
+            var r = pushItem(blockMenu, e.getValue().clone(), e.getKey());
+            if (r != null) failed.add(r);
         }
+        if (!result.isEmpty() && chooseOne) return failed;
 
         // push free output
-        ItemStack[] freeOutput = output.freeOutput();
-        for (int i = 0; i < freeOutput.length; i++) {
-            ItemStack PitemToPush = freeOutput[i];
-            if (PitemToPush == null || PitemToPush.getType() == Material.AIR) {
-                continue;
-            }
-
-            ItemStack itemToPush = PitemToPush.clone();
-
-            int chance = output.freeChances()[i];
-            if (chance > 0 && chance < 100 && Math.random() * 100 > chance) {
-                continue;
-            }
-
-            pushItem(blockMenu, itemToPush, slots);
-
-            if (chooseOneIfHas) {
-                break;
-            }
+        var result2 = output.getFreeMatchChanceResult(chooseOne);
+        for (var item : result2) {
+            var r = pushItem(blockMenu, item.clone(), slots);
+            if (r != null) failed.add(r);
         }
+
+        return failed;
     }
 }

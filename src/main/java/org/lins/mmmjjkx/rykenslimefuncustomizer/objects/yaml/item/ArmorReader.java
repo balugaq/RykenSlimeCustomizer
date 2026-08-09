@@ -24,7 +24,6 @@ import io.github.thebusybiscuit.slimefun4.core.attributes.ProtectionType;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -32,17 +31,26 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.CustomArmorPiece;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
     private final List<String> CHECKS = List.of("helmet", "chestplate", "leggings", "boots");
 
-    public ArmorReader(YamlConfiguration config, ProjectAddon addon) {
-        super(config, addon);
+    @Override
+    public String getFileName() {
+        return Constants.ARMORS_FILE;
     }
+
+    public ArmorReader(File file, ProjectAddon addon) {
+        super(file, addon);
+    }
+
 
     @Override
     public List<CustomArmorPiece> readEach(String s) {
@@ -141,21 +149,25 @@ public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
         if (section == null) return null;
 
         for (String check : CHECKS) {
-            ConfigurationSection pieceSection = section.getConfigurationSection(check);
-            if (pieceSection == null) continue;
+            ConfigurationSection piece = section.getConfigurationSection(check);
+            if (piece == null) {
+                Debug.warning(file, section, "缺失配置 '盔甲部件' (" + check + ")");
+                continue;
+            }
 
-            ItemStack stack = CommonUtils.readItem(pieceSection, false, addon);
+
+            ItemStack stack = CommonUtils.readItem(piece, false, addon);
+
             if (stack == null) {
-                ExceptionHandler.handleError(
-                        "在附属" + addon.getAddonId() + "中加载盔甲套" + s + "的" + check + "时遇到了问题: " + "物品为空或格式错误导致无法加载，已跳过");
+                Debug.warning(file, piece, "缺失配置 '盔甲部件' (" + check + ")");
                 continue;
             }
 
             SlimefunItemStack sfis = new SlimefunItemStack(
-                    addon.getId(
-                            s + "_" + check.toUpperCase(),
-                            section.getString("id_alias", pieceSection.getString("id", ""))),
-                    stack);
+                addon.getId(
+                    s + "_" + check.toUpperCase(),
+                    section.getString("id_alias", piece.getString("id", ""))),
+                stack);
             items.add(sfis);
         }
 

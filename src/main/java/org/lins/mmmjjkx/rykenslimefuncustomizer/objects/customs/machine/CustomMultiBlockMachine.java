@@ -43,6 +43,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -83,14 +84,12 @@ public class CustomMultiBlockMachine extends MultiBlockMachine {
     private final BlockFace dispenserFace;
 
     public CustomMultiBlockMachine(
-            ItemGroup itemGroup,
-            SlimefunItemStack item,
-            ItemStack[] recipe,
+            YamlReader.BaseResult base,
             Map<ItemStack[], ItemStack> craftRecipes,
             int work,
             @Nullable SoundEffect soundEffect,
             @Nullable ScriptEval eval) {
-        super(itemGroup, item, recipe, BlockFace.SELF);
+        super(base.itemGroup(), base.sfis(), base.recipe(), BlockFace.SELF);
 
         this.workIndex = work - 1;
         this.craftSound = soundEffect;

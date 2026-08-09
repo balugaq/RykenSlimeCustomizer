@@ -25,7 +25,6 @@ import io.github.thebusybiscuit.slimefun4.api.items.groups.SubItemGroup;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
@@ -35,15 +34,23 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupJEG
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.Visible;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ItemGroupReader extends YamlReader<ItemGroup> {
-    public ItemGroupReader(YamlConfiguration config, ProjectAddon addon) {
-        super(config, addon);
+    @Override
+    public String getFileName() {
+        return Constants.GROUPS_FILE;
+    }
+
+    public ItemGroupReader(File file, ProjectAddon addon) {
+        super(file, addon);
     }
 
     @Override
@@ -57,14 +64,14 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
         ConfigurationSection item = section.getConfigurationSection("item");
         ItemStack stack = CommonUtils.readItem(item, false, addon);
         if (stack == null) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载物品组" + s + "时遇到了问题: " + "物品为空或格式错误导致无法加载");
+            Debug.error(file, section, "缺少或配置错误 '物品' (item)");
             return null;
         }
 
         String type = section.getString("type", "");
         GroupType groupType = GroupType.getType(type);
         if (groupType == null) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载物品组" + s + "时遇到了问题: " + "物品组类型" + type + "无效");
+            Debug.error(file, section, "缺少或配置错误 '物品组类型' (type): " + type);
             return null;
         }
         NamespacedKey key = new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, s);
@@ -80,12 +87,12 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
             ItemGroup raw = CommonUtils.getIf(Slimefun.getRegistry().getAllItemGroups(), ig -> ig.getKey().equals(parK));
             switch (raw) {
                 case null -> {
-                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载物品组" + section.getCurrentPath() + "时遇到了问题: 无法找到父物品组: " + par);
+                    Debug.error(file, section, "无法找到父物品组 (parent): " + par);
                     return null;
                 }
                 case NestedItemGroup nig -> {
                     if (groupType == GroupType.locked) {
-                        ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载物品组" + section.getCurrentPath() + "时遇到了问题: 无法将 LockedItemGroup 添加到 NestedItemGroup 中: " + par);
+                        Debug.error(file, section, "无法将 LockedItemGroup 添加到 NestedItemGroup 中 (parent): " + par);
                         return null;
                     }
                     ExceptionHandler.debugLog(() -> "由于技术限制原因，物品组 " + key + " 无法成为可嵌套物品组，因为其父物品组为 NestedItemGroup");
@@ -97,7 +104,7 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
                 case RSCItemGroupLegacy rsc -> parent = rsc;
                 case RSCItemGroupJEG rsc -> parent = rsc;
                 default -> {
-                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载物品组" + section.getCurrentPath() + "时遇到了问题: 无法将添加到指定的物品组: " + par);
+                    Debug.error(file, section, "无法添加当前物品组至到指定的物品组 (parent): " + key + " -> " + par);
                     return null;
                 }
             }
@@ -109,8 +116,7 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
             for (String ig : section.getStringList("parents")) {
                 NamespacedKey nk = NamespacedKey.fromString(ig.toLowerCase());
                 if (nk == null) {
-                    ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载物品组" + s + "时遇到了问题: "
-                        + ig + "不是一个有效的NamespacedKey");
+                    Debug.warning(file, section, "NamespacedKey 非法 (parents): " + ig);
                     continue;
                 }
                 parents.add(nk);

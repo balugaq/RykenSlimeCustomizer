@@ -42,11 +42,9 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.CustomArmor
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.CustomFood;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.CustomGeoResource;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.exts.CustomMobDrop;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.AdvancedCustomMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomGenerator;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomLinkedRecipeMachine;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomMaterialGenerator;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomMultiBlockMachine;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomRecipeMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSolarGenerator;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSuperMultiBlockMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomTemplateMachine;
@@ -105,9 +103,9 @@ public final class ProjectAddon {
     // generators.yml
     private List<CustomGenerator> generators = new ArrayList<>();
     // mat_generators.yml
-    private List<CustomMaterialGenerator> materialGenerators = new ArrayList<>();
+    private List<AdvancedCustomMachine> materialGenerators = new ArrayList<>();
     // recipe_machines.yml
-    private List<CustomRecipeMachine> recipeMachines = new ArrayList<>();
+    private List<AdvancedCustomMachine> recipeMachines = new ArrayList<>();
     // mb_machines.yml
     private List<CustomMultiBlockMachine> multiBlockMachines = new ArrayList<>();
     // solar_generators.yml
@@ -129,7 +127,7 @@ public final class ProjectAddon {
     // template_machines.yml
     private List<CustomTemplateMachine> templateMachines = new ArrayList<>();
     // linked_recipe_machines.yml
-    private List<CustomLinkedRecipeMachine> linkedRecipeMachines = new ArrayList<>();
+    private List<AdvancedCustomMachine> linkedRecipeMachines = new ArrayList<>();
     // workbenches.yml
     private List<CustomWorkbench> workbenches = new ArrayList<>();
     // super_multi_block_machines.yml
@@ -165,7 +163,7 @@ public final class ProjectAddon {
 
     public void unregister() {
         itemGroups.forEach(ig -> Slimefun.getRegistry().getAllItemGroups().remove(ig));
-        menus.forEach(m -> Slimefun.getRegistry().getMenuPresets().remove(m.getID()));
+        menus.forEach(m -> Slimefun.getRegistry().getMenuPresets().remove(m.getId()));
         items.forEach(this::unregisterItem);
         mobDrops.forEach(md -> {
             unregisterItem(md);

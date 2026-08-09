@@ -27,6 +27,7 @@ import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 
 public class CustomSolarGenerator extends SolarGenerator {
@@ -41,19 +42,12 @@ public class CustomSolarGenerator extends SolarGenerator {
     private final int lightLevel;
 
     public CustomSolarGenerator(
-            ItemGroup itemGroup,
+            YamlReader.BaseResult base,
             int dayEnergy,
             int nightEnergy,
-            SlimefunItemStack item,
-            RecipeType recipeType,
-            ItemStack[] recipe,
             int capacity,
             int lightLevel) {
-        super(itemGroup, dayEnergy, nightEnergy, item, recipeType, recipe, capacity);
-
-        if (lightLevel > 15 || lightLevel < 0) {
-            lightLevel = 15;
-        }
+        super(base.itemGroup(), dayEnergy, nightEnergy, base.sfis(), base.recipeType(), base.recipe(), capacity);
 
         this.lightLevel = lightLevel;
 

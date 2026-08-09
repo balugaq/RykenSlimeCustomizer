@@ -22,20 +22,27 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.researches.Research;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
+import java.io.File;
 import java.util.List;
 import java.util.regex.Pattern;
 
 public class ResearchReader extends YamlReader<Research> {
     private static final Pattern VALID_KEY = Pattern.compile("[a-z0-9/._-]+");
 
-    public ResearchReader(YamlConfiguration config, ProjectAddon addon) {
-        super(config, addon);
+    @Override
+    public String getFileName() {
+        return Constants.RESEARCHES_FILE;
+    }
+
+    public ResearchReader(File file, ProjectAddon addon) {
+        super(file, addon);
     }
 
     @Override
@@ -44,8 +51,7 @@ public class ResearchReader extends YamlReader<Research> {
         if (section == null) return null;
 
         if (!VALID_KEY.matcher(s).matches()) {
-            ExceptionHandler.handleError(
-                    "在附属" + addon.getAddonId() + "中加载研究" + s + "时遇到了问题: " + "研究" + s + " 的ID无效，只能使用[a-z0-9._-]这些字符。");
+            Debug.error(file, section, "研究注册 ID 无效，不满足 " + VALID_KEY + " 的匹配");
             return null;
         }
 
@@ -55,15 +61,15 @@ public class ResearchReader extends YamlReader<Research> {
         List<String> items = section.getStringList("items");
 
         if (researchId <= 0) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载研究" + s + "时遇到了问题: " + "id必须大于0!");
+            Debug.error(file, section, "缺少或配置错误 '研究数字 ID' (id)", 1, Integer.MAX_VALUE);
             return null;
         }
         if (cost <= 0) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载研究" + s + "时遇到了问题: " + "等级花费必须大于0!");
+            Debug.error(file, section, "缺少或配置错误 '研究等级花费' (levelCost)", 1, Integer.MAX_VALUE);
             return null;
         }
         if (name == null || name.isBlank()) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载研究" + s + "时遇到了问题: " + "名称不能为空!");
+            Debug.error(file, section, "缺少或配置错误 '名称' (name)");
             return null;
         }
 
@@ -74,8 +80,7 @@ public class ResearchReader extends YamlReader<Research> {
         if (hasCurrency) {
             currency = section.getDouble("currencyCost");
             if (currency < 0) {
-                ExceptionHandler.handleWarning(
-                        "在附属" + addon.getAddonId() + "中加载研究" + s + "时遇到了问题: " + "货币花费不能小于0! 已忽略.");
+                Debug.warning(file, section, "缺少或配置错误 '研究货币花费' (currencyCost)", 1, Integer.MAX_VALUE);
                 hasCurrency = false;
             }
         }
@@ -91,8 +96,7 @@ public class ResearchReader extends YamlReader<Research> {
         for (String item : items) {
             SlimefunItem sfItem = SlimefunItem.getById(item);
             if (sfItem == null) {
-                ExceptionHandler.handleWarning(
-                        "在附属" + addon.getAddonId() + "中加载研究" + s + "时遇到了问题: " + item + " 不是粘液科技物品! 已跳过.");
+                Debug.warning(file, section, "不是粘液物品 (item): " + item);
                 continue;
             }
             research.addItems(sfItem);

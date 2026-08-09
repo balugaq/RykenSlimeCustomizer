@@ -17,22 +17,30 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml;
 
+import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import io.github.thebusybiscuit.slimefun4.libraries.paperlib.PaperLib;
+import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddonLoader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomAddonConfig;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -42,11 +50,16 @@ public abstract class YamlReader<T> {
     public static final int MAJOR_VERSION = PaperLib.getMinecraftVersion();
     public static final int MINOR_VERSION = PaperLib.getMinecraftPatchVersion();
     private final List<String> lateInits;
+    protected final File dir;
+    protected final File file;
     protected final ProjectAddon addon;
     protected final YamlConfiguration configuration;
+    public abstract String getFileName();
 
-    public YamlReader(YamlConfiguration config, ProjectAddon addon) {
-        this.configuration = config;
+    public YamlReader(File dir, ProjectAddon addon) {
+        this.dir = dir;
+        this.file = new File(dir, getFileName());
+        this.configuration = ProjectAddonLoader.doFileLoad(dir, getFileName());
         this.lateInits = new ArrayList<>();
         this.addon = addon;
     }
@@ -90,7 +103,7 @@ public abstract class YamlReader<T> {
                     recipeTypeStr);
 
             if (result.getFirstValue() == ExceptionHandler.HandleResult.FAILED) {
-                return new Pair<>(RecipeType.NULL, new ItemStack[] {});
+                return new Pair<>(RecipeType.NULL, new ItemStack[0]);
             }
 
             rt = result.getSecondValue();
@@ -436,5 +449,99 @@ public abstract class YamlReader<T> {
     private static String getLoadingProgress(ProjectAddon addon) {
         return addon.getLoadedObjects() + "/" + addon.getTotalObjects() + " ("
                 + ((int) (((double) addon.getLoadedObjects()) / addon.getTotalObjects() * 10000)) / 100.0D + "%)";
+    }
+
+    public String getId(String s) {
+        return addon.getId(s, configuration.getConfigurationSection(s).getString("id_alias"));
+    }
+
+    public @Nullable BaseResult getBase(ConfigurationSection section, String s) {
+        if (section == null) return null;
+        String id = addon.getId(s, section.getString("id_alias"));
+
+        ExceptionHandler.HandleResult result = ExceptionHandler.handleIdConflict(id);
+
+        if (result == ExceptionHandler.HandleResult.FAILED) return null;
+
+        String igId = section.getString("item_group");
+        Pair<ExceptionHandler.HandleResult, ItemGroup> group = ExceptionHandler.handleItemGroupGet(addon, igId);
+        if (group.getFirstValue() == ExceptionHandler.HandleResult.FAILED) return null;
+
+        SlimefunItemStack slimefunItemStack = getPreloadItem(id);
+        if (slimefunItemStack == null) return null;
+
+        Pair<RecipeType, ItemStack[]> recipePair = getRecipe(section, addon);
+        RecipeType rt = recipePair.getFirstValue();
+        ItemStack[] recipe = recipePair.getSecondValue();
+
+        return new BaseResult(group.getSecondValue(), slimefunItemStack, rt, recipe);
+    }
+
+    @NullMarked
+        public record BaseResult(ItemGroup itemGroup, SlimefunItemStack sfis, RecipeType recipeType,
+                                 @Nullable ItemStack[] recipe) {
+    }
+
+    public boolean isInvalidSlots(List<Integer> slots, ConfigurationSection section, ItemTransportFlow flow) {
+        for (int slot : slots) {
+            if (slot < 0 || slot > 53) {
+                Debug.warning(file, section, "槽位超出范围! " + (flow == ItemTransportFlow.INSERT ? "'输入槽' (input)" : "'输出槽' (output)"), 0, 53);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public List<SlimefunItemStack> blockPreloadItems(String s) {
+        return internalPreloadItems(s, true, true, true);
+    }
+
+    public List<SlimefunItemStack> anyPreloadItems(String s) {
+        return internalPreloadItems(s, true, true, false);
+    }
+
+    private List<SlimefunItemStack> internalPreloadItems(String s, boolean noAir, boolean noLegacy, boolean mustBeBlock) {
+        ConfigurationSection section = configuration.getConfigurationSection(s);
+        if (section == null) return null;
+
+        ConfigurationSection item = section.getConfigurationSection("item");
+        if (item == null) {
+            Debug.error(file, section, "缺失配置 '物品' (item)");
+            return null;
+        }
+
+
+        ItemStack stack = CommonUtils.readItem(item, false, addon);
+        if (stack == null) {
+            Debug.error(file, item, "配置错误 '物品' (item)");
+            return null;
+        }
+
+        if ((noAir && stack.getType().isAir())
+            || (noLegacy && stack.getType().isLegacy())
+            || (mustBeBlock && !stack.getType().isBlock())) {
+            Debug.error(file, item, "机器物品材质必须为方块 '物品' (item)");
+            return null;
+        }
+
+        return List.of(new SlimefunItemStack(getId(s), stack));
+    }
+
+    @Contract("_, null -> null")
+    @Nullable
+    public JavaScriptEval getScriptOrNull(ConfigurationSection section, @Nullable String script) {
+        if (script == null) return null;
+        String scriptName = script + ".js";
+        File file = new File(addon.getScriptsFolder(), scriptName);
+        if (!file.exists()) {
+            Debug.warning(file, section, "找不到对应的脚本文件 (script), file=" + file.getAbsolutePath());
+            return null;
+        } else {
+            var js = JavaScriptEval.create(file, addon);
+            if (js != null) {
+                Debug.debug(file, () -> "成功加载了脚本文件 " + scriptName);
+            }
+            return js;
+        }
     }
 }

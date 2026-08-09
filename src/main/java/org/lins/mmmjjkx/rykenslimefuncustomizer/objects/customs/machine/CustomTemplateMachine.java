@@ -42,6 +42,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SingleItemRecipeGuideListener;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
@@ -58,8 +59,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomRecipeMachine.RECIPE_INPUT;
-import static org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomRecipeMachine.RECIPE_OUTPUT;
+import static org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.RecipesHolder.RECIPE_INPUT;
+import static org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.RecipesHolder.RECIPE_OUTPUT;
 
 public class CustomTemplateMachine extends AbstractEmptyMachine<CustomTemplateCraftingOperation>
         implements RecipeDisplayItem, EnergyNetComponent {
@@ -88,7 +89,7 @@ public class CustomTemplateMachine extends AbstractEmptyMachine<CustomTemplateCr
             SlimefunItemStack item,
             RecipeType recipeType,
             ItemStack[] recipe,
-            @NotNull CustomMenu menu,
+            @Nullable CustomMenu menu,
             List<Integer> inputSlots,
             List<Integer> outputSlots,
             int templateSlot,

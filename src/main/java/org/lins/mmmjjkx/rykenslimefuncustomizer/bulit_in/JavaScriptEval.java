@@ -79,6 +79,7 @@ public class JavaScriptEval extends ScriptEval {
         addon.getScriptEvals().add(this);
     }
 
+    @Nullable
     public static JavaScriptEval create(@NotNull File js, ProjectAddon addon) {
         try {
             return new JavaScriptEval(js, addon);

@@ -44,11 +44,11 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataHolder;
 import org.bukkit.persistence.PersistentDataType;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.CustomMenuHolder;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.LinkedOutput;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomLinkedRecipeMachine;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomRecipeMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomTemplateMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomWorkbench;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomLinkedMachineRecipe;
@@ -191,8 +191,8 @@ public class SingleItemRecipeGuideListener implements Listener {
             int[] inputSlots = item.getInputSlots();
             int[] outputSlots = item.getOutputSlots();
 
-            if (item instanceof CustomRecipeMachine crm) {
-                CustomMenu menu = crm.getMenu();
+            if (item instanceof CustomMenuHolder holder) {
+                CustomMenu menu = holder.getCustomMenu();
                 if (menu != null) {
                     defaultRecipeGUI = false;
                     progressSlot = menu.getProgressSlot();
@@ -268,7 +268,7 @@ public class SingleItemRecipeGuideListener implements Listener {
                 int outputSlot = outputSlots[0];
                 List<ItemStack> inputs = List.of(rmr.getInput());
                 ItemStack[] outputs = recipe.getOutput();
-                if (rmr.isChooseOneIfHas()) {
+                if (rmr.isChooseOne()) {
                     List<ItemStack> taggedChanceOutputs = new ArrayList<>();
                     for (int i = 0; i < outputs.length; i++) {
                         Integer chance = rmr.getChances().get(i);
@@ -393,7 +393,7 @@ public class SingleItemRecipeGuideListener implements Listener {
             }
 
             ItemStack[] outputs = recipe.getOutput();
-            if (recipe.isChooseOneIfHas()) {
+            if (recipe.isChooseOne()) {
                 List<ItemStack> taggedChanceOutputs = new ArrayList<>();
                 for (int i = 0; i < outputs.length; i++) {
                     Integer chance = recipe.getChances().get(i);
@@ -553,7 +553,7 @@ public class SingleItemRecipeGuideListener implements Listener {
                 }
                 int outputSlot = outputSlots[0];
                 ItemStack[] outputs = recipe.getOutput();
-                if (lmr.isChooseOneIfHas()) {
+                if (lmr.isChooseOne()) {
                     List<ItemStack> taggedChanceOutputs = new ArrayList<>();
                     for (int i = 0; i < outputs.length; i++) {
                         Integer chance = lmr.getChances().get(i);

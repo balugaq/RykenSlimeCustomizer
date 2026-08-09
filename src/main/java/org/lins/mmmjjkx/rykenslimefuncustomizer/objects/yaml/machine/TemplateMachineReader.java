@@ -22,9 +22,12 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.RecipeReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomTemplateMachine;
@@ -32,14 +35,22 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomMachineRec
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.MachineTemplate;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TemplateMachineReader extends YamlReader<CustomTemplateMachine> {
-    public TemplateMachineReader(YamlConfiguration config, ProjectAddon addon) {
-        super(config, addon);
+    @Override
+    public String getFileName() {
+        return Constants.TEMPLATE_MACHINES_FILE;
+    }
+
+    public TemplateMachineReader(File file, ProjectAddon addon) {
+        super(file, addon);
     }
 
     @Override
@@ -71,43 +82,38 @@ public class TemplateMachineReader extends YamlReader<CustomTemplateMachine> {
         List<Integer> output = section.getIntegerList("output");
 
         if (output.isEmpty()) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载模板机器" + s + "时遇到了问题: " + "输出槽为空");
+            Debug.error(file, section, "缺少或配置错误 '输出槽' (output)");
             return null;
         }
 
-        CustomMenu menu = CommonUtils.getIf(addon.getMenus(), m -> m.getID().equalsIgnoreCase(id));
+        if (!input.isEmpty() && isInvalidSlots(input, section, ItemTransportFlow.INSERT)
+            || isInvalidSlots(output, section, ItemTransportFlow.WITHDRAW)) {
+            return null;
+        }
 
+        CustomMenu menu = CommonUtils.getIf(addon.getMenus(), m -> m.getId().equalsIgnoreCase(id));
         if (menu == null) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载模板机器" + s + "时遇到了问题: " + "未找到菜单");
-            return null;
-        }
-
-        if (menu.getProgressSlot() < 0) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载模板机器" + s + "时遇到了问题: " + "进度槽位未设置");
-            return null;
+            Debug.warning(file, section, "未找到菜单 " + id + " (menu), 使用默认菜单");
         }
 
         List<MachineTemplate> templates =
                 readTemplates(id, input.size(), output.size(), section.getConfigurationSection("recipes"), addon);
 
         int templateSlot = section.getInt("templateSlot");
-
-        if (templateSlot < 0 || templateSlot >= 54) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载模板机器" + s + "时遇到了问题: " + "模板槽位不合法");
+        if (templateSlot < 0 || templateSlot > 53) {
+            Debug.error(file, section, "缺少或配置错误 '模板槽位' (templateSlot)", 0, 53);
             return null;
         }
 
-        int capacity = section.getInt("capacity");
-
-        if (capacity < 0) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载模板机器" + s + "时遇到了问题: " + "能源容量小于0");
+        int capacity = section.getInt("capacity", -1);
+        if (capacity <= 0) {
+            Debug.error(file, section, "缺少或配置错误 '能源容量' (capacity)", 1, Integer.MAX_VALUE);
             return null;
         }
 
-        int energy = section.getInt("consumption");
-
+        int energy = section.getInt("consumption", -1);
         if (energy <= 0) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载模板机器" + s + "时遇到了问题: " + "消耗能量未设置或小于等于0");
+            Debug.error(file, section, "缺少或配置错误 '能量消耗' (consumption)", 1, Integer.MAX_VALUE);
             return null;
         }
 
@@ -185,7 +191,7 @@ public class TemplateMachineReader extends YamlReader<CustomTemplateMachine> {
                 continue;
             }
 
-            List<Integer> chances = new ArrayList<>();
+            IntList chances = new IntArrayList();
 
             ItemStack[] output = new ItemStack[outputSize];
             for (int i = 0; i < outputSize; i++) {
@@ -205,24 +211,13 @@ public class TemplateMachineReader extends YamlReader<CustomTemplateMachine> {
                 }
             }
 
-            RecipeMachineReader.addToList(list, recipes, seconds, input, chances, output);
+            RecipeReader.addToList(list, recipes, seconds, input, chances, output);
         }
         return list;
     }
 
     @Override
     public List<SlimefunItemStack> preloadItems(String s) {
-        ConfigurationSection section = configuration.getConfigurationSection(s);
-        if (section == null) return null;
-
-        ConfigurationSection item = section.getConfigurationSection("item");
-        ItemStack stack = CommonUtils.readItem(item, false, addon);
-
-        if (stack == null) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载模板机器" + s + "时遇到了问题: " + "物品为空或格式错误导致无法加载");
-            return null;
-        }
-
-        return List.of(new SlimefunItemStack(addon.getId(s, section.getString("id_alias")), stack));
+        return blockPreloadItems(s);
     }
 }

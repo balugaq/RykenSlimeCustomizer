@@ -534,6 +534,14 @@ public class CommonUtils {
         return Integer.parseInt(ver2);
     }
 
+    public static String richFormatSeconds(int seconds) {
+        String lore = "&e制作时间: &b" + seconds + "&es";
+        if (seconds > 60) {
+            lore = lore.concat("(" + CommonUtils.formatSeconds(seconds) + "&e)");
+        }
+        return lore;
+    }
+
     public static String formatSeconds(int seconds) {
         if (seconds < 60) {
             return "&b" + seconds + "&es";
@@ -577,5 +585,47 @@ public class CommonUtils {
             if (r != null) return r;
         }
         return null;
+    }
+
+    public static int clamp(int v, int a, int b, File file, ConfigurationSection section, String msg) {
+        if (v < a) {
+            Debug.warning(file, section, msg + "，已转为 " + a, a, b);
+            v = a;
+        }
+
+        if (v > b) {
+            Debug.warning(file, section, msg + "，已转为 " + b, a, b);
+            v = b;
+        }
+
+        return v;
+    }
+
+    public static float clamp(float v, float a, float b, File file, ConfigurationSection section, String msg) {
+        if (v < a) {
+            Debug.warning(file, section, msg + "，已转为 " + a, a, b);
+            v = a;
+        }
+
+        if (v > b) {
+            Debug.warning(file, section, msg + "，已转为 " + b, a, b);
+            v = b;
+        }
+
+        return v;
+    }
+
+    public static float clamp(float v, float a, float def, float b, File file, ConfigurationSection section, String msg) {
+        if (v < a) {
+            Debug.warning(file, section, msg + "，已转为 " + def, a, b);
+            v = a;
+        }
+
+        if (v > b) {
+            Debug.warning(file, section, msg + "，已转为 " + def, a, b);
+            v = b;
+        }
+
+        return v;
     }
 }

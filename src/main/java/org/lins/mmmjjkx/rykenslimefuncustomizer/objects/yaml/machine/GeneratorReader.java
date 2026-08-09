@@ -24,21 +24,28 @@ import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import lombok.SneakyThrows;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineFuel;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomGenerator;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GeneratorReader extends YamlReader<CustomGenerator> {
-    public GeneratorReader(YamlConfiguration config, ProjectAddon addon) {
-        super(config, addon);
+    @Override
+    public String getFileName() {
+        return Constants.GENERATORS_FILE;
+    }
+
+    public GeneratorReader(File file, ProjectAddon addon) {
+        super(file, addon);
     }
 
     @SneakyThrows
@@ -46,56 +53,31 @@ public class GeneratorReader extends YamlReader<CustomGenerator> {
     public CustomGenerator readEach(String s) {
         ConfigurationSection section = configuration.getConfigurationSection(s);
         if (section == null) return null;
-        String id = addon.getId(s, section.getString("id_alias"));
+        String id = getId(s);
+        var base = getBase(section, s);
+        if (base == null) return null;
 
-        ExceptionHandler.HandleResult result = ExceptionHandler.handleIdConflict(id);
-
-        if (result == ExceptionHandler.HandleResult.FAILED) return null;
-
-        String igId = section.getString("item_group");
-
-        SlimefunItemStack sfis = getPreloadItem(id);
-        if (sfis == null) return null;
-
-        Pair<ExceptionHandler.HandleResult, ItemGroup> group = ExceptionHandler.handleItemGroupGet(addon, igId);
-        if (group.getFirstValue() == ExceptionHandler.HandleResult.FAILED) return null;
-
-        Pair<RecipeType, ItemStack[]> recipePair = getRecipe(section, addon);
-        RecipeType rt = recipePair.getFirstValue();
-        ItemStack[] itemStacks = recipePair.getSecondValue();
-
-        CustomMenu menu = CommonUtils.getIf(addon.getMenus(), m -> m.getID().equalsIgnoreCase(id));
+        CustomMenu menu = CommonUtils.getIf(addon.getMenus(), m -> m.getId().equalsIgnoreCase(id));
 
         List<Integer> input = section.getIntegerList("input");
         List<Integer> output = section.getIntegerList("output");
 
         ConfigurationSection fuelsSection = section.getConfigurationSection("fuels");
         List<MachineFuel> fuels = readFuels(s, fuelsSection, addon);
-        int capacity = section.getInt("capacity", 0);
-        int production = section.getInt("production");
+        int capacity = section.getInt("capacity", 1);
+        int production = section.getInt("production", -1);
 
         if (production < 1) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载发电机" + s + "时遇到了问题: " + "产电量不能小于1");
+            Debug.error(file, section, "缺少或配置错误 '产电量' (production)", 1, Integer.MAX_VALUE);
             return null;
         }
 
-        return new CustomGenerator(
-                group.getSecondValue(), sfis, rt, itemStacks, menu, capacity, input, output, production, fuels);
+        return new CustomGenerator(base, menu, capacity, input, output, production, fuels);
     }
 
     @Override
-    public List<SlimefunItemStack> preloadItems(String id) {
-        ConfigurationSection section = configuration.getConfigurationSection(id);
-        if (section == null) return null;
-
-        ConfigurationSection item = section.getConfigurationSection("item");
-        ItemStack stack = CommonUtils.readItem(item, false, addon);
-
-        if (stack == null) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载发电机" + id + "时遇到了问题: " + "物品为空或格式错误导致无法加载");
-            return null;
-        }
-        return List.of(new SlimefunItemStack(addon.getId(id, section.getString("id_alias")), stack));
+    public List<SlimefunItemStack> preloadItems(String s) {
+        return blockPreloadItems(s);
     }
 
     private List<MachineFuel> readFuels(String s, ConfigurationSection section, ProjectAddon addon) {

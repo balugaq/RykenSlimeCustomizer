@@ -52,16 +52,16 @@ import java.util.Optional;
 @UtilityClass
 @SuppressWarnings("deprecation")
 public class StackUtils {
-    public static boolean itemsMatch(@Nonnull ItemStack cache, @Nullable ItemStack itemStack) {
+    public static boolean itemsMatch(@Nullable ItemStack cache, @Nullable ItemStack itemStack) {
         return itemsMatch(cache, itemStack, false, false, false);
     }
 
-    public static boolean itemsMatch(@Nonnull ItemStack cache, @Nullable ItemStack itemStack, boolean checkLore) {
+    public static boolean itemsMatch(@Nullable ItemStack cache, @Nullable ItemStack itemStack, boolean checkLore) {
         return itemsMatch(cache, itemStack, checkLore, false, false);
     }
 
     public static boolean itemsMatch(
-            @Nonnull ItemStack cache, @Nullable ItemStack itemStack, boolean checkLore, boolean checkAmount) {
+            @Nullable ItemStack cache, @Nullable ItemStack itemStack, boolean checkLore, boolean checkAmount) {
         return itemsMatch(cache, itemStack, checkLore, checkAmount, false);
     }
     /**

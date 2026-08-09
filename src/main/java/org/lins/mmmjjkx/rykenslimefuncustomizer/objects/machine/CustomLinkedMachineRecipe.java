@@ -19,17 +19,55 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import lombok.Getter;
+import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
+import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.InvIndex;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.LinkedOutput;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.BlockMenuUtil;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.StackUtils;
 
 import java.util.Map;
 import java.util.Set;
 
+@NullMarked
 @Getter
 public class CustomLinkedMachineRecipe extends CustomMachineRecipe {
     private final Set<Integer> noConsumes;
     private final Map<Integer, ItemStack> linkedInput;
     private final LinkedOutput linkedOutput;
+    private final int saveAmount;
+
+    @Override
+    public boolean pushOutputs(BlockMenu inv) {
+        var slots = inv.getPreset().getSlotsAccessedByItemTransport(ItemTransportFlow.WITHDRAW);
+        return BlockMenuUtil.pushItem(inv, linkedOutput, false, slots).isEmpty();
+    }
+
+    @Override
+    public boolean matches(InvIndex index, boolean consumeItems) {
+        for (var e : linkedInput.entrySet()) {
+            ItemStack stack = index.getItemInSlot(e.getKey());
+            if (stack == null
+                || stack.getAmount() < e.getValue().getAmount() + saveAmount
+                || !StackUtils.itemsMatch(e.getValue(), stack, true, false)) {
+                return false;
+            }
+        }
+
+        if (!BlockMenuUtil.fits(index.getInv(), linkedOutput)) return false;
+
+        if (consumeItems) {
+            for (var e : linkedInput.entrySet()) {
+                ItemStack stack = index.getItemInSlot(e.getKey());
+                if (stack != null) {
+                    stack.setAmount(stack.getAmount() - e.getValue().getAmount());
+                }
+            }
+        }
+        return true;
+    }
 
     public CustomLinkedMachineRecipe(
             int seconds,
@@ -38,12 +76,13 @@ public class CustomLinkedMachineRecipe extends CustomMachineRecipe {
             boolean chooseOneIfHas,
             boolean forDisplay,
             boolean hide,
-            Set<Integer> noConsumes) {
+            Set<Integer> noConsumes,
+            int saveAmount) {
         super(
                 seconds,
                 input.values().toArray(new ItemStack[0]),
                 linkedOutput.toArray(),
-                linkedOutput.chancesToArray(),
+                linkedOutput.chancesToList(),
                 chooseOneIfHas,
                 forDisplay,
                 hide,
@@ -51,5 +90,6 @@ public class CustomLinkedMachineRecipe extends CustomMachineRecipe {
         this.linkedInput = input;
         this.linkedOutput = linkedOutput;
         this.noConsumes = noConsumes;
+        this.saveAmount = saveAmount;
     }
 }

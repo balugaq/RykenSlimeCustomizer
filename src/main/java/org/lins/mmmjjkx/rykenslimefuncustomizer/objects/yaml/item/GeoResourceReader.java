@@ -27,7 +27,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
@@ -35,15 +34,22 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.CustomGeoRe
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.DropFromBlock;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
+import java.io.File;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
 public class GeoResourceReader extends YamlReader<CustomGeoResource> {
-    public GeoResourceReader(YamlConfiguration config, ProjectAddon addon) {
-        super(config, addon);
+    @Override
+    public String getFileName() {
+        return Constants.GEO_RESOURCES_FILE;
+    }
+
+    public GeoResourceReader(File file, ProjectAddon addon) {
+        super(file, addon);
     }
 
     @Override

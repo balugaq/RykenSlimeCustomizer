@@ -19,36 +19,75 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.Getter;
-import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe;
+import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
+import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.AbstractRecipe;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.InvIndex;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.ItemWrapper;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SingleItemRecipeGuideListener;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.BlockMenuUtil;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.StackUtils;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.RecipesHolder.RECIPE_INPUT;
+import static org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.RecipesHolder.RECIPE_OUTPUT;
+
+@NullMarked
 @Getter
-public class CustomMachineRecipe extends MachineRecipe {
-    private final List<Integer> chances;
+public class CustomMachineRecipe extends AbstractRecipe {
+    private final IntList chances;
     private final IntList noConsume;
 
-    private final boolean chooseOneIfHas;
-    private final boolean forDisplay;
+    private final List<ItemWrapper> inputs;
+    private final List<ItemWrapper> outputs;
+    private final boolean chooseOne;
+    private final boolean forDisplayOnly;
     private final boolean hide;
+
+    @Deprecated
+    public boolean chooseOneIfHas() {
+        return chooseOne;
+    }
+
+    @Deprecated
+    public boolean forDisplay() {
+        return forDisplayOnly;
+    }
 
     public CustomMachineRecipe(
             int seconds,
             ItemStack[] input,
             ItemStack[] output,
-            List<Integer> chances,
-            boolean chooseOneIfHas,
-            boolean forDisplay,
+            IntList chances,
+            boolean chooseOne,
+            boolean forDisplayOnly,
             boolean hide,
             IntList noConsumeIndexes) {
-        super(seconds, input.clone(), output.clone());
+        this(input, output, seconds * 2, chances, chooseOne, forDisplayOnly, hide, noConsumeIndexes);
+    }
 
+    public CustomMachineRecipe(
+        ItemStack[] input,
+        ItemStack[] output,
+        int ticks,
+        IntList chances,
+        boolean chooseOne,
+        boolean forDisplayOnly,
+        boolean hide,
+        IntList noConsumeIndexes) {
+        super(input, output, ticks);
+
+        this.inputs = InvIndex.mergeItems(input);
+        this.outputs = InvIndex.mergeItems(output);
         this.chances = chances;
-        this.chooseOneIfHas = chooseOneIfHas;
-        this.forDisplay = forDisplay;
+        this.chooseOne = chooseOne;
+        this.forDisplayOnly = forDisplayOnly;
         this.hide = hide;
         this.noConsume = noConsumeIndexes;
     }
@@ -57,22 +96,107 @@ public class CustomMachineRecipe extends MachineRecipe {
         List<ItemStack> itemStacks = new ArrayList<>();
 
         for (int i = 0; i < getOutput().length; i++) {
-            ItemStack output = getOutput()[i];
-            int chance = chances.get(i);
-            if (matchChance(chance)) {
-                itemStacks.add(output);
+            if (matchChance(chances.getInt(i))) {
+                itemStacks.add(getOutput()[i]);
             }
         }
 
         return itemStacks;
     }
 
-    private boolean matchChance(Integer chance) {
-        if (chance == null) return false;
+    public static boolean matchChance(int chance) {
         if (chance >= 100) return true;
         if (chance < 1) return false;
 
         int result = new SecureRandom().nextInt(100);
         return result < chance;
+    }
+
+    @Override
+    public boolean matches(InvIndex index, boolean consumeItems) {
+        if (this.isForDisplayOnly()) return false;
+
+        for (var input : inputs) {
+            if (!index.matches(input)) {
+                return false;
+            }
+        }
+
+        int slotsOutputTakes = outputs.stream().map(ItemWrapper::countStack).mapToInt(i -> i).sum();
+        if (index.getEmptyOutputSlots() < slotsOutputTakes) { // fast check
+            if (!BlockMenuUtil.fits(index.getInv(), outputs, index.getInv().getPreset().getSlotsAccessedByItemTransport(ItemTransportFlow.WITHDRAW))) {
+                // cannot output items
+                return false;
+            }
+        }
+
+        if (consumeItems) {
+            var inv = index.getInv();
+            for (var wrapper : inputs) {
+                for (var slotWrapper : index.getInputs()) {
+                    if (StackUtils.itemsMatch(slotWrapper.getStack(), wrapper.getStack())) {
+                        int left = wrapper.getAmount();
+                        for (var entry : slotWrapper.getAmounts().int2IntEntrySet()) {
+                            int slot = entry.getIntKey();
+                            int curr = entry.getIntValue();
+                            if (curr <= left) {
+                                left -= curr;
+                                inv.consumeItem(slot, curr);
+                            } else {
+                                inv.consumeItem(slot, left);
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean pushOutputs(BlockMenu inv) {
+        ItemStack[] outputs = getMatchChanceResult().toArray(ItemStack[]::new);
+        if (outputs.length == 0) return true;
+
+        boolean pushedAll = true;
+        if (!isChooseOne()) {
+            for (ItemStack o : outputs) {
+                var slots = inv.getPreset().getSlotsAccessedByItemTransport(ItemTransportFlow.WITHDRAW);
+                if (inv.pushItem(o.clone(), slots) != null) {
+                    pushedAll = false;
+                }
+            }
+        } else {
+            int index = new SecureRandom().nextInt(outputs.length);
+            ItemStack is = outputs[index];
+            var slots = inv.getPreset().getSlotsAccessedByItemTransport(ItemTransportFlow.WITHDRAW);
+            if (inv.pushItem(is.clone(), slots) != null) {
+                pushedAll = false;
+            };
+        }
+
+        return pushedAll;
+    }
+
+    @Override
+    public ItemStack getDisplayInput(int index) {
+        if (inputs.size() == 1) {
+            return inputs.getFirst().getStack();
+        } else {
+            return SingleItemRecipeGuideListener.tagItemRecipe(RECIPE_INPUT, index);
+        }
+    }
+
+    @Override
+    public ItemStack getDisplayOutput(int index) {
+        if (outputs.size() == 1) {
+            ItemStack out = outputs.getFirst().getStack().clone();
+            CommonUtils.addLore(out, true, CommonUtils.richFormatSeconds(getTicks() / 2));
+            return out;
+        } else {
+            return SingleItemRecipeGuideListener.tagItemRecipe(RECIPE_OUTPUT, index);
+        }
     }
 }

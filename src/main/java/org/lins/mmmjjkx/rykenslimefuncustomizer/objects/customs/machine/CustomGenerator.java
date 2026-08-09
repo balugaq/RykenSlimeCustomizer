@@ -45,6 +45,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 
 import javax.annotation.Nonnull;
@@ -73,17 +74,14 @@ public class CustomGenerator extends AbstractEnergyProvider
     private final int production;
 
     public CustomGenerator(
-            ItemGroup itemGroup,
-            SlimefunItemStack item,
-            RecipeType recipeType,
-            ItemStack[] recipe,
+            YamlReader.BaseResult base,
             @Nullable CustomMenu menu,
             int capacity,
             List<Integer> input,
             List<Integer> output,
             int production,
             List<MachineFuel> machineFuels) {
-        super(itemGroup, item, recipeType, recipe);
+        super(base.itemGroup(), base.sfis(), base.recipeType(), base.recipe());
         this.processor.setProgressBar(this.getProgressBar());
 
         this.addItemHandler(this.onBlockBreak());

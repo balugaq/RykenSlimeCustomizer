@@ -17,14 +17,20 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import org.bukkit.inventory.ItemStack;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.ItemWrapper;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomMachineRecipe;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public record LinkedOutput(
         ItemStack[] freeOutput,
+        List<ItemWrapper> freeOutputWrappers,
         Map<Integer, ItemStack> linkedOutput,
         int[] freeChances,
         Map<Integer, Integer> linkedChances) {
@@ -41,12 +47,39 @@ public record LinkedOutput(
         return result;
     }
 
-    public List<Integer> chancesToArray() {
-        List<Integer> result = new ArrayList<>(freeChances.length + linkedChances.size());
+    public IntList chancesToList() {
+        IntList result = new IntArrayList(freeChances.length + linkedChances.size());
         for (int chance : freeChances) {
             result.add(chance);
         }
         result.addAll(linkedChances.values());
         return result;
+    }
+
+    public Map<Integer, ItemStack> getLinkedMatchChanceResult(boolean chooseOne) {
+        Map<Integer, ItemStack> itemStacks = new HashMap<>();
+
+        for (var e : linkedOutput.entrySet()) {
+            int slot = e.getKey();
+            if (CustomMachineRecipe.matchChance(linkedChances().get(slot))) {
+                itemStacks.put(slot, e.getValue());
+                if (chooseOne) return itemStacks;
+            }
+        }
+
+        return itemStacks;
+    }
+
+    public List<ItemStack> getFreeMatchChanceResult(boolean chooseOne) {
+        List<ItemStack> itemStacks = new ArrayList<>();
+
+        for (int i = 0; i < freeOutput().length; i++) {
+            if (CustomMachineRecipe.matchChance(freeChances()[i])) {
+                itemStacks.add(freeOutput()[i]);
+                if (chooseOne) return itemStacks;
+            }
+        }
+
+        return itemStacks;
     }
 }

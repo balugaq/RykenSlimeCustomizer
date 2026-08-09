@@ -23,7 +23,6 @@ import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -33,6 +32,8 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 import java.io.File;
@@ -45,9 +46,15 @@ public class MenuReader extends YamlReader<CustomMenu> {
     public static final int NOT_SET = -1;
     private static final NamespacedKey PROGRESS_KEY = new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "progress");
 
-    public MenuReader(YamlConfiguration config, ProjectAddon addon) {
-        super(config, addon);
+    @Override
+    public String getFileName() {
+        return Constants.MENUS_FILE;
     }
+
+    public MenuReader(File file, ProjectAddon addon) {
+        super(file, addon);
+    }
+
 
     @Override
     public CustomMenu readEach(String s) {
@@ -62,21 +69,16 @@ public class MenuReader extends YamlReader<CustomMenu> {
         int size = section.getInt("size", NOT_SET);
 
         if (section.contains("size") && size != NOT_SET && size % 9 != 0) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载菜单" + s + "时遇到了问题: " + "菜单大小必须是9的倍数。");
+            Debug.error(file, section, "菜单大小必须是 9 的倍数 (size): " + size);
             return null;
         }
 
-        JavaScriptEval eval = null;
-        if (section.contains("script")) {
-            String script = section.getString("script", "");
-            File file = new File(addon.getScriptsFolder(), script + ".js");
-            if (!file.exists()) {
-                ExceptionHandler.handleWarning(
-                        "在附属" + addon.getAddonId() + "中加载菜单" + s + "时遇到了问题: " + "找不到脚本文件 " + file.getName());
-            } else {
-                eval = JavaScriptEval.create(file, addon);
-            }
+        if (size < 9 || size > 54) {
+            Debug.error(file, section, "菜单大小超出范围 (size): " + size, 9, 54);
+            return null;
         }
+
+        JavaScriptEval eval = getScriptOrNull(section, section.getString("script"));
 
         if (section.contains("import")) {
             String menuId = section.getString("import", "");
@@ -85,14 +87,13 @@ public class MenuReader extends YamlReader<CustomMenu> {
                 CustomMenu menu =
                         CommonUtils.getIf(addon.getMenus(), m -> m.getId().equals(menuId));
                 if (menu == null) {
-                    ExceptionHandler.handleError(
-                            "在附属" + addon.getAddonId() + "中加载菜单" + s + "时遇到了问题: " + "无法加载机器菜单" + s + ": 无法找到要导入的菜单");
+                    Debug.error(file, section, "无法找到要导入的菜单 (import): " + menuId);
                     return null;
                 } else {
                     return new CustomMenu(s, title, menu);
                 }
             }
-            return new CustomMenu(s, title, menuPreset, new ItemStack(Material.BLACK_STAINED_GLASS_PANE), eval);
+            return new CustomMenu(s, title, menuPreset, eval);
         }
 
         int progress = 22;
@@ -139,7 +140,7 @@ public class MenuReader extends YamlReader<CustomMenu> {
         Map<Integer, ItemStack> slotMap = new HashMap<>();
         ConfigurationSection slots = section.getConfigurationSection("slots");
         if (slots == null) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载菜单" + s + "时遇到了问题: " + "没有设置物品。");
+            Debug.error(file, section, "没有预设物品 (slots)");
             return null;
         }
 
@@ -147,15 +148,13 @@ public class MenuReader extends YamlReader<CustomMenu> {
             try {
                 int realSlot = Integer.parseInt(slot);
                 if (realSlot > 53 || realSlot < 0) {
-                    ExceptionHandler.handleWarning(
-                            "在附属" + addon.getAddonId() + "中加载菜单" + s + "时遇到了问题: " + "位于槽位大于53或小于0的物品，跳过对此物品的读取。");
+                    Debug.warning(file, section, "槽位超出范围: " + slot, 0, 53);
                     continue;
                 }
                 ConfigurationSection item = slots.getConfigurationSection(slot);
                 ItemStack itemStack = CommonUtils.readItem(item, true, addon);
                 if (itemStack == null) {
-                    ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载菜单" + s + "时遇到了问题: " + "位于槽位"
-                            + realSlot + "的物品格式错误或输入了错误的数据无法读取，跳过对此物品的读取。");
+                    Debug.warning(file, section, "槽位对应的物品无效 (slots): " + slot);
                     continue;
                 }
                 if (item.getBoolean("progressbar", false)) {
@@ -177,26 +176,28 @@ public class MenuReader extends YamlReader<CustomMenu> {
             } catch (NumberFormatException e) {
                 String[] range = slot.split("-");
                 if (range.length != 2) {
-                    ExceptionHandler.handleError(
-                            "在附属" + addon.getAddonId() + "中加载菜单" + s + "时遇到了问题: " + "有错误的槽位区间表达式" + slot);
+                    Debug.error(file, section, "槽位区间表达式非法 (slots): " + slot);
                     continue;
                 }
                 ConfigurationSection item = slots.getConfigurationSection(slot);
                 ItemStack stack = CommonUtils.readItem(item, true, addon);
                 if (stack == null) {
-                    ExceptionHandler.handleWarning("在附属" + addon.getAddonId() + "中加载菜单" + s + "时遇到了问题: " + "位于区间槽位"
-                            + slot + "的物品格式错误或输入了错误的数据无法读取，跳过对此物品的读取。");
+                    Debug.warning(file, section, "槽位对应的物品无效 (slots): " + slot);
                     continue;
                 }
-                IntStream intStream = IntStream.rangeClosed(Integer.parseInt(range[0]), Integer.parseInt(range[1]));
-                intStream.forEach(i -> {
-                    if (i > 53 || i < 0) {
-                        ExceptionHandler.handleWarning(
-                                "在附属" + addon.getAddonId() + "中加载菜单" + s + "时遇到了问题: " + "位于区间槽位大于53或小于0，跳过对此槽位放置物品。");
-                        return;
-                    }
-                    slotMap.put(i, stack);
-                });
+                try {
+                    IntStream intStream = IntStream.rangeClosed(Integer.parseInt(range[0]), Integer.parseInt(range[1]));
+                    intStream.forEach(i -> {
+                        if (i < 0 || i > 53) {
+                            Debug.warning(file, section, "槽位超出范围: " + slot, 0, 53);
+                            return;
+                        }
+                        slotMap.put(i, stack);
+                    });
+                } catch (NumberFormatException e2) {
+                    Debug.error(file, section, "槽位区间表达式非法 (slots): " + slot);
+                    return null;
+                }
             }
         }
 
