@@ -2,6 +2,8 @@
 #spotless = "7.0.2"
 shadow = "9.3.2"
 lombok = "1.18.46"
+junit = "5.11.4"
+mockito = "5.14.2"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version = "1.19.4-R0.1-SNAPSHOT" }
@@ -29,6 +31,8 @@ byte-buddy = { module = "net.bytebuddy:byte-buddy", version = "1.18.11" }
 slimefun4 = { module = "com.github.SlimefunGuguProject:Slimefun4", version = "2025.1" }
 item-nbt-api-plugin = { module = "de.tr7zw:item-nbt-api-plugin", version = "2.15.1" }
 justenoughguide = { module = "com.github.balugaq:JustEnoughGuide", version = "4d4e3e607b" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 
 [plugins]
 #spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

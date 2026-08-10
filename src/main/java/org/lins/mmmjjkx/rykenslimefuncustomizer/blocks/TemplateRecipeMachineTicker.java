@@ -6,20 +6,25 @@ import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomTemplateMachineRecipe;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.StackUtils;
 
 @NullMarked
-public interface RecipeMachineTicker extends MachineTicker {
+public interface TemplateRecipeMachineTicker extends MachineTicker {
     @Override
-    default Type getType() {
-        return Type.RECIPE;
+    default MachineTicker.Type getType() {
+        return Type.TEMPLATE_RECIPE;
     }
+
+    int getTemplateSlot();
+
+    boolean isFasterIfMoreTemplates();
 
     @Override
     default boolean preTick(Location location) {
         return takeCharge(location);
     }
 
-    @Override
     default void tick(Location location) {
         if (!canTick(location) || !preTick(location)) return;
 
@@ -42,8 +47,17 @@ public interface RecipeMachineTicker extends MachineTicker {
         }
 
         if (!currentOperation.isFinished()) {
+            ItemStack template = inv.getItemInSlot(getTemplateSlot());
+            if (template == null
+                || template.getType().isAir()
+                || !StackUtils.itemsMatch(template, ((CustomTemplateMachineRecipe) currentOperation.getRecipe()).getTemplateStack())) {
+                getMachineProcessor().endOperation(location); // cancel operation
+                return;
+            }
+            if (isFasterIfMoreTemplates()) {
+                currentOperation.addProgress(template.getAmount());
+            }
             getMachineProcessor().updateProgressBar(inv, getProgressSlot(), currentOperation);
-            currentOperation.addProgress(1);
             return;
         }
 

@@ -29,12 +29,9 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.ProjectAddonManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ZipUtils;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -42,8 +39,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 public class GithubUpdater {
     public static final File downloadFolder =
@@ -127,10 +122,10 @@ public class GithubUpdater {
                     File projectFolder = new File(ProjectAddonManager.ADDONS_DIRECTORY, folderName);
 
                     if (!projectFolder.exists()) {
-                        mkdir(projectFolder);
+                        ZipUtils.mkdir(projectFolder);
                     }
 
-                    unzip(zip, projectFolder);
+                    ZipUtils.unzip(zip, projectFolder);
 
                     File info = new File(projectFolder, "info.yml");
                     YamlConfiguration infoYml = YamlConfiguration.loadConfiguration(info);
@@ -155,55 +150,6 @@ public class GithubUpdater {
     }
 
     public static void unzip(File zipFile, File desDirectory) throws IOException {
-        if (!desDirectory.exists()) {
-            boolean mkdirSuccess = desDirectory.mkdirs();
-            if (!mkdirSuccess) {
-                throw new IOException("创建解压目标文件夹失败");
-            }
-        }
-
-        if (!zipFile.exists()) {
-            throw new FileNotFoundException("找不到压缩包");
-        }
-
-        try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile))) {
-            ZipEntry zipEntry = zipInputStream.getNextEntry();
-            while (zipEntry != null) {
-                if (!zipEntry.isDirectory()) {
-                    String entryName = zipEntry.getName();
-
-                    int firstSlashIndex = entryName.indexOf('/');
-                    if (firstSlashIndex != -1) {
-                        entryName = entryName.substring(firstSlashIndex + 1);
-                    }
-                    File outFile = new File(desDirectory, entryName);
-                    mkdir(outFile.getParentFile());
-
-                    try (BufferedOutputStream bufferedOutputStream =
-                            new BufferedOutputStream(new FileOutputStream(outFile))) {
-                        byte[] bytes = new byte[1024];
-                        int readLen;
-                        long totalBytesRead = 0;
-                        while ((readLen = zipInputStream.read(bytes)) != -1) {
-                            bufferedOutputStream.write(bytes, 0, readLen);
-                            totalBytesRead += readLen;
-                        }
-
-                        if (zipEntry.getSize() != -1 && totalBytesRead != zipEntry.getSize()) {
-                            throw new IOException("读取的字节数与条目大小不一致");
-                        }
-                    }
-                }
-                zipEntry = zipInputStream.getNextEntry();
-            }
-        }
-    }
-
-    private static void mkdir(File file) {
-        if (file == null || file.exists()) {
-            return;
-        }
-        mkdir(file.getParentFile());
-        file.mkdirs();
+        ZipUtils.unzip(zipFile, desDirectory);
     }
 }

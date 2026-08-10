@@ -11,6 +11,8 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.AdvancedCustomMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 import java.io.File;
@@ -30,7 +32,6 @@ public interface MachineTicker extends DataCache, RecipesHolder, CustomMenuHolde
 
     void tick(Location location);
 
-    // todo: 别忘了call这个
     default void init() {
         var menu = getCustomMenu();
         if (menu == null) {
@@ -64,12 +65,14 @@ public interface MachineTicker extends DataCache, RecipesHolder, CustomMenuHolde
     }
 
     @Nullable static MachineTicker create(File file, AdvancedCustomMachine sf, ConfigurationSection section, @Nullable CustomMenu menu, ProjectAddon addon, @Nullable Type type) {
-        // todo
-        // type: RECIPE
-        // recipes:
-        // hideAllRecipes: boolean
-        // 主要是读配方部分
-        if (type == null) type = Type.RECIPE;
+        if (type == null) {
+            var tpc = section.getString("type");
+            var typeOptional = CommonUtils.getEnum(Type.class, tpc);
+            if (typeOptional.isEmpty()) {
+                Debug.warning(file, section, " 机器类型 (type) 非法: " + tpc + ", 已转换为 RECIPE ");
+                type = Type.RECIPE;
+            }
+        };
         return type.createTicker(file, sf, section, menu, addon);
     }
 
@@ -80,7 +83,7 @@ public interface MachineTicker extends DataCache, RecipesHolder, CustomMenuHolde
         LINKED_RECIPE(new LinkedRecipeMachineTickerCreator()), // 强配方机器
         TEMPLATE_RECIPE(new TemplateRecipeMachineTickerCreator()), // 模板配方
         MATERIAL_GENERATOR(new MaterialGeneratorMachineTickerCreator()), // 材料生成器
-        WORKBENCH(LINKED_RECIPE); // 工作台，记得去掉ticker
+        WORKBENCH(new WorkbenchMachineTickerCreator()); // 工作台
 
         private final TickerCreator tickerCreator;
 

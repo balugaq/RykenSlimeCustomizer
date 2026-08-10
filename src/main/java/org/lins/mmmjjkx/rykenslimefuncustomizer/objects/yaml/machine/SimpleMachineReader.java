@@ -17,18 +17,16 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine;
 
-import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.factories.SimpleMachineFactory;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.SimpleMachineType;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
@@ -54,7 +52,7 @@ public class SimpleMachineReader extends YamlReader<SlimefunItem> {
 
         String machineTypeStr = section.getString("type");
 
-        Pair<ExceptionHandler.HandleResult, SimpleMachineType> machineTypePair = ExceptionHandler.handleEnumValueOf(
+        Pair<ExceptionHandler.HandleResult, SimpleMachineType> machineTypePair = CommonUtils.getEnum(
                 "错误的简单机器类型 " + machineTypeStr, SimpleMachineType.class, machineTypeStr);
         if (machineTypePair.getFirstValue() == ExceptionHandler.HandleResult.FAILED
                 || machineTypePair.getSecondValue() == null) {

@@ -48,8 +48,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.CustomMenuHolder;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.LinkedOutput;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomLinkedRecipeMachine;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomTemplateMachine;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.AdvancedCustomMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomWorkbench;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomLinkedMachineRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomMachineRecipe;
@@ -62,13 +61,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+// todo rewrite with MachineMenuPreviewGroup FlexItemGroup
+@Deprecated
 @SuppressWarnings("deprecation")
 public class SingleItemRecipeGuideListener implements Listener {
     private static final NamespacedKey RECIPE_KEY = new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "rsc_recipe");
     private static final NamespacedKey RECIPE_INDEX_KEY =
             new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "rsc_recipe_index");
-    private static final NamespacedKey RECIPE_TEMPLATE_INDEX_KEY =
-            new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "rsc_recipe_template_index");
 
     public SingleItemRecipeGuideListener() {
         Bukkit.getPluginManager().registerEvents(this, RykenSlimefunCustomizer.INSTANCE);
@@ -106,23 +105,11 @@ public class SingleItemRecipeGuideListener implements Listener {
         return pdc.getKeys().contains(RECIPE_KEY) && pdc.getKeys().contains(RECIPE_INDEX_KEY);
     }
 
-    public static ItemStack tagItemRecipe(ItemStack item, int index) {
+    public static ItemStack tagItem(ItemStack item, int index) {
         item = item.clone();
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
-        pdc.set(RECIPE_KEY, PersistentDataType.INTEGER, 1);
         pdc.set(RECIPE_INDEX_KEY, PersistentDataType.INTEGER, index);
-        item.setItemMeta(meta);
-        return item;
-    }
-
-    public static ItemStack tagItemTemplateRecipe(ItemStack item, int templateIndex, int recipeIndex) {
-        item = item.clone();
-        ItemMeta meta = item.getItemMeta();
-        PersistentDataContainer pdc = meta.getPersistentDataContainer();
-        pdc.set(RECIPE_KEY, PersistentDataType.INTEGER, 2);
-        pdc.set(RECIPE_INDEX_KEY, PersistentDataType.INTEGER, recipeIndex);
-        pdc.set(RECIPE_TEMPLATE_INDEX_KEY, PersistentDataType.INTEGER, templateIndex);
         item.setItemMeta(meta);
         return item;
     }
@@ -153,21 +140,15 @@ public class SingleItemRecipeGuideListener implements Listener {
         return item;
     }
 
+    // todo: rewrite
     private ChestMenu createGUI(Player p, SlimefunItem machine, PersistentDataHolder holder) {
+        if (machine instanceof AdvancedCustomMachine acm) {
+            return acm.createGUI(p, PersistentDataAPI.getInt(holder, RECIPE_KEY, 1));
+        }
         int type = PersistentDataAPI.getInt(holder, RECIPE_KEY, 1);
         if (machine instanceof AContainer ac && type == 1) {
             int index = PersistentDataAPI.getInt(holder, RECIPE_INDEX_KEY, 0);
             return new RecipeMenu(ac, p, index);
-        } else if (machine instanceof CustomTemplateMachine ctm && type == 2) {
-            int templateIndex = PersistentDataAPI.getInt(holder, RECIPE_TEMPLATE_INDEX_KEY, 0);
-            int recipeIndex = PersistentDataAPI.getInt(holder, RECIPE_INDEX_KEY, 0);
-            return new TemplateRecipeMenu(ctm, p, templateIndex, recipeIndex);
-        } else if (machine instanceof CustomLinkedRecipeMachine clrm && type == 3) {
-            int recipeIndex = PersistentDataAPI.getInt(holder, RECIPE_INDEX_KEY, 0);
-            return new LinkedRecipeMenu(clrm, p, recipeIndex);
-        } else if (machine instanceof CustomWorkbench cw && type == 4) {
-            int index = PersistentDataAPI.getInt(holder, RECIPE_INDEX_KEY, 0);
-            return new WorkbenchRecipeMenu(cw, p, index);
         }
         return null;
     }

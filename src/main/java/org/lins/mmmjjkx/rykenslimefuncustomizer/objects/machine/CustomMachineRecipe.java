@@ -34,6 +34,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.StackUtils;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.RecipesHolder.RECIPE_INPUT;
 import static org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.RecipesHolder.RECIPE_OUTPUT;
@@ -51,12 +52,12 @@ public class CustomMachineRecipe extends AbstractRecipe {
     private final boolean hide;
 
     @Deprecated
-    public boolean chooseOneIfHas() {
+    public boolean isChooseOneIfHas() {
         return chooseOne;
     }
 
     @Deprecated
-    public boolean forDisplay() {
+    public boolean isForDisplay() {
         return forDisplayOnly;
     }
 
@@ -92,16 +93,21 @@ public class CustomMachineRecipe extends AbstractRecipe {
         this.noConsume = noConsumeIndexes;
     }
 
-    public List<ItemStack> getMatchChanceResult() {
-        List<ItemStack> itemStacks = new ArrayList<>();
+    public List<ItemWrapper> getMatchChanceResult(boolean chooseOne) {
+        List<ItemWrapper> wrappers = new ArrayList<>();
 
-        for (int i = 0; i < getOutput().length; i++) {
+        for (int i = 0; i < getOutputs().size(); i++) {
             if (matchChance(chances.getInt(i))) {
-                itemStacks.add(getOutput()[i]);
+                wrappers.add(getOutputs().get(i).clone());
             }
         }
 
-        return itemStacks;
+        if (chooseOne) {
+            int index = new Random().nextInt(wrappers.size());
+            return List.of(wrappers.get(index));
+        }
+
+        return wrappers;
     }
 
     public static boolean matchChance(int chance) {
@@ -157,36 +163,14 @@ public class CustomMachineRecipe extends AbstractRecipe {
 
     @Override
     public boolean pushOutputs(BlockMenu inv) {
-        ItemStack[] outputs = getMatchChanceResult().toArray(ItemStack[]::new);
-        if (outputs.length == 0) return true;
-
-        boolean pushedAll = true;
-        if (!isChooseOne()) {
-            for (ItemStack o : outputs) {
-                var slots = inv.getPreset().getSlotsAccessedByItemTransport(ItemTransportFlow.WITHDRAW);
-                if (inv.pushItem(o.clone(), slots) != null) {
-                    pushedAll = false;
-                }
-            }
-        } else {
-            int index = new SecureRandom().nextInt(outputs.length);
-            ItemStack is = outputs[index];
-            var slots = inv.getPreset().getSlotsAccessedByItemTransport(ItemTransportFlow.WITHDRAW);
-            if (inv.pushItem(is.clone(), slots) != null) {
-                pushedAll = false;
-            };
-        }
-
-        return pushedAll;
+        BlockMenuUtil.pushItems(inv, outputs, inv.getPreset().getSlotsAccessedByItemTransport(ItemTransportFlow.WITHDRAW));
+        return true;
     }
 
     @Override
     public ItemStack getDisplayInput(int index) {
-        if (inputs.size() == 1) {
-            return inputs.getFirst().getStack();
-        } else {
-            return SingleItemRecipeGuideListener.tagItemRecipe(RECIPE_INPUT, index);
-        }
+        if (inputs.size() == 1) return inputs.getFirst().getStack();
+        return SingleItemRecipeGuideListener.tagItem(RECIPE_INPUT, index);
     }
 
     @Override
@@ -196,7 +180,7 @@ public class CustomMachineRecipe extends AbstractRecipe {
             CommonUtils.addLore(out, true, CommonUtils.richFormatSeconds(getTicks() / 2));
             return out;
         } else {
-            return SingleItemRecipeGuideListener.tagItemRecipe(RECIPE_OUTPUT, index);
+            return SingleItemRecipeGuideListener.tagItem(RECIPE_OUTPUT, index);
         }
     }
 }

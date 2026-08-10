@@ -23,8 +23,13 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 
 public abstract class CustomItem extends SlimefunItem {
+    public CustomItem(YamlReader.BaseResult base) {
+        this(base.itemGroup(), base.sfis(), base.recipeType(), base.recipe(), base.output());
+    }
+
     public CustomItem(
             ItemGroup itemGroup,
             SlimefunItemStack item,

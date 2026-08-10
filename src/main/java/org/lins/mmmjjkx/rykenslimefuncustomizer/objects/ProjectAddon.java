@@ -47,7 +47,6 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomGe
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomMultiBlockMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSolarGenerator;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSuperMultiBlockMachine;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomTemplateMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomWorkbench;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.parent.AbstractEmptyMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.DropFromBlock;
@@ -125,7 +124,7 @@ public final class ProjectAddon {
     // supers.yml
     private List<SlimefunItem> supers = new ArrayList<>();
     // template_machines.yml
-    private List<CustomTemplateMachine> templateMachines = new ArrayList<>();
+    private List<AdvancedCustomMachine> templateMachines = new ArrayList<>();
     // linked_recipe_machines.yml
     private List<AdvancedCustomMachine> linkedRecipeMachines = new ArrayList<>();
     // workbenches.yml

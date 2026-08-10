@@ -17,7 +17,6 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine;
 
-import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.core.services.sounds.SoundEffect;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
@@ -94,7 +93,7 @@ public class MultiBlockMachineReader extends YamlReader<CustomMultiBlockMachine>
         SoundEffect sound = null;
         if (section.contains("sound")) {
             String soundString = section.getString("sound");
-            Pair<ExceptionHandler.HandleResult, SoundEffect> soundEffectPair = ExceptionHandler.handleEnumValueOf(
+            Pair<ExceptionHandler.HandleResult, SoundEffect> soundEffectPair = CommonUtils.getEnum(
                     "在附属" + addon.getAddonId() + "中加载多方块机器" + s + "无法获取声音类型" + soundString,
                     SoundEffect.class,
                     soundString);

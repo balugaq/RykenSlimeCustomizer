@@ -136,3 +136,5 @@ gradle-app.setting
 
 bin/
 gradle.properties
+scan.txt
+maintainability-review.md

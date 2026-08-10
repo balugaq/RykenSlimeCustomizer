@@ -80,6 +80,47 @@ public class BlockMenuUtil {
         }
     }
 
+    public static void pushItems(@Nonnull BlockMenu blockMenu, @Nonnull List<ItemWrapper> wrappers, int... slots) {
+        for (ItemWrapper wrapper : wrappers) {
+            pushItem(blockMenu, wrapper, slots);
+        }
+    }
+
+    public static void pushItem(@Nonnull BlockMenu blockMenu, @Nonnull ItemWrapper wrapper, int... slots) {
+        int leftAmount = wrapper.getAmount();
+
+        for (int slot : slots) {
+            if (leftAmount <= 0) {
+                break;
+            }
+
+            ItemStack existing = blockMenu.getItemInSlot(slot);
+
+            if (existing == null || existing.getType().isAir()) {
+                int received = Math.min(leftAmount, wrapper.getMaxStackSize());
+                var clone = wrapper.getStack().clone();
+                clone.setAmount(received);
+                blockMenu.replaceExistingItem(slot, clone);
+                leftAmount -= received;
+                wrapper.setAmount(Math.max(0, leftAmount));
+            } else {
+                int existingAmount = existing.getAmount();
+                if (existingAmount >= wrapper.getMaxStackSize()) {
+                    continue;
+                }
+
+                if (!StackUtils.itemsMatch(wrapper.getStack(), existing, true, false)) {
+                    continue;
+                }
+
+                int received = Math.max(0, Math.min(wrapper.getMaxStackSize() - existingAmount, leftAmount));
+                leftAmount -= received;
+                existing.setAmount(existingAmount + received);
+                wrapper.setAmount(leftAmount);
+            }
+        }
+    }
+
     @Nonnull
     public static Map<ItemStack, Integer> pushItem(
             @Nonnull BlockMenu blockMenu, @Nonnull ItemStack[] items, int... slots) {

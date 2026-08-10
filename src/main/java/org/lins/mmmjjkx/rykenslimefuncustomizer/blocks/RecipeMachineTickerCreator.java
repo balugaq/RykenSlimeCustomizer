@@ -23,9 +23,11 @@ import java.util.List;
 public class RecipeMachineTickerCreator implements TickerCreator {
     @Override
     public @Nullable List<? extends AbstractRecipe> read(File file, int inputSize, int outputSize, ConfigurationSection section, ProjectAddon addon) {
-        ConfigurationSection recipes = section.getConfigurationSection("recipes");
-        if (recipes == null) return Collections.emptyList();
+        return readRecipes(file, inputSize, outputSize, section, section.getConfigurationSection("recipes"), addon);
+    }
 
+    public @Nullable List<? extends AbstractRecipe> readRecipes(File file, int inputSize, int outputSize, ConfigurationSection section, @Nullable ConfigurationSection recipes, ProjectAddon addon) {
+        if (recipes == null) return Collections.emptyList();
         List<CustomMachineRecipe> list = new ArrayList<>();
         for (String key : recipes.getKeys(false)) {
             ConfigurationSection recipe = section.getConfigurationSection(key);

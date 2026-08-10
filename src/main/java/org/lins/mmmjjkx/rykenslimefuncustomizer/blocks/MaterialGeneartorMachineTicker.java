@@ -19,7 +19,7 @@ public interface MaterialGeneartorMachineTicker extends MachineTicker {
     ItemStack PROCESSING = new CustomItemStack(Material.LIME_STAINED_GLASS_PANE, "&a生产中", "");
 
     @Override
-    default Type getType() {
+    default MachineTicker.Type getType() {
         return Type.MATERIAL_GENERATOR;
     }
 

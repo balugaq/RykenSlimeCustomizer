@@ -12,10 +12,14 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public class CraftingRecipeOperation extends CraftingOperation {
     private static final ItemStack[] PLACEHOLDER = new ItemStack[] {new ItemStack(Material.AIR)};
-
     private final Recipe recipe;
+
     public CraftingRecipeOperation(Recipe recipe) {
-        super(PLACEHOLDER, PLACEHOLDER, recipe.getTicks());
+        this(recipe, recipe.getTicks());
+    }
+
+    public CraftingRecipeOperation(Recipe recipe, int ticks) {
+        super(PLACEHOLDER, PLACEHOLDER, ticks);
         this.recipe = recipe;
     }
 }

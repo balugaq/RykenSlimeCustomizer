@@ -68,6 +68,13 @@ dependencies {
 
     // System-scoped local JARs
     compileOnly(fileTree(mapOf("dir" to "lib", "include" to listOf("*.jar"))))
+
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockito.core)
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 tasks.jar {

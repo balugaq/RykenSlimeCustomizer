@@ -17,16 +17,13 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.parent;
 
-import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
-import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.attributes.MachineProcessHolder;
 import io.github.thebusybiscuit.slimefun4.core.machines.MachineOperation;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.interfaces.InventoryBlock;
 import me.mrCookieSlime.Slimefun.Objects.handlers.BlockTicker;
-import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 
 @SuppressWarnings("deprecation")
 public abstract class AbstractEmptyMachine<O extends MachineOperation> extends SlimefunItem
@@ -40,9 +37,8 @@ public abstract class AbstractEmptyMachine<O extends MachineOperation> extends S
         getRecipeType().register(getRecipe(), getRecipeOutput());
     }
 
-    public AbstractEmptyMachine(
-            ItemGroup itemGroup, SlimefunItemStack item, RecipeType recipeType, ItemStack[] recipe) {
-        super(itemGroup, item, recipeType, recipe);
+    public AbstractEmptyMachine(YamlReader.BaseResult base) {
+        super(base.itemGroup(), base.sfis(), base.recipeType(), base.recipe(), base.output());
     }
 
     @Override

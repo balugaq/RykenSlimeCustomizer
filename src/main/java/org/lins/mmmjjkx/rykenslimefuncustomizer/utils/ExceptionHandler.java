@@ -48,15 +48,6 @@ public class ExceptionHandler {
         return HandleResult.SUCCESS;
     }
 
-    public static HandleResult handleMenuConflict(String id, ProjectAddon addon) {
-        CustomMenu menu = CommonUtils.getIf(addon.getMenus(), m -> m.getId().equalsIgnoreCase(id));
-        if (menu != null) {
-            console.sendMessage(decorate(CMIChatColor.translate("&4ERROR | ID冲突：已存在菜单ID为" + id + "的菜单")));
-            return HandleResult.FAILED;
-        }
-        return HandleResult.SUCCESS;
-    }
-
     public static HandleResult handleGroupIdConflict(String id) {
         ItemGroup ig = CommonUtils.getIf(
                 Slimefun.getRegistry().getAllItemGroups(),
@@ -134,24 +125,6 @@ public class ExceptionHandler {
         console.sendMessage(decorate(CMIChatColor.translate("&aINFO | " + message)));
     }
 
-    public static <T extends Enum<T>> Pair<HandleResult, T> handleEnumValueOf(
-            String msg, Class<T> enumClass, String name) {
-        var r = CommonUtils.readPipe(name, n -> {
-            try {
-                return new Pair<>(
-                        HandleResult.SUCCESS,
-                        Enum.valueOf(enumClass, n.trim().toUpperCase()));
-            } catch (NullPointerException | IllegalArgumentException ignored) {
-                handleWarning(msg);
-                return null;
-            }
-        });
-
-        if (r != null) return r;
-        handleError(msg);
-        return new Pair<>(HandleResult.FAILED, null);
-    }
-
     public static Pair<HandleResult, ItemGroup> handleItemGroupGet(ProjectAddon addon, String id) {
         ItemGroup ig = CommonUtils.getIf(
                 addon.getItemGroups(), i -> i.getKey().getKey().equalsIgnoreCase(id));
@@ -190,6 +163,15 @@ public class ExceptionHandler {
             message = "[" + RykenSlimefunCustomizer.addonManager.getLoadingAddon() + "] " + message;
         }
         return message;
+    }
+
+    public static HandleResult handleMenuConflict(String id, ProjectAddon addon) {
+        CustomMenu menu = CommonUtils.getIf(addon.getMenus(), m -> m.getId().equalsIgnoreCase(id));
+        if (menu != null) {
+            console.sendMessage(decorate(CMIChatColor.translate("&4ERROR | ID冲突：已存在菜单ID为" + id + "的菜单")));
+            return HandleResult.FAILED;
+        }
+        return HandleResult.SUCCESS;
     }
 
     public enum HandleResult {

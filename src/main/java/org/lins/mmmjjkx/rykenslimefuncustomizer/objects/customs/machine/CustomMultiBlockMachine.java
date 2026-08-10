@@ -19,9 +19,7 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine;
 
 import com.google.common.base.Preconditions;
 import io.github.thebusybiscuit.slimefun4.api.events.MultiBlockCraftEvent;
-import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
-import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.multiblocks.MultiBlockMachine;
 import io.github.thebusybiscuit.slimefun4.core.services.sounds.SoundEffect;
@@ -83,13 +81,21 @@ public class CustomMultiBlockMachine extends MultiBlockMachine {
     private final ScriptEval eval;
     private final BlockFace dispenserFace;
 
+    public static BlockFace getFace(int work) {
+        return switch (work) {
+            case 2 -> BlockFace.UP;
+            case 8 -> BlockFace.DOWN;
+            default -> BlockFace.SELF;
+        };
+    }
+
     public CustomMultiBlockMachine(
             YamlReader.BaseResult base,
             Map<ItemStack[], ItemStack> craftRecipes,
             int work,
             @Nullable SoundEffect soundEffect,
             @Nullable ScriptEval eval) {
-        super(base.itemGroup(), base.sfis(), base.recipe(), BlockFace.SELF);
+        super(base.itemGroup(), base.sfis(), base.recipe(), getFace(work));
 
         this.workIndex = work - 1;
         this.craftSound = soundEffect;

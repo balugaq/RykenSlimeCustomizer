@@ -111,7 +111,7 @@ public abstract class YamlReader<T> {
 
         int recipeSize = rt.getKey().getKey().equalsIgnoreCase("infinity_forge") ? 36 : 9;
 
-        return new Pair<>(rt, CommonUtils.readRecipe(section.getConfigurationSection("recipe"), addon, recipeSize));
+        return new Pair<>(rt, CommonUtils.readRecipe(file, section.getConfigurationSection("recipe"), addon, recipeSize));
     }
 
     @Nullable protected final SlimefunItemStack getPreloadItem(String itemId) {
@@ -457,7 +457,7 @@ public abstract class YamlReader<T> {
 
     public @Nullable BaseResult getBase(ConfigurationSection section, String s) {
         if (section == null) return null;
-        String id = addon.getId(s, section.getString("id_alias"));
+        String id = getId(s);
 
         ExceptionHandler.HandleResult result = ExceptionHandler.handleIdConflict(id);
 
@@ -474,12 +474,27 @@ public abstract class YamlReader<T> {
         RecipeType rt = recipePair.getFirstValue();
         ItemStack[] recipe = recipePair.getSecondValue();
 
-        return new BaseResult(group.getSecondValue(), slimefunItemStack, rt, recipe);
+        ItemStack output = null;
+        if (section.contains("recipeOutput")) {
+            output = CommonUtils.readItem(file, section.getConfigurationSection("recipeOutput"), addon);
+            if (output == null) {
+                Debug.warning(file, section, "你设置了物品输出，但是输出物品无效 (recipeOutput) 已跳过");
+                return null;
+            }
+        }
+
+        if (output == null) {
+            output = slimefunItemStack.clone();
+            int amount = section.getInt("item.amount");
+            output.setAmount(amount);
+        }
+
+        return new BaseResult(group.getSecondValue(), slimefunItemStack, rt, recipe, output);
     }
 
     @NullMarked
         public record BaseResult(ItemGroup itemGroup, SlimefunItemStack sfis, RecipeType recipeType,
-                                 @Nullable ItemStack[] recipe) {
+                                 @Nullable ItemStack[] recipe, ItemStack output) {
     }
 
     public boolean isInvalidSlots(List<Integer> slots, ConfigurationSection section, ItemTransportFlow flow) {
@@ -511,7 +526,7 @@ public abstract class YamlReader<T> {
         }
 
 
-        ItemStack stack = CommonUtils.readItem(item, false, addon);
+        ItemStack stack = CommonUtils.readItem(file, item, addon);
         if (stack == null) {
             Debug.error(file, item, "配置错误 '物品' (item)");
             return null;

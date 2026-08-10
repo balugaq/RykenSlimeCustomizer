@@ -38,6 +38,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
     private final List<String> CHECKS = List.of("helmet", "chestplate", "leggings", "boots");
@@ -66,12 +67,12 @@ public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
         List<String> pt = section.getStringList("protection_types");
         List<ProtectionType> protectionTypes = new ArrayList<>();
         for (String type : pt) {
-            Pair<ExceptionHandler.HandleResult, ProtectionType> result = ExceptionHandler.handleEnumValueOf(
-                    "在附属" + addon.getAddonId() + "中加载盔甲套" + s + "时遇到了问题: " + "错误的盔甲保护类型: " + type,
-                    ProtectionType.class,
-                    type);
-            if (result.getFirstValue() == ExceptionHandler.HandleResult.FAILED) return null;
-            protectionTypes.add(result.getSecondValue());
+            Optional<ProtectionType> result = CommonUtils.getEnum(ProtectionType.class, type);
+            if (result.isEmpty()) {
+                Debug.warning(file, section, " 盔甲保护类型 (protection_types) 非法: " + type);
+                continue;
+            }
+            protectionTypes.add(result.get());
         }
 
         List<CustomArmorPiece> pieces = new ArrayList<>();
@@ -98,28 +99,28 @@ public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
             for (String effect : effects) {
                 String[] split = effect.split(" ");
                 if (split.length != 2) {
-                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载盔甲套" + s + "的" + check + "时遇到了问题: "
-                            + "错误的药水效果格式: " + effect);
-                    return null;
+                    Debug.warning(file, pieceSection, "药水格式非法 (potion_effects) " + effect);
+                    continue;
                 }
                 String effectName = split[0];
                 int amplifier = Integer.parseInt(split[1]);
 
                 PotionEffectType type = PotionEffectType.getByName(effectName);
                 if (type == null) {
-                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载盔甲套" + s + "的" + check + "时遇到了问题: "
-                            + "错误的药水效果类型: " + effectName);
-                    return null;
+                    Debug.warning(file, pieceSection, "药水效果类型非法 (potion_effects) " + effectName);
+                    continue;
                 }
 
                 if (amplifier < 0) {
-                    ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载盔甲套" + s + "的" + check + "时遇到了问题: "
-                            + "药水效果等级不能为负数: " + effect + "， 但你设置了" + amplifier);
-                    return null;
+                    Debug.warning(file, pieceSection, "药水效果等级非法 (potion_effects) " + effect, 1, Integer.MAX_VALUE);
+                    continue;
                 }
 
                 potionEffects.add(new PotionEffect(
-                        type, (Slimefun.getCfg().getInt("options.armor-update-interval") + 3) * 20, amplifier));
+                    type,
+                    (Slimefun.getCfg().getInt("options.armor-update-interval") + 3) * 20,
+                    amplifier)
+                );
             }
 
             pieces.add(new CustomArmorPiece(
@@ -135,7 +136,7 @@ public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
         }
 
         if (pieces.isEmpty()) {
-            ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载盔甲套" + s + "时遇到了问题: " + "没有找到任何盔甲部分");
+            Debug.error(file, section, "没有设置盔甲部分");
             return null;
         }
 

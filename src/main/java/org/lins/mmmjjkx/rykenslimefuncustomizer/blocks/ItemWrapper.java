@@ -11,13 +11,17 @@ import java.util.stream.Stream;
 
 @NullMarked
 @Data
-public class ItemWrapper {
+public class ItemWrapper implements Cloneable {
     private final ItemStack stack;
     private int amount;
 
     public ItemWrapper(ItemStack stack) {
+        this(stack, stack.getAmount());
+    }
+
+    public ItemWrapper(ItemStack stack, int amount) {
         this.stack = stack.asOne(); // clone
-        this.amount = stack.getAmount();
+        this.amount = amount;
     }
 
     public Material getType() {
@@ -54,5 +58,10 @@ public class ItemWrapper {
             list.add(stack.asQuantity(left));
         }
         return list.stream();
+    }
+
+    @Override
+    public ItemWrapper clone() {
+        return new ItemWrapper(stack.clone(), amount);
     }
 }

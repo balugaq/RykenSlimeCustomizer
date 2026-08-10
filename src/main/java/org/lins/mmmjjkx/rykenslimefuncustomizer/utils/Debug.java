@@ -6,6 +6,14 @@ import java.io.File;
 import java.util.concurrent.Callable;
 
 public class Debug {
+    public static void error(String msg) {
+        ExceptionHandler.handleError(msg);
+    }
+
+    public static void error(String msg, Throwable x) {
+        ExceptionHandler.handleError(msg, x);
+    }
+
     public static void error(File file, ConfigurationSection section, String msg) {
         ExceptionHandler.handleError("文件: " + file.getAbsolutePath());
         ExceptionHandler.handleError("在 " + section.getCurrentPath() + " 发现错误: " + msg);
@@ -17,9 +25,9 @@ public class Debug {
         e.printStackTrace();
     }
 
-    public static void error(File file, ConfigurationSection section, String msg, int start, int end) {
+    public static void error(File file, ConfigurationSection section, String msg, Number start, Number end) {
         ExceptionHandler.handleError("文件: " + file.getAbsolutePath());
-        ExceptionHandler.handleError("在 " + section.getCurrentPath() + " 发现错误: " + msg + ", 数值范围，整型 [" + start + ", " + end + "]");
+        ExceptionHandler.handleError("在 " + section.getCurrentPath() + " 发现错误: " + msg + ", 数值范围， [" + start + ", " + end + "]");
     }
 
     public static void warning(File file, ConfigurationSection section, String msg) {
@@ -33,14 +41,9 @@ public class Debug {
         e.printStackTrace();
     }
 
-    public static void warning(File file, ConfigurationSection section, String msg, int start, int end) {
+    public static void warning(File file, ConfigurationSection section, String msg, Number start, Number end) {
         ExceptionHandler.handleWarning("文件: " + file.getAbsolutePath());
-        ExceptionHandler.handleWarning("在 " + section.getCurrentPath() + " 发现问题: " + msg + ", 数值范围，整型 [" + start + ", " + end + "]");
-    }
-
-    public static void warning(File file, ConfigurationSection section, String msg, float start, float end) {
-        ExceptionHandler.handleWarning("文件: " + file.getAbsolutePath());
-        ExceptionHandler.handleWarning("在 " + section.getCurrentPath() + " 发现问题: " + msg + ", 数值范围，浮点型 [" + start + ", " + end + "]");
+        ExceptionHandler.handleWarning("在 " + section.getCurrentPath() + " 发现问题: " + msg + ", 数值范围，[" + start + ", " + end + "]");
     }
 
     public static void debug(File file, Callable<String> msg) {

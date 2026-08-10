@@ -32,7 +32,7 @@ public class CustomFood extends SimpleSlimefunItem<ItemConsumptionHandler> {
     public CustomFood(
             YamlReader.BaseResult base,
             @Nullable ScriptEval eval) {
-        super(base.itemGroup(), base.sfis(), base.recipeType(), base.recipe());
+        super(base.itemGroup(), base.sfis(), base.recipeType(), base.recipe(), base.output());
 
         this.eval = eval;
 

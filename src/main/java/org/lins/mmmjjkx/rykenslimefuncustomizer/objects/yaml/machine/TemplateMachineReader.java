@@ -17,20 +17,18 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine;
 
-import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
-import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.MachineTicker;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.RecipeReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomTemplateMachine;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.AdvancedCustomMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomMachineRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.MachineTemplate;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
@@ -43,7 +41,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TemplateMachineReader extends YamlReader<CustomTemplateMachine> {
+public class TemplateMachineReader extends YamlReader<AdvancedCustomMachine> {
     @Override
     public String getFileName() {
         return Constants.TEMPLATE_MACHINES_FILE;
@@ -54,54 +52,33 @@ public class TemplateMachineReader extends YamlReader<CustomTemplateMachine> {
     }
 
     @Override
-    public CustomTemplateMachine readEach(String s) {
+    public AdvancedCustomMachine readEach(String s) {
         ConfigurationSection section = configuration.getConfigurationSection(s);
         if (section == null) return null;
-
-        String id = addon.getId(s, section.getString("id_alias"));
-        ExceptionHandler.HandleResult result = ExceptionHandler.handleIdConflict(id);
-
-        if (result == ExceptionHandler.HandleResult.FAILED) return null;
-
-        String igId = section.getString("item_group");
-
-        SlimefunItemStack sfis = getPreloadItem(id);
-        if (sfis == null) return null;
-
-        Pair<ExceptionHandler.HandleResult, ItemGroup> group = ExceptionHandler.handleItemGroupGet(addon, igId);
-        if (group.getFirstValue() == ExceptionHandler.HandleResult.FAILED) return null;
-
-        Pair<RecipeType, ItemStack[]> recipePair = getRecipe(section, addon);
-        RecipeType rt = recipePair.getFirstValue();
-        ItemStack[] recipe = recipePair.getSecondValue();
-
-        boolean fasterIfMoreTemplates = section.getBoolean("fasterIfMoreTemplates", false);
-        boolean moreOutputIfMoreTemplates = section.getBoolean("moreOutputIfMoreTemplates", false);
-
-        List<Integer> input = section.getIntegerList("input");
-        List<Integer> output = section.getIntegerList("output");
-
-        if (output.isEmpty()) {
-            Debug.error(file, section, "缺少或配置错误 '输出槽' (output)");
-            return null;
-        }
-
-        if (!input.isEmpty() && isInvalidSlots(input, section, ItemTransportFlow.INSERT)
-            || isInvalidSlots(output, section, ItemTransportFlow.WITHDRAW)) {
-            return null;
-        }
+        String id = getId(s);
+        var base = getBase(section, s);
+        if (base == null) return null;
 
         CustomMenu menu = CommonUtils.getIf(addon.getMenus(), m -> m.getId().equalsIgnoreCase(id));
         if (menu == null) {
             Debug.warning(file, section, "未找到菜单 " + id + " (menu), 使用默认菜单");
         }
 
-        List<MachineTemplate> templates =
-                readTemplates(id, input.size(), output.size(), section.getConfigurationSection("recipes"), addon);
+        List<Integer> input = section.getIntegerList("input");
+        List<Integer> output = section.getIntegerList("output");
 
-        int templateSlot = section.getInt("templateSlot");
-        if (templateSlot < 0 || templateSlot > 53) {
-            Debug.error(file, section, "缺少或配置错误 '模板槽位' (templateSlot)", 0, 53);
+        if (input.isEmpty()) {
+            Debug.error(file, section, "缺少或配置错误 '输入槽' (input)");
+            return null;
+        }
+
+        if (output.isEmpty()) {
+            Debug.error(file, section, "缺少或配置错误 '输出槽' (output)");
+            return null;
+        }
+
+        if (isInvalidSlots(input, section, ItemTransportFlow.INSERT)
+            || isInvalidSlots(output, section, ItemTransportFlow.WITHDRAW)) {
             return null;
         }
 
@@ -111,29 +88,30 @@ public class TemplateMachineReader extends YamlReader<CustomTemplateMachine> {
             return null;
         }
 
-        int energy = section.getInt("consumption", -1);
+        int energy = section.getInt("energyPerCraft", -1);
         if (energy <= 0) {
-            Debug.error(file, section, "缺少或配置错误 '能量消耗' (consumption)", 1, Integer.MAX_VALUE);
+            Debug.error(file, section, "缺少或配置错误 '能量消耗' (energyPerCraft)", 1, Integer.MAX_VALUE);
             return null;
         }
 
-        boolean hideAllRecipes = section.getBoolean("hideAllRecipes", false);
+        int speed = section.getInt("speed", 1);
+        if (speed <= 0) {
+            Debug.error(file, section, "配置错误 '合成速度' (speed)", 1, Integer.MAX_VALUE);
+            return null;
+        }
 
-        return new CustomTemplateMachine(
-                group.getSecondValue(),
-                sfis,
-                rt,
-                recipe,
-                menu,
-                input,
-                output,
-                templateSlot,
-                templates,
-                energy,
-                capacity,
-                fasterIfMoreTemplates,
-                moreOutputIfMoreTemplates,
-                hideAllRecipes);
+        var machine = new AdvancedCustomMachine(
+            base,
+            input.stream().mapToInt(x -> x).toArray(),
+            output.stream().mapToInt(x -> x).toArray(),
+            energy,
+            capacity,
+            speed
+        );
+        var ticker = MachineTicker.create(file, machine, section, menu, addon, MachineTicker.Type.TEMPLATE_RECIPE);
+        if (ticker == null) return null;
+        machine.setTicker(ticker);
+        return machine;
     }
 
     private List<MachineTemplate> readTemplates(

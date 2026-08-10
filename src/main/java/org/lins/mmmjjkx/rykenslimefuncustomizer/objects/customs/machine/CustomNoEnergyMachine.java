@@ -18,10 +18,7 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine;
 
 import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
-import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
-import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockBreakHandler;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockPlaceHandler;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockUseHandler;
@@ -78,7 +75,7 @@ public class CustomNoEnergyMachine extends AbstractEmptyMachine<MachineOperation
             List<Integer> output,
             @Nullable ScriptEval eval,
             List<Integer> work) {
-        super(base.itemGroup(), base.sfis(), base.recipeType(), base.recipe());
+        super(base);
 
         this.input = input;
         this.output = output;

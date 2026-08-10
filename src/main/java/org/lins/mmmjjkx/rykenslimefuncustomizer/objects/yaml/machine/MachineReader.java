@@ -17,13 +17,10 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine;
 
-import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.networks.energy.EnergyNetComponentType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
@@ -84,7 +81,7 @@ public class MachineReader extends YamlReader<AbstractEmptyMachine<?>> {
             }
             MachineRecord record = new MachineRecord(capacity);
             String encType = energySettings.getString("type");
-            Pair<ExceptionHandler.HandleResult, EnergyNetComponentType> enc = ExceptionHandler.handleEnumValueOf(
+            Pair<ExceptionHandler.HandleResult, EnergyNetComponentType> enc = CommonUtils.getEnum(
                     "无法读取在附属" + addon.getAddonId() + "中的机器" + s + "的能源设置，已转为无电机器，原因: 错误的能源网络组件类型" + encType,
                     EnergyNetComponentType.class,
                     encType);

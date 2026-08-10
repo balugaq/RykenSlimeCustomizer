@@ -14,6 +14,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.AbstractRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.InvIndex;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.MachineTicker;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.TemplateRecipeMachineTicker;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 
@@ -45,7 +46,7 @@ public class AdvancedCustomMachine extends AContainer {
         int capacity,
         int speed
     ) {
-        super(base.itemGroup(), base.sfis(), base.recipeType(), base.recipe());
+        super(base.itemGroup(), base.sfis(), base.recipeType(), base.recipe(), base.output());
         this.input = input;
         this.output = output;
         this.energyPerCraft = energyPerCraft;
@@ -76,6 +77,9 @@ public class AdvancedCustomMachine extends AContainer {
             public void onBlockBreak(Block b) {
                 BlockMenu inv = StorageCacheUtils.getMenu(b.getLocation());
                 if (inv != null) {
+                    if (ticker instanceof TemplateRecipeMachineTicker tp) {
+                        inv.dropItems(b.getLocation(), tp.getTemplateSlot());
+                    }
                     inv.dropItems(b.getLocation(), getInputSlots());
                     inv.dropItems(b.getLocation(), getOutputSlots());
                 }
@@ -83,6 +87,10 @@ public class AdvancedCustomMachine extends AContainer {
                 getMachineProcessor().endOperation(b);
             }
         };
+    }
+
+    public MachineTicker.Type getType() {
+        return ticker.getType();
     }
 
     @Override
