@@ -26,6 +26,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.Range;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.generations.GenerationArea;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.generations.GenerationInfo;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -58,7 +59,13 @@ public class GenerationReader extends YamlReader<GenerationInfo> {
 
         int c = 1;
         while (areaSection.contains(String.valueOf(c))) {
-            areas.add(readArea(areaSection.getConfigurationSection(String.valueOf(c))));
+            var cfg = areaSection.getConfigurationSection(String.valueOf(c));
+            if (cfg == null) {
+                Debug.error(file, areaSection, "无效的生成表达 (areas): " + c);
+                continue;
+            }
+
+            areas.add(readArea(cfg));
 
             c++;
         }

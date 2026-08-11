@@ -25,25 +25,27 @@ import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import io.github.thebusybiscuit.slimefun4.libraries.paperlib.PaperLib;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddonLoader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomAddonConfig;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.DropFromBlock;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 public abstract class YamlReader<T> {
@@ -59,7 +61,7 @@ public abstract class YamlReader<T> {
     public YamlReader(File dir, ProjectAddon addon) {
         this.dir = dir;
         this.file = new File(dir, getFileName());
-        this.configuration = ProjectAddonLoader.doFileLoad(dir, getFileName());
+        this.configuration = ProjectAddonLoader.readYml(dir, getFileName());
         this.lateInits = new ArrayList<>();
         this.addon = addon;
     }
@@ -84,7 +86,7 @@ public abstract class YamlReader<T> {
 
             for (SlimefunItemStack item : items) {
                 addon.getPreloadItems().put(item.getItemId(), item);
-                ExceptionHandler.debugLog("&a已预加载物品: " + item.getItemId());
+                Debug.debug("&a已预加载物品: " + item.getItemId());
             }
         }
     }
@@ -96,21 +98,14 @@ public abstract class YamlReader<T> {
         if (section.getBoolean("piglin_trade_chance")) {
             rt = RecipeType.BARTER_DROP;
         } else {
-            Pair<ExceptionHandler.HandleResult, RecipeType> result = ExceptionHandler.getRecipeType(
-                    String.format(
-                            "在附属 %s 中加载物品 %s 时遇到了问题: 错误的配方类型 %s !",
-                            addon.getAddonId(), section.getCurrentPath(), recipeTypeStr),
-                    recipeTypeStr);
-
-            if (result.getFirstValue() == ExceptionHandler.HandleResult.FAILED) {
+            rt = CommonUtils.getRecipeType(recipeTypeStr);
+            if (rt == null) {
+                Debug.error("错误的配方类型 (recipe_type): " + recipeTypeStr);
                 return new Pair<>(RecipeType.NULL, new ItemStack[0]);
             }
-
-            rt = result.getSecondValue();
         }
 
         int recipeSize = rt.getKey().getKey().equalsIgnoreCase("infinity_forge") ? 36 : 9;
-
         return new Pair<>(rt, CommonUtils.readRecipe(file, section.getConfigurationSection("recipe"), addon, recipeSize));
     }
 
@@ -119,7 +114,7 @@ public abstract class YamlReader<T> {
     }
 
     public final List<T> readAll() {
-        ExceptionHandler.info("正在加载" + addon.getAddonId() + "/"
+        Debug.info("正在加载" + addon.getAddonId() + "/"
                 + this.getClass()
                         .getSimpleName()
                         .substring(0, this.getClass().getSimpleName().length() - 6));
@@ -128,7 +123,7 @@ public abstract class YamlReader<T> {
             ConfigurationSection section = configuration.getConfigurationSection(key);
             if (section == null) continue;
 
-            ExceptionHandler.debugLog("开始读取配置: " + key);
+            Debug.debug("开始读取配置: " + key);
 
             ConfigurationSection register = section.getConfigurationSection("register");
             String id = addon.getId(key, section.getString("id_alias"));
@@ -136,7 +131,7 @@ public abstract class YamlReader<T> {
 
             if (section.getBoolean("lateInit", false)) {
                 putLateInit(key);
-                ExceptionHandler.debugLog("检查结果：延迟加载");
+                Debug.debug("检查结果：延迟加载");
                 continue;
             }
 
@@ -144,12 +139,12 @@ public abstract class YamlReader<T> {
             if (object != null) {
                 addon.addLoadedObject();
                 objects.add(object);
-                ExceptionHandler.debugLog("&aSUCCESS | 读取项" + key + "成功！");
+                Debug.debug("&aSUCCESS | 读取项" + key + "成功！");
             } else {
-                ExceptionHandler.debugLog("&cFAILURE | 读取项" + key + "失败！");
+                Debug.debug("&cFAILURE | 读取项" + key + "失败！");
             }
         }
-        ExceptionHandler.info("附属" + addon.getAddonId() + " 已加载 " + getLoadingProgress(addon));
+        Debug.info("附属" + addon.getAddonId() + " 已加载 " + getLoadingProgress(addon));
         return objects;
     }
 
@@ -158,23 +153,23 @@ public abstract class YamlReader<T> {
     }
 
     public List<T> loadLateInits() {
-        ExceptionHandler.info("正在加载延迟项 " + addon.getAddonId() + "/"
+        Debug.info("正在加载延迟项 " + addon.getAddonId() + "/"
                 + this.getClass()
                         .getSimpleName()
                         .substring(0, this.getClass().getSimpleName().length() - 6));
         List<T> objects = new ArrayList<>();
         lateInits.forEach(key -> {
-            ExceptionHandler.debugLog("开始读取配置：" + key);
+            Debug.debug("开始读取配置：" + key);
             var object = readEach(key);
             if (object != null) {
                 addon.addLoadedObject();
                 objects.add(object);
-                ExceptionHandler.debugLog("&aSUCCESS | 读取项" + key + "成功！");
+                Debug.debug("&aSUCCESS | 读取项" + key + "成功！");
             } else {
-                ExceptionHandler.debugLog("&cFAILURE | 读取项" + key + "失败！");
+                Debug.debug("&cFAILURE | 读取项" + key + "失败！");
             }
         });
-        ExceptionHandler.info("附属" + addon.getAddonId() + " 已加载 " + getLoadingProgress(addon));
+        Debug.info("附属" + addon.getAddonId() + " 已加载 " + getLoadingProgress(addon));
 
         lateInits.clear();
 
@@ -194,7 +189,7 @@ public abstract class YamlReader<T> {
         if (unfinished) return false;
         if (!logitech_stackable && RykenSlimefunCustomizer.logitechNotStackableIds != null) {
             RykenSlimefunCustomizer.logitechNotStackableIds.add(id);
-            ExceptionHandler.debugLog(() -> "物品 " + id + " 将不能被逻辑工艺-堆叠机器堆叠!");
+            Debug.debug(() -> "物品 " + id + " 将不能被逻辑工艺-堆叠机器堆叠!");
         }
 
         for (String condition : conditions) {
@@ -202,19 +197,19 @@ public abstract class YamlReader<T> {
             String head = splits[0];
             if (head.equalsIgnoreCase("hasplugin")) {
                 if (splits.length != 2) {
-                    ExceptionHandler.handleError("读取" + key + "的注册条件时发现问题: hasplugin仅需要一个参数");
+                    Debug.error("读取" + key + "的注册条件时发现问题: hasplugin仅需要一个参数");
                     continue;
                 }
                 boolean b = Bukkit.getPluginManager().isPluginEnabled(splits[1]);
                 if (!b) {
                     if (warn) {
-                        ExceptionHandler.handleError(key + "需要服务端插件" + splits[1] + "才能被注册");
+                        Debug.error(key + "需要服务端插件" + splits[1] + "才能被注册");
                     }
                     return false;
                 }
             } else if (head.equalsIgnoreCase("itemexist")) {
                 if (splits.length != 2) {
-                    ExceptionHandler.handleError("读取" + key + "的注册条件时发现问题: itemexist仅需要一个参数");
+                    Debug.error("读取" + key + "的注册条件时发现问题: itemexist仅需要一个参数");
                     continue;
                 }
 
@@ -222,14 +217,14 @@ public abstract class YamlReader<T> {
 
                 if (SlimefunItem.getById(itemId) == null || addon.getPreloadItems().get(itemId) == null) {
                     if (warn) {
-                        ExceptionHandler.handleError(key + "需要物品" + splits[1] + "才能被注册");
+                        Debug.error(key + "需要物品" + splits[1] + "才能被注册");
                     }
 
                     return false;
                 }
             } else if (head.equalsIgnoreCase("!itemexist")) {
                 if (splits.length != 2) {
-                    ExceptionHandler.handleError("读取" + key + "的注册条件时发现问题: !itemexist仅需要一个参数");
+                    Debug.error("读取" + key + "的注册条件时发现问题: !itemexist仅需要一个参数");
                     continue;
                 }
 
@@ -237,26 +232,26 @@ public abstract class YamlReader<T> {
 
                 if (SlimefunItem.getById(itemId) != null || addon.getPreloadItems().get(itemId) != null) {
                     if (warn) {
-                        ExceptionHandler.handleError(key + "需要物品" + splits[1] + "不存在才能被注册");
+                        Debug.error(key + "需要物品" + splits[1] + "不存在才能被注册");
                     }
 
                     return false;
                 }
             } else if (head.equalsIgnoreCase("!hasplugin")) {
                 if (splits.length != 2) {
-                    ExceptionHandler.handleError("读取" + key + "的注册条件时发现问题: !hasplugin仅需要一个参数");
+                    Debug.error("读取" + key + "的注册条件时发现问题: !hasplugin仅需要一个参数");
                     continue;
                 }
                 boolean b = Bukkit.getPluginManager().isPluginEnabled(splits[1]);
                 if (b) {
                     if (warn) {
-                        ExceptionHandler.handleError(key + "需要卸载服务端插件" + splits[1] + "才能被注册(可能与其冲突？)");
+                        Debug.error(key + "需要卸载服务端插件" + splits[1] + "才能被注册(可能与其冲突？)");
                     }
                     return false;
                 }
             } else if (head.equalsIgnoreCase("version")) {
                 if (splits.length != 3) {
-                    ExceptionHandler.handleError("读取" + key + "的注册条件时发现问题: version需要两个参数");
+                    Debug.error("读取" + key + "的注册条件时发现问题: version需要两个参数");
                     continue;
                 }
 
@@ -267,7 +262,7 @@ public abstract class YamlReader<T> {
                     try {
                         targetMajor = Integer.parseInt(versionSplit[1]);
                     } catch (NumberFormatException e) {
-                        ExceptionHandler.handleError("读取" + key + "的注册条件时发现问题: 版本号" + splits[2] + "不是正常的版本号！");
+                        Debug.error("读取" + key + "的注册条件时发现问题: 版本号" + splits[2] + "不是正常的版本号！");
                         continue;
                     }
                 } else if (versionSplit.length == 3) {
@@ -275,11 +270,11 @@ public abstract class YamlReader<T> {
                         targetMajor = Integer.parseInt(versionSplit[1]);
                         targetMinor = Integer.parseInt(versionSplit[2]);
                     } catch (NumberFormatException e) {
-                        ExceptionHandler.handleError("读取" + key + "的注册条件时发现问题: 版本号" + splits[2] + "不是正常的版本号！");
+                        Debug.error("读取" + key + "的注册条件时发现问题: 版本号" + splits[2] + "不是正常的版本号！");
                         continue;
                     }
                 } else {
-                    ExceptionHandler.handleError("读取" + key + "的注册条件时发现问题: 版本号" + splits[2] + "不是正常的版本号！");
+                    Debug.error("读取" + key + "的注册条件时发现问题: 版本号" + splits[2] + "不是正常的版本号！");
                 }
 
                 // ExceptionHandler.info("key: " + key + " condition: " + condition + " major: " + targetMajor + "
@@ -321,53 +316,53 @@ public abstract class YamlReader<T> {
                         }
                     }
                     default -> {
-                        ExceptionHandler.handleError("读取" + key + "的注册条件时发现问题: version需要合法的比较符！");
+                        Debug.error("读取" + key + "的注册条件时发现问题: version需要合法的比较符！");
                         pass = true;
                     }
                 }
                 if (!pass) {
                     if (warn) {
-                        ExceptionHandler.handleError(key + "需要服务端版本" + splits[1] + " " + splits[2] + "才能被注册");
+                        Debug.error(key + "需要服务端版本" + splits[1] + " " + splits[2] + "才能被注册");
                     }
                     return false;
                 }
             } else if (head.contains("config")) {
                 CustomAddonConfig config = addon.getConfig();
                 if (config == null) {
-                    ExceptionHandler.handleError("读取" + key + "的注册条件时发现问题: 无法获取配置");
+                    Debug.error("读取" + key + "的注册条件时发现问题: 无法获取配置");
                     continue;
                 }
 
                 switch (head) {
                     case "config.boolean" -> {
                         if (splits.length != 2) {
-                            ExceptionHandler.handleError("读取" + key + "的注册条件时发现问题: config.boolean需要一个参数");
+                            Debug.error("读取" + key + "的注册条件时发现问题: config.boolean需要一个参数");
                             continue;
                         }
 
                         if (!config.config().getBoolean(splits[1])) {
                             if (warn) {
-                                ExceptionHandler.handleError(key + "需要配置选项" + splits[1] + "为true才能被注册");
+                                Debug.error(key + "需要配置选项" + splits[1] + "为true才能被注册");
                             }
                             return false;
                         }
                     }
                     case "config.string" -> {
                         if (splits.length != 3) {
-                            ExceptionHandler.handleError("读取" + key + "的注册条件时发现问题: config.string需要两个参数");
+                            Debug.error("读取" + key + "的注册条件时发现问题: config.string需要两个参数");
                             continue;
                         }
 
                         if (!Objects.equals(config.config().getString(splits[1]), splits[2])) {
                             if (warn) {
-                                ExceptionHandler.handleError(key + "需要配置选项" + splits[1] + "为" + splits[2] + "才能被注册");
+                                Debug.error(key + "需要配置选项" + splits[1] + "为" + splits[2] + "才能被注册");
                             }
                             return false;
                         }
                     }
                     case "config.int" -> {
                         if (splits.length != 4) {
-                            ExceptionHandler.handleError("读取" + key + "的注册条件时发现问题: config.int需要三个参数");
+                            Debug.error("读取" + key + "的注册条件时发现问题: config.int需要三个参数");
                             continue;
                         }
 
@@ -428,14 +423,14 @@ public abstract class YamlReader<T> {
                         yield current != destination;
                     }
                     default -> {
-                        ExceptionHandler.handleError("读取" + key + "的注册条件时发现问题: " + regParam + "需要合法的比较符！");
+                        Debug.error("读取" + key + "的注册条件时发现问题: " + regParam + "需要合法的比较符！");
                         yield true;
                     }
                 };
 
         if (!b) {
             if (warn) {
-                ExceptionHandler.handleError(key + msg.apply(operation));
+                Debug.error(key + msg.apply(operation));
             }
         }
 
@@ -455,17 +450,14 @@ public abstract class YamlReader<T> {
         return addon.getId(s, configuration.getConfigurationSection(s).getString("id_alias"));
     }
 
-    public @Nullable BaseResult getBase(ConfigurationSection section, String s) {
+    public @Nullable BaseResult getBase(@Nullable ConfigurationSection section, String s) {
         if (section == null) return null;
         String id = getId(s);
 
-        ExceptionHandler.HandleResult result = ExceptionHandler.handleIdConflict(id);
+        if (!CommonUtils.passItemIdConflictCheck(id)) return null;
 
-        if (result == ExceptionHandler.HandleResult.FAILED) return null;
-
-        String igId = section.getString("item_group");
-        Pair<ExceptionHandler.HandleResult, ItemGroup> group = ExceptionHandler.handleItemGroupGet(addon, igId);
-        if (group.getFirstValue() == ExceptionHandler.HandleResult.FAILED) return null;
+        ItemGroup group = CommonUtils.getItemGroup(addon, section.getString("item_group"));
+        if (group == null) return null;
 
         SlimefunItemStack slimefunItemStack = getPreloadItem(id);
         if (slimefunItemStack == null) return null;
@@ -478,7 +470,7 @@ public abstract class YamlReader<T> {
         if (section.contains("recipeOutput")) {
             output = CommonUtils.readItem(file, section.getConfigurationSection("recipeOutput"), addon);
             if (output == null) {
-                Debug.warning(file, section, "你设置了物品输出，但是输出物品无效 (recipeOutput) 已跳过");
+                Debug.warn(file, section, "你设置了物品输出，但是输出物品无效 (recipeOutput) 已跳过");
                 return null;
             }
         }
@@ -489,7 +481,9 @@ public abstract class YamlReader<T> {
             output.setAmount(amount);
         }
 
-        return new BaseResult(group.getSecondValue(), slimefunItemStack, rt, recipe, output);
+        SlimefunItemStack sfis = new SlimefunItemStack(slimefunItemStack.getItemId(), slimefunItemStack.asOne());
+
+        return new BaseResult(group, sfis, rt, recipe, output);
     }
 
     @NullMarked
@@ -500,7 +494,7 @@ public abstract class YamlReader<T> {
     public boolean isInvalidSlots(List<Integer> slots, ConfigurationSection section, ItemTransportFlow flow) {
         for (int slot : slots) {
             if (slot < 0 || slot > 53) {
-                Debug.warning(file, section, "槽位超出范围! " + (flow == ItemTransportFlow.INSERT ? "'输入槽' (input)" : "'输出槽' (output)"), 0, 53);
+                Debug.warn(file, section, "槽位超出范围! " + (flow == ItemTransportFlow.INSERT ? "'输入槽' (input)" : "'输出槽' (output)"), 0, 53);
                 return false;
             }
         }
@@ -549,7 +543,7 @@ public abstract class YamlReader<T> {
         String scriptName = script + ".js";
         File file = new File(addon.getScriptsFolder(), scriptName);
         if (!file.exists()) {
-            Debug.warning(file, section, "找不到对应的脚本文件 (script), file=" + file.getAbsolutePath());
+            Debug.warn(file, section, "找不到对应的脚本文件 (script), file=" + file.getAbsolutePath());
             return null;
         } else {
             var js = JavaScriptEval.create(file, addon);
@@ -558,5 +552,58 @@ public abstract class YamlReader<T> {
             }
             return js;
         }
+    }
+
+    public static void resolveDropFrom(File file, ConfigurationSection section, SlimefunItemStack sfis, ProjectAddon addon) {
+        int chance = 100;
+        if (section.contains("drop_chance")) {
+            chance = CommonUtils.clamp(section.getInt("drop_chance", 100), 1, 100, file, section, "'掉落概率 (drop_chance) 非法'");
+        } else if (section.contains("chance")) {
+            chance = CommonUtils.clamp(section.getInt("chance", 100), 1, 100, file, section, "'掉落概率 (chance) 非法'");
+        }
+        int amount = section.isInt("drop_amount") ? section.getInt("drop_amount", 1) : -1;
+
+        String dropMaterial = section.getString("drop_from", "");
+        Optional<Material> xm = CommonUtils.getMaterial(dropMaterial);
+        if (xm.isEmpty()) {
+            Debug.warn(file, section, "掉落方块材料类型 (drop_from) 无效 已跳过");
+            return;
+        }
+        Material material = xm.get();
+        if (amount != -1) {
+            DropFromBlock.addDrop(material, new DropFromBlock.Drop(sfis, chance, addon, amount, amount));
+            return;
+        }
+
+        int min, max, amt = sfis.getAmount();
+        resolve_amount:
+        {
+            String between = section.getString("drop_amount", "1");
+            if (between.contains("-")) {
+                String[] split = between.split("-");
+                if (split.length != 2) {
+                    Debug.warn(file, section, "掉落数量区间 (drop_amount) 非法，已将掉落数量转为 " + amt);
+                    min = max = amt;
+                    break resolve_amount;
+                }
+
+                try {
+                    min = Integer.parseInt(split[0]);
+                    max = Integer.parseInt(split[1]);
+                } catch (NumberFormatException e) {
+                    Debug.warn(file, section, "掉落数量区间 (drop_amount) 非法，已将掉落数量转为 " + amt);
+                    min = max = amt;
+                }
+            } else {
+                try {
+                    min = max = Integer.parseInt(between);
+                } catch (NumberFormatException e) {
+                    Debug.warn(file, section, "掉落数量 (drop_amount) 非法，已将掉落数量转为 " + amt);
+                    min = max = 1;
+                }
+            }
+        }
+
+        DropFromBlock.addDrop(material, new DropFromBlock.Drop(sfis, chance, addon, min, max));
     }
 }

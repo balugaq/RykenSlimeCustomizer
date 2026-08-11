@@ -19,7 +19,6 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine;
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.core.services.sounds.SoundEffect;
-import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
@@ -31,12 +30,12 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class MultiBlockMachineReader extends YamlReader<CustomMultiBlockMachine> {
     @Override
@@ -93,14 +92,13 @@ public class MultiBlockMachineReader extends YamlReader<CustomMultiBlockMachine>
         SoundEffect sound = null;
         if (section.contains("sound")) {
             String soundString = section.getString("sound");
-            Pair<ExceptionHandler.HandleResult, SoundEffect> soundEffectPair = CommonUtils.getEnum(
-                    "在附属" + addon.getAddonId() + "中加载多方块机器" + s + "无法获取声音类型" + soundString,
-                    SoundEffect.class,
-                    soundString);
-            ExceptionHandler.HandleResult result1 = soundEffectPair.getFirstValue();
-            if (result1 != ExceptionHandler.HandleResult.FAILED && soundEffectPair.getSecondValue() != null) {
-                sound = soundEffectPair.getSecondValue();
+            Optional<SoundEffect> soundEffect = CommonUtils.getEnum(SoundEffect.class, soundString);
+            if (soundEffect.isEmpty()) {
+                Debug.error(file, section, "无效的声音类型 (sound): " + soundString);
+                return null;
             }
+
+            sound = soundEffect.get();
         }
 
         JavaScriptEval eval = getScriptOrNull(section, section.getString("script"));
@@ -129,31 +127,18 @@ public class MultiBlockMachineReader extends YamlReader<CustomMultiBlockMachine>
         for (String key : section.getKeys(false)) {
             ConfigurationSection recipe = section.getConfigurationSection(key);
             if (recipe == null) continue;
-            ConfigurationSection inputs = recipe.getConfigurationSection("input");
+            ItemStack[] inputs = CommonUtils.readRecipe(file, recipe.getConfigurationSection("input"), addon);
             if (inputs == null) {
-                ExceptionHandler.handleError(
-                        "在附属" + addon.getAddonId() + "中加载多方块机器" + s + "的工作配方" + key + "时遇到了问题: " + "没有输入物品");
+                Debug.warn(file, recipe, "缺少 '输入物品' (input) 已跳过");
                 continue;
             }
-            ItemStack[] input = CommonUtils.readRecipe(inputs, addon);
-            if (input == null) {
-                ExceptionHandler.handleError(
-                        "在附属" + addon.getAddonId() + "中加载多方块机器" + s + "的工作配方" + key + "时遇到了问题: " + "输入物品为空或格式错误");
-                continue;
-            }
-            ConfigurationSection outputs = recipe.getConfigurationSection("output");
-            if (outputs == null) {
-                ExceptionHandler.handleError(
-                        "在附属" + addon.getAddonId() + "中加载多方块机器" + s + "的工作配方" + key + "时遇到了问题: " + "没有输出物品");
-                continue;
-            }
-            ItemStack output = CommonUtils.readItem(outputs, true, addon);
+
+            ItemStack output = CommonUtils.readItem(file, recipe.getConfigurationSection("output"), addon);
             if (output == null) {
-                ExceptionHandler.handleError(
-                        "在附属" + addon.getAddonId() + "中加载多方块机器" + s + "的工作配方" + key + "时遇到了问题: " + "输出物品为空或格式错误");
+                Debug.warn(file, recipe, "缺少 '输出物品' (output) 已跳过");
                 continue;
             }
-            map.put(input, output);
+            map.put(inputs, output);
         }
         return map;
     }

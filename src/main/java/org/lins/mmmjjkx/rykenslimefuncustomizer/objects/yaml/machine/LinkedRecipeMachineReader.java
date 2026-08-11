@@ -77,7 +77,7 @@ public class LinkedRecipeMachineReader extends YamlReader<AdvancedCustomMachine>
 
         CustomMenu menu = CommonUtils.getIf(addon.getMenus(), m -> m.getId().equalsIgnoreCase(id));
         if (menu == null) {
-            Debug.warning(file, section, "未找到菜单 " + id + " (menu), 使用默认菜单");
+            Debug.warn(file, section, "未找到菜单 " + id + " (menu), 使用默认菜单");
         }
 
         List<Integer> input = section.getIntegerList("input");

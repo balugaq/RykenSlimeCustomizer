@@ -17,10 +17,7 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine;
 
-import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
-import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import lombok.SneakyThrows;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineFuel;
 import org.bukkit.configuration.ConfigurationSection;
@@ -32,7 +29,6 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -89,32 +85,29 @@ public class GeneratorReader extends YamlReader<CustomGenerator> {
             ConfigurationSection section1 = section.getConfigurationSection(key);
             if (section1 == null) continue;
             ConfigurationSection item = section1.getConfigurationSection("item");
-            ItemStack stack = CommonUtils.readItem(item, true, addon);
+            ItemStack stack = CommonUtils.readItem(file, item, addon);
             if (stack == null) {
-                ExceptionHandler.handleError(
-                        "在附属" + addon.getAddonId() + "中加载发电机" + s + "的燃料" + key + "时遇到了问题: " + "输入物品为空或格式错误，已跳过加载");
+                Debug.error(file, section1, "缺少 '输入物品' (input)");
                 continue;
             }
             int seconds = section1.getInt("seconds");
 
-            if (seconds < 1) {
-                ExceptionHandler.handleError(
-                        "在附属" + addon.getAddonId() + "中加载发电机" + s + "的燃料" + key + "时遇到了问题: " + "秒数不能小于1，已跳过加载");
+            if (seconds < 0) {
+                Debug.warn(file, section1, "缺少或配置错误 '配方耗时' (seconds) 已跳过");
                 continue;
             }
 
-            ItemStack output = null;
             if (section1.contains("output")) {
                 ConfigurationSection outputSet = section1.getConfigurationSection("output");
-                output = CommonUtils.readItem(outputSet, true, addon);
+                ItemStack output = CommonUtils.readItem(file, outputSet, addon);
                 if (output == null) {
-                    ExceptionHandler.handleError(
-                            "在附属" + addon.getAddonId() + "中加载发电机" + s + "的燃料" + key + "时遇到了问题: " + "输出物品为空或格式错误，已转为空");
+                    Debug.error(file, section1, "缺少 '输出物品' (output)");
+                    continue;
+                } else {
+                    MachineFuel fuel = new MachineFuel(seconds, stack, output);
+                    fuels.add(fuel);
                 }
             }
-
-            MachineFuel fuel = new MachineFuel(seconds, stack, output);
-            fuels.add(fuel);
         }
         return fuels;
     }

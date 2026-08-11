@@ -1,10 +1,14 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.blocks;
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.LinkedOutput;
@@ -17,10 +21,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @NullMarked
 public class LinkedRecipeMachineTickerCreator extends RecipeMachineTickerCreator {
@@ -41,23 +43,23 @@ public class LinkedRecipeMachineTickerCreator extends RecipeMachineTickerCreator
             if (recipe == null) continue;
             int seconds = recipe.getInt("seconds");
             if (seconds < 0) {
-                Debug.warning(file, recipe, "缺少或配置错误 '时间间隔' (seconds)");
+                Debug.warn(file, recipe, "缺少或配置错误 '时间间隔' (seconds)");
                 continue;
             }
             ConfigurationSection inputs = recipe.getConfigurationSection("input");
             if (inputs == null) {
-                Debug.warning(file, recipe, "缺少 '输入物品' (input)");
+                Debug.warn(file, recipe, "缺少 '输入物品' (input)");
                 continue;
             }
 
             ConfigurationSection outputs = recipe.getConfigurationSection("output");
             if (outputs == null) {
-                Debug.warning(file, recipe, "缺少 '输出物品' (output)");
+                Debug.warn(file, recipe, "缺少 '输出物品' (output)");
                 continue;
             }
 
             List<ItemStack> freeOutput = new ArrayList<>();
-            List<Integer> freeChances = new ArrayList<>();
+            IntList freeChances = new IntArrayList();
 
             Map<Integer, ItemStack> linkedOutput = new HashMap<>();
             Map<Integer, Integer> linkedChances = new HashMap<>();
@@ -83,10 +85,9 @@ public class LinkedRecipeMachineTickerCreator extends RecipeMachineTickerCreator
             boolean chooseOne = recipe.getBoolean("chooseOne", false);
             boolean forDisplay = recipe.getBoolean("forDisplay", false);
             boolean hide = recipe.getBoolean("hide", false);
-            boolean noConsume = recipe.getBoolean("noConsume", false);
 
-            Set<Integer> noConsumes = new HashSet<>();
-            Map<Integer, ItemStack> finalInput = new HashMap<>();
+            IntSet noConsume = new IntOpenHashSet();
+            Map<Integer, ItemStack> stackMap = new HashMap<>();
             for (int i = 0; i < inputSize; i++) {
                 ConfigurationSection section1 = inputs.getConfigurationSection(String.valueOf(i + 1));
                 if (section1 == null) {
@@ -100,43 +101,43 @@ public class LinkedRecipeMachineTickerCreator extends RecipeMachineTickerCreator
 
                 int slot = section1.getInt("slot", -1);
                 if (slot == -1) {
-                    Debug.warning(file, recipe, "缺少或配置错误 '槽位' (slot)");
+                    Debug.warn(file, recipe, "缺少或配置错误 '槽位' (slot)");
                     continue;
                 }
 
                 if (slot < 0 || slot > 53) {
-                    Debug.warning(file, recipe, "'槽位' 非法 (slot)");
+                    Debug.warn(file, recipe, "'槽位' 非法 (slot)");
                     continue;
                 }
 
-                finalInput.put(slot, itemStack);
+                stackMap.put(slot, itemStack);
 
-                boolean noConsume1 = section1.getBoolean("noConsume", false);
-                if (noConsume1) {
-                    noConsumes.add(slot);
+                if (section1.getBoolean("noConsume", false)) {
+                    noConsume.add(slot);
                 }
-            }
-
-            int[] array = new int[freeChances.size()];
-            for (int i = 0; i < array.length; i++) {
-                array[i] = i;
             }
 
             list.add(new CustomLinkedMachineRecipe(
                 seconds,
-                finalInput,
-                new LinkedOutput(freeOutput.toArray(new ItemStack[0]), InvIndex.mergeItems(freeOutput), linkedOutput, array, linkedChances),
+                stackMap,
+                new LinkedOutput(
+                    freeOutput.toArray(new ItemStack[0]),
+                    InvIndex.mergeItems(freeOutput),
+                    linkedOutput,
+                    freeChances,
+                    linkedChances
+                ),
+                noConsume,
                 chooseOne,
                 forDisplay,
                 hide,
-                noConsumes,
                 saveAmount));
         }
         return list;
     }
 
     @Override
-    public @Nullable MachineTicker create(File file, AdvancedCustomMachine sf, ConfigurationSection section, @org.jspecify.annotations.Nullable CustomMenu menu, ProjectAddon addon) {
+    public @Nullable MachineTicker create(File file, AdvancedCustomMachine sf, ConfigurationSection section, @Nullable CustomMenu menu, ProjectAddon addon) {
         var recipes = read(file, sf.getInputSlots().length, sf.getOutputSlots().length, section, addon);
         if (recipes == null) return null;
         return new LinkedRecipeMachineTicker() {

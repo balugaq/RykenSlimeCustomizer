@@ -20,8 +20,8 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 @Getter
 public class VanillaMultiBlockPart implements MultiBlockPart {
@@ -34,13 +34,13 @@ public class VanillaMultiBlockPart implements MultiBlockPart {
     }
 
     @Override
-    public boolean isOfPart(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
+    public boolean isOfPart(@NonNull SuperMultiBlock superMultiBlockInstance, @NonNull Location partLocation) {
         return partLocation.getBlock().getBlockData().matches(blockData);
     }
 
     @Override
     @Nullable
-    public DisplayDescriptor getDisplayDescriptor(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
+    public DisplayDescriptor getDisplayDescriptor(@NonNull SuperMultiBlock superMultiBlockInstance, @NonNull Location partLocation) {
         return descriptor;
     }
 }

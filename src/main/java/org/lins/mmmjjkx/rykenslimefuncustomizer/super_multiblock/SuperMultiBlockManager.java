@@ -36,14 +36,15 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Consumer;
 import org.bukkit.util.Transformation;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSuperMultiBlockMachine;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -60,7 +61,7 @@ public class SuperMultiBlockManager {
         return RykenSlimefunCustomizer.INSTANCE.getSuperMultiBlockManager();
     }
 
-    public static final NamespacedKey RSC_KEY = new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "rsc_projectile");
+    public static final NamespacedKey RSC_KEY = Keys.newKey("rsc_projectile");
 
     @Getter
     private static final Map<Location, SuperMultiBlock> coreStorage = new ConcurrentHashMap<>();
@@ -95,7 +96,7 @@ public class SuperMultiBlockManager {
             MENU_FIELD = SlimefunBlockData.class.getDeclaredField("menu");
             MENU_FIELD.setAccessible(true);
         } catch (NoSuchFieldException e) {
-            ExceptionHandler.handleError("Failed to get menu field from SlimefunBlockData.class.", e);
+            Debug.error("Failed to get menu field from SlimefunBlockData.class.", e);
         }
 
         Bukkit.getScheduler().runTaskTimerAsynchronously(RykenSlimefunCustomizer.INSTANCE, () -> {
@@ -114,7 +115,7 @@ public class SuperMultiBlockManager {
 
     public SuperMultiBlockManager() {}
 
-    public boolean startSuperMultiBlock(@NotNull SuperMultiBlock superMultiBlock) {
+    public boolean startSuperMultiBlock(@NonNull SuperMultiBlock superMultiBlock) {
         Set<Location> locations = superMultiBlock.getLocations();
         if (locations.stream().anyMatch(monitoringLocations::containsKey)) {
             // don't block the incoming SuperMultiBlock
@@ -193,11 +194,11 @@ public class SuperMultiBlockManager {
         superMultiBlock.onDestroy();
     }
 
-    public void markDirty(@NotNull Location location, boolean autoSwitchLayer) {
+    public void markDirty(@NonNull Location location, boolean autoSwitchLayer) {
         dirtyLocations.add(entry(location, autoSwitchLayer));
     }
 
-    private void processDirty(@NotNull Location location, boolean autoSwitchLayer) {
+    private void processDirty(@NonNull Location location, boolean autoSwitchLayer) {
         SuperMultiBlock superMultiBlock = monitoringLocations.get(location);
         if (superMultiBlock == null) {
             return;
@@ -248,7 +249,7 @@ public class SuperMultiBlockManager {
         }
     }
 
-    public static void findNearbyPlayers(@NotNull Location location, double radius, Consumer<Player> consumer) {
+    public static void findNearbyPlayers(@NonNull Location location, double radius, Consumer<Player> consumer) {
         Bukkit.getScheduler().runTask(RykenSlimefunCustomizer.INSTANCE, () -> {
             location.getWorld().getNearbyPlayers(location, radius).forEach(consumer::accept);
         });
@@ -272,11 +273,11 @@ public class SuperMultiBlockManager {
     }
 
     @Nullable
-    public SuperMultiBlock getSuperMultiBlock(@NotNull Location location) {
+    public SuperMultiBlock getSuperMultiBlock(@NonNull Location location) {
         return monitoringLocations.get(location);
     }
 
-    public void addProjectiles(@NotNull SuperMultiBlock instance) {
+    public void addProjectiles(@NonNull SuperMultiBlock instance) {
         Bukkit.getScheduler().runTask(RykenSlimefunCustomizer.INSTANCE, () -> {
             Set<Location> locations = instance.getLocations();
             for (Location location : locations) {
@@ -290,7 +291,7 @@ public class SuperMultiBlockManager {
                 if (descriptor != null) {
                     addProjectile(location, descriptor, !instance.getMachine().isAllowSwitchDisplayLayer(), glow);
                 } else {
-                    ExceptionHandler.handleError("无法展示超大多方块投影: 机器:" + instance.getMachine().getId() + "，位置:" + location);
+                    Debug.error("无法展示超大多方块投影: 机器:" + instance.getMachine().getId() + "，位置:" + location);
                 }
             }
 
@@ -299,7 +300,7 @@ public class SuperMultiBlockManager {
         });
     }
 
-    public void addProjectile(@NotNull Location location, @NotNull DisplayDescriptor descriptor, boolean visible, boolean glow) {
+    public void addProjectile(@NonNull Location location, @NonNull DisplayDescriptor descriptor, boolean visible, boolean glow) {
         for (Entity entity : location.getWorld().getNearbyEntities(location, 0.1, 0.1, 0.1)) {
             if (entity.getType() == EntityType.BLOCK_DISPLAY || entity.getType() == EntityType.ITEM_DISPLAY) {
                 if (entity.getPersistentDataContainer().has(RSC_KEY, PersistentDataType.BOOLEAN)) {
@@ -335,7 +336,7 @@ public class SuperMultiBlockManager {
         return new Transformation(new Vector3f(offset, offset, offset), new AxisAngle4f(0, 0, 0, 0), new Vector3f(scale, scale, scale), new AxisAngle4f(0, 0, 0, 0));
     }
 
-    public void removeProjectile(@NotNull Location location) {
+    public void removeProjectile(@NonNull Location location) {
         Display display = projectiles.remove(location);
         if (display != null && !display.isDead() && display.isValid()) {
             display.remove();
@@ -358,11 +359,11 @@ public class SuperMultiBlockManager {
         }
     }
 
-    public Set<Display> selectEntities(@NotNull SuperMultiBlock instance) {
+    public Set<Display> selectEntities(@NonNull SuperMultiBlock instance) {
         return instance.getLocations().stream().map(projectiles::get).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
-    public Set<Display> selectEntities(@NotNull SuperMultiBlock instance, int layer) {
+    public Set<Display> selectEntities(@NonNull SuperMultiBlock instance, int layer) {
         return instance.getLocations().stream().filter(l -> l.getBlockY() == layer).map(projectiles::get).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
@@ -374,7 +375,7 @@ public class SuperMultiBlockManager {
         entities.forEach(entity -> entity.setTransformation(INVISIBLE_TRANSFORMATION));
     }
 
-    public void updateLayer(@NotNull SuperMultiBlock instance, int oldLayer, int newLayer) {
+    public void updateLayer(@NonNull SuperMultiBlock instance, int oldLayer, int newLayer) {
         Bukkit.getScheduler().runTask(RykenSlimefunCustomizer.INSTANCE, () -> {
             showEntities(selectEntities(instance, newLayer));
             hideEntities(selectEntities(instance, oldLayer));
@@ -411,7 +412,7 @@ public class SuperMultiBlockManager {
                     }
                 });
             } catch (IllegalAccessException e2) {
-                ExceptionHandler.handleError("Failed to set menu field.", e2);
+                Debug.error("Failed to set menu field.", e2);
             }
         }
     }

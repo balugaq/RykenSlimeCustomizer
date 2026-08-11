@@ -17,28 +17,19 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine;
 
-import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.MachineTicker;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.RecipeReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.AdvancedCustomMachine;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.CustomMachineRecipe;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.MachineTemplate;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 public class TemplateMachineReader extends YamlReader<AdvancedCustomMachine> {
@@ -61,7 +52,7 @@ public class TemplateMachineReader extends YamlReader<AdvancedCustomMachine> {
 
         CustomMenu menu = CommonUtils.getIf(addon.getMenus(), m -> m.getId().equalsIgnoreCase(id));
         if (menu == null) {
-            Debug.warning(file, section, "未找到菜单 " + id + " (menu), 使用默认菜单");
+            Debug.warn(file, section, "未找到菜单 " + id + " (menu), 使用默认菜单");
         }
 
         List<Integer> input = section.getIntegerList("input");
@@ -112,86 +103,6 @@ public class TemplateMachineReader extends YamlReader<AdvancedCustomMachine> {
         if (ticker == null) return null;
         machine.setTicker(ticker);
         return machine;
-    }
-
-    private List<MachineTemplate> readTemplates(
-            String s, int inputSize, int outputSize, ConfigurationSection section, ProjectAddon addon) {
-        List<MachineTemplate> list = new ArrayList<>();
-        if (section == null) {
-            return list;
-        }
-
-        for (String key : section.getKeys(false)) {
-            SlimefunItemStack item = getPreloadItem(key);
-            if (item == null) {
-                SlimefunItem item2 = SlimefunItem.getById(key);
-                if (item2 != null) {
-                    item = ((SlimefunItemStack) item2.getItem().clone());
-                }
-            }
-
-            if (item == null) {
-                ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载模板机器" + s + "时遇到了问题: 无法找到作为模板的物品" + key);
-                continue;
-            }
-
-            List<CustomMachineRecipe> recipes =
-                    readRecipes(s, inputSize, outputSize, section.getConfigurationSection(key), addon);
-            list.add(new MachineTemplate(item, recipes));
-        }
-
-        return list;
-    }
-
-    private List<CustomMachineRecipe> readRecipes(
-            String s, int inputSize, int outputSize, ConfigurationSection section, ProjectAddon addon) {
-        List<CustomMachineRecipe> list = new ArrayList<>();
-        if (section == null) {
-            return list;
-        }
-
-        for (String key : section.getKeys(false)) {
-            ConfigurationSection recipes = section.getConfigurationSection(key);
-            if (recipes == null) continue;
-            int seconds = recipes.getInt("seconds");
-            if (seconds < 0) {
-                ExceptionHandler.handleError(
-                        "在附属" + addon.getAddonId() + "中加载模板机器" + s + "的工作配方" + key + "时遇到了问题: " + "间隔时间未设置或不能小于0");
-                continue;
-            }
-
-            ConfigurationSection inputs = recipes.getConfigurationSection("input");
-            ItemStack[] input = CommonUtils.readRecipe(inputs, addon, inputSize);
-            ConfigurationSection outputs = recipes.getConfigurationSection("output");
-            if (outputs == null) {
-                ExceptionHandler.handleError(
-                        "在附属" + addon.getAddonId() + "中加载模板机器" + s + "的工作配方" + key + "时遇到了问题: " + "没有输出物品");
-                continue;
-            }
-
-            IntList chances = new IntArrayList();
-
-            ItemStack[] output = new ItemStack[outputSize];
-            for (int i = 0; i < outputSize; i++) {
-                ConfigurationSection section1 = outputs.getConfigurationSection(String.valueOf(i + 1));
-                var item = CommonUtils.readItem(section1, true, addon);
-                if (item != null) {
-                    int chance = section1.getInt("chance", 100);
-
-                    if (chance < 1) {
-                        ExceptionHandler.handleError("在附属" + addon.getAddonId() + "中加载模板机器" + s + "的工作配方" + key
-                                + "时遇到了问题: " + "概率不应该小于1，已转为1");
-                        chance = 1;
-                    }
-
-                    output[i] = item;
-                    chances.add(chance);
-                }
-            }
-
-            RecipeReader.addToList(list, recipes, seconds, input, chances, output);
-        }
-        return list;
     }
 
     @Override

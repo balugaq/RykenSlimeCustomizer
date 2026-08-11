@@ -28,73 +28,38 @@ import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class AsyncChanceRecipeTask implements Runnable {
-    private static final int UPDATE_INTERVAL = 15;
+    private static final long UPDATE_INTERVAL = 14L;
     private final Map<Integer, LoopIterator<ItemStack>> iterators = new HashMap<>();
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private Inventory inventory;
     private int id;
-
-    public AsyncChanceRecipeTask() {}
 
     public void start(@Nonnull Inventory inv) {
         Validate.notNull(inv, "Inventory must not be null");
         this.inventory = inv;
         this.id = Bukkit.getScheduler()
-                .runTaskTimerAsynchronously(RykenSlimefunCustomizer.INSTANCE, this, 0L, 14L)
-                .getTaskId();
+            .runTaskTimerAsynchronously(RykenSlimefunCustomizer.INSTANCE, this, 0L, UPDATE_INTERVAL)
+            .getTaskId();
     }
 
-    public void add(int slot, @Nonnull List<ItemStack> item) {
+    public synchronized void add(int slot, @Nonnull List<ItemStack> item) {
         Validate.notNull(item, "Cannot add a null list of ItemStacks");
-        this.lock.writeLock().lock();
-
-        try {
-            this.iterators.put(slot, new LoopIterator<>(item));
-        } finally {
-            this.lock.writeLock().unlock();
-        }
+        this.iterators.put(slot, new LoopIterator<>(item));
     }
 
-    public boolean isEmpty() {
-        this.lock.readLock().lock();
-
-        boolean var1;
-        try {
-            var1 = this.iterators.isEmpty();
-        } finally {
-            this.lock.readLock().unlock();
-        }
-
-        return var1;
+    public synchronized boolean isEmpty() {
+        return this.iterators.isEmpty();
     }
 
-    public void clear() {
-        this.lock.writeLock().lock();
-
-        try {
-            this.iterators.clear();
-        } finally {
-            this.lock.writeLock().unlock();
-        }
-    }
-
-    public void run() {
+    public synchronized void run() {
         if (this.inventory.getViewers().isEmpty()) {
             Bukkit.getScheduler().cancelTask(this.id);
-        } else {
-            this.lock.readLock().lock();
+            return;
+        }
 
-            try {
-                for (Map.Entry<Integer, LoopIterator<ItemStack>> entry : this.iterators.entrySet()) {
-                    this.inventory.setItem(entry.getKey(), entry.getValue().next());
-                }
-            } finally {
-                this.lock.readLock().unlock();
-            }
+        for (Map.Entry<Integer, LoopIterator<ItemStack>> entry : this.iterators.entrySet()) {
+            this.inventory.setItem(entry.getKey(), entry.getValue().next());
         }
     }
 }

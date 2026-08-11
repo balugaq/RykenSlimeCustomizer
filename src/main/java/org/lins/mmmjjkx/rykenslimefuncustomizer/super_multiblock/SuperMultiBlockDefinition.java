@@ -20,8 +20,8 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.HorizonDirection;
 
 import java.util.EnumMap;
@@ -36,12 +36,12 @@ public class SuperMultiBlockDefinition extends SuperMultiBlockManager {
     private final Map<Vector3i, MultiBlockPart> map;
     private final EnumMap<HorizonDirection, Map<Vector3i, MultiBlockPart>> rotatedMap = new EnumMap<>(HorizonDirection.class);
 
-    public SuperMultiBlockDefinition(@NotNull Map<String, MultiBlockPart> mapping, @NotNull Map<Vector3i, MultiBlockPart> map) {
+    public SuperMultiBlockDefinition(@NonNull Map<String, MultiBlockPart> mapping, @NonNull Map<Vector3i, MultiBlockPart> map) {
         this.mapping = Map.copyOf(mapping);
         this.map = Map.copyOf(map);
     }
 
-    public int count(@NotNull String mappingName) {
+    public int count(@NonNull String mappingName) {
         var part = getPart(mappingName);
         if (part == null) return 0;
         return Math.toIntExact(map.values().stream().filter(p -> p == part).count());
@@ -52,7 +52,7 @@ public class SuperMultiBlockDefinition extends SuperMultiBlockManager {
     }
 
     @Nullable
-    public Vector findFirstValue(@NotNull HorizonDirection direction, @NotNull String mappingName) {
+    public Vector findFirstValue(@NonNull HorizonDirection direction, @NonNull String mappingName) {
         var part = getPart(mappingName);
         if (part == null) return null;
         for (var e : getMap(direction).entrySet()) {
@@ -63,13 +63,13 @@ public class SuperMultiBlockDefinition extends SuperMultiBlockManager {
         return null;
     }
 
-    @NotNull
+    @NonNull
     public Map<Vector3i, MultiBlockPart> getOriginMap() {
         return map;
     }
 
-    @NotNull
-    public Map<Vector3i, MultiBlockPart> getMap(@NotNull HorizonDirection direction) {
+    @NonNull
+    public Map<Vector3i, MultiBlockPart> getMap(@NonNull HorizonDirection direction) {
         if (rotatedMap.containsKey(direction)) return rotatedMap.get(direction);
 
         var rotated = switch (direction) {
@@ -94,8 +94,8 @@ public class SuperMultiBlockDefinition extends SuperMultiBlockManager {
         return rotated;
     }
 
-    @NotNull
-    public Set<Location> getLocations(@NotNull Location coreLocation, HorizonDirection direction) {
+    @NonNull
+    public Set<Location> getLocations(@NonNull Location coreLocation, HorizonDirection direction) {
         Set<Location> locations = new HashSet<>();
         for (Vector3i offset : getMap(direction).keySet()) {
             locations.add(offset.addTo(coreLocation));

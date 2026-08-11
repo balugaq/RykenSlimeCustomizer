@@ -1,7 +1,6 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.blocks;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import lombok.Data;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
@@ -30,9 +29,8 @@ public class SlotWrapper {
         return new SlotWrapper(stack, slot);
     }
 
-    public int getConsumableAmount(IntSet noConsumes) {
-        if (noConsumes.isEmpty()) return getConsumableAmount();
-        return getConsumableAmount() - noConsumes.intStream().map(amounts::get).sum();
+    public int getConsumableAmount(NoConsume noConsume) {
+        return getConsumableAmount() - noConsume.getLinkedNoConsume().intStream().map(amounts::get).sum() - noConsume.getNoConsumeAmountExcludeLinked();
     }
 
     public int getConsumableAmount() {

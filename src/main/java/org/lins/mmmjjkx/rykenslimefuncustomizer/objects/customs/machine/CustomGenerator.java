@@ -19,9 +19,6 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine;
 
 import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
-import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
-import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.attributes.EnergyNetProvider;
 import io.github.thebusybiscuit.slimefun4.core.attributes.MachineProcessHolder;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockBreakHandler;
@@ -40,8 +37,8 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
@@ -88,7 +85,7 @@ public class CustomGenerator extends AbstractEnergyProvider
         this.registerDefaultFuelTypes();
 
         if (menu != null) {
-            this.processor.setProgressBar(menu.getProgressBarItem());
+            this.processor.setProgressBar(menu.getProgressBar());
 
             createPreset(this, menu::apply);
         }
@@ -202,7 +199,7 @@ public class CustomGenerator extends AbstractEnergyProvider
     @Nonnull
     protected BlockBreakHandler onBlockBreak() {
         return new SimpleBlockBreakHandler() {
-            public void onBlockBreak(@NotNull Block b) {
+            public void onBlockBreak(@NonNull Block b) {
                 BlockMenu inv = StorageCacheUtils.getMenu(b.getLocation());
                 if (inv != null) {
                     inv.dropItems(b.getLocation(), CustomGenerator.this.getInputSlots());
@@ -214,12 +211,12 @@ public class CustomGenerator extends AbstractEnergyProvider
         };
     }
 
-    @NotNull @Override
+    @NonNull @Override
     public String getInventoryTitle() {
         return "";
     }
 
-    @NotNull @Override
+    @NonNull @Override
     // outside init
     public ItemStack getProgressBar() {
         return new ItemStack(Material.FLINT_AND_STEEL);
@@ -231,7 +228,7 @@ public class CustomGenerator extends AbstractEnergyProvider
     }
 
     @Override
-    public @NotNull MachineProcessor<FuelOperation> getMachineProcessor() {
+    public @NonNull MachineProcessor<FuelOperation> getMachineProcessor() {
         return processor;
     }
 

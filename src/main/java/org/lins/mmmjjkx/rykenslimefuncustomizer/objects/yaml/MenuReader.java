@@ -27,14 +27,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
 
 import java.io.File;
 import java.util.HashMap;
@@ -44,7 +44,7 @@ import java.util.stream.IntStream;
 
 public class MenuReader extends YamlReader<CustomMenu> {
     public static final int NOT_SET = -1;
-    private static final NamespacedKey PROGRESS_KEY = new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "progress");
+    private static final NamespacedKey PROGRESS_KEY = Keys.newKey("progress");
 
     @Override
     public String getFileName() {
@@ -61,8 +61,7 @@ public class MenuReader extends YamlReader<CustomMenu> {
         ConfigurationSection section = configuration.getConfigurationSection(s);
         if (section == null) return null;
 
-        ExceptionHandler.HandleResult conflict = ExceptionHandler.handleMenuConflict(s, addon);
-        if (conflict == ExceptionHandler.HandleResult.FAILED) return null;
+        if (!CommonUtils.passMenuIdConflictCheck(s, addon)) return null;
 
         String title = section.getString("title", "");
         boolean playerInvClickable = section.getBoolean("playerInvClickable", true);
@@ -73,7 +72,7 @@ public class MenuReader extends YamlReader<CustomMenu> {
             return null;
         }
 
-        if (size < 9 || size > 54) {
+        if (size != NOT_SET && size < 9 || size > 54) {
             Debug.error(file, section, "菜单大小超出范围 (size): " + size, 9, 54);
             return null;
         }
@@ -96,46 +95,12 @@ public class MenuReader extends YamlReader<CustomMenu> {
             return new CustomMenu(s, title, menuPreset, eval);
         }
 
-        int progress = 22;
-        ItemStack progressItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         if (section.contains("matrix")) {
-
-            List<String> matrix = section.getStringList("matrix");
-            Map<Integer, ItemStack> slotMap = new HashMap<>();
-            Map<Character, ItemStack> mapping = new HashMap<>();
-            int slot = 0;
-            for (String line : matrix) {
-                for (char c : line.toCharArray()) {
-                    if (!mapping.containsKey(c)) {
-                        var k = section.getConfigurationSection("mapping." + c);
-                        if (k == null) {
-                            slot += 1;
-                            continue;
-                        }
-                        mapping.put(c, CommonUtils.readItem(k, true, addon));
-                        if (k.getBoolean("progressbar", false)) {
-                            progress = slot;
-                            if (k.contains("progressBarItem")) {
-                                progressItem =
-                                        CommonUtils.readItem(k.getConfigurationSection("progressBarItem"), true, addon);
-                            } else {
-                                progressItem = mapping.get(c);
-                            }
-
-                            ItemMeta meta = progressItem.getItemMeta();
-                            if (meta != null) {
-                                PersistentDataContainer pdc = meta.getPersistentDataContainer();
-                                pdc.set(PROGRESS_KEY, PersistentDataType.INTEGER, 0);
-                            }
-                        }
-                    }
-                    slotMap.put(slot, mapping.get(c));
-                    slot += 1;
-                }
-            }
-
-            return new CustomMenu(s, title, slotMap, playerInvClickable, progress, progressItem, eval);
+            return readMatrix(section, s, title, playerInvClickable, eval);
         }
+
+        int progress = 22;
+        ItemStack progressItem = createDefaultProgressItem();
 
         Map<Integer, ItemStack> slotMap = new HashMap<>();
         ConfigurationSection slots = section.getConfigurationSection("slots");
@@ -148,20 +113,19 @@ public class MenuReader extends YamlReader<CustomMenu> {
             try {
                 int realSlot = Integer.parseInt(slot);
                 if (realSlot > 53 || realSlot < 0) {
-                    Debug.warning(file, section, "槽位超出范围: " + slot, 0, 53);
+                    Debug.warn(file, section, "槽位超出范围: " + slot + " 已跳过", 0, 53);
                     continue;
                 }
                 ConfigurationSection item = slots.getConfigurationSection(slot);
-                ItemStack itemStack = CommonUtils.readItem(item, true, addon);
+                ItemStack itemStack = CommonUtils.readItem(file, item, addon);
                 if (itemStack == null) {
-                    Debug.warning(file, section, "槽位对应的物品无效 (slots): " + slot);
+                    Debug.warn(file, section, "槽位对应的物品无效 (slots): " + slot + " 已跳过");
                     continue;
                 }
                 if (item.getBoolean("progressbar", false)) {
                     progress = realSlot;
                     if (item.contains("progressBarItem")) {
-                        progressItem =
-                                CommonUtils.readItem(item.getConfigurationSection("progressBarItem"), true, addon);
+                        progressItem = CommonUtils.readItem(file, item.getConfigurationSection("progressBarItem"), addon);
                     } else {
                         progressItem = itemStack;
                     }
@@ -180,16 +144,16 @@ public class MenuReader extends YamlReader<CustomMenu> {
                     continue;
                 }
                 ConfigurationSection item = slots.getConfigurationSection(slot);
-                ItemStack stack = CommonUtils.readItem(item, true, addon);
+                ItemStack stack = CommonUtils.readItem(file, item, addon);
                 if (stack == null) {
-                    Debug.warning(file, section, "槽位对应的物品无效 (slots): " + slot);
+                    Debug.warn(file, section, "槽位对应的物品无效 (slots): " + slot);
                     continue;
                 }
                 try {
-                    IntStream intStream = IntStream.rangeClosed(Integer.parseInt(range[0]), Integer.parseInt(range[1]));
-                    intStream.forEach(i -> {
+                    IntStream.rangeClosed(Integer.parseInt(range[0]), Integer.parseInt(range[1]))
+                        .forEach(i -> {
                         if (i < 0 || i > 53) {
-                            Debug.warning(file, section, "槽位超出范围: " + slot, 0, 53);
+                            Debug.warn(file, section, "槽位超出范围: " + slot, 0, 53);
                             return;
                         }
                         slotMap.put(i, stack);
@@ -200,8 +164,53 @@ public class MenuReader extends YamlReader<CustomMenu> {
                 }
             }
         }
+        if (progressItem == null) progressItem = createDefaultProgressItem();
 
         return new CustomMenu(s, title, slotMap, playerInvClickable, progress, progressItem, eval).setSize(size);
+    }
+
+    private static ItemStack createDefaultProgressItem() {
+        return new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+    }
+
+    private CustomMenu readMatrix(ConfigurationSection section, String s, String title, boolean playerInvClickable, ScriptEval eval) {
+        int progress = 22;
+        ItemStack progressItem = createDefaultProgressItem();
+        List<String> matrix = section.getStringList("matrix");
+        Map<Integer, ItemStack> slotMap = new HashMap<>();
+        Map<Character, ItemStack> mapping = new HashMap<>();
+        int slot = 0;
+        for (String line : matrix) {
+            for (char c : line.toCharArray()) {
+                if (!mapping.containsKey(c)) {
+                    var k = section.getConfigurationSection("mapping." + c);
+                    if (k == null) {
+                        slot += 1;
+                        continue;
+                    }
+                    mapping.put(c, CommonUtils.readItem(file, k, addon));
+                    if (k.getBoolean("progressbar", false)) {
+                        progress = slot;
+                        if (k.contains("progressBarItem")) {
+                            progressItem = CommonUtils.readItem(file, k.getConfigurationSection("progressBarItem"), addon);
+                        } else {
+                            progressItem = mapping.get(c);
+                        }
+
+                        ItemMeta meta = progressItem.getItemMeta();
+                        if (meta != null) {
+                            PersistentDataContainer pdc = meta.getPersistentDataContainer();
+                            pdc.set(PROGRESS_KEY, PersistentDataType.INTEGER, 0);
+                        }
+                    }
+                }
+                slotMap.put(slot, mapping.get(c));
+                slot += 1;
+            }
+        }
+        if (progressItem == null) progressItem = createDefaultProgressItem();
+
+        return new CustomMenu(s, title, slotMap, playerInvClickable, progress, progressItem, eval);
     }
 
     // 菜单不需要预加载物品

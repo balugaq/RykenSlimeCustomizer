@@ -18,7 +18,7 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs;
 
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 
 import java.io.File;

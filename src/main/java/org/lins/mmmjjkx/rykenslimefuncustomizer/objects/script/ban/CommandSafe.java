@@ -27,35 +27,34 @@ public class CommandSafe {
             "deop",
             "whitelist",
             "ban-ip",
-            "banlist",
-            "pardon",
             "kick",
             "ban",
-            "pardon-ip",
+            "ip",
             "save-all",
             "unban",
             "luckperms",
             "lp",
-            "cmi:ban",
-            "cmi:pardon",
-            "cmi:banlist",
-            "cmi:unban",
-            "cmi:jail",
-            "cmi:unjail",
-            "cmi:mute",
-            "cmi:unmute",
-            "cmi:sudo",
-            "essentials:ban",
-            "essentials:pardon",
-            "essentials:banlist",
-            "essentials:unban",
-            "essentials:mute",
-            "essentials:unmute",
-            "essentials:jail",
-            "essentials:unjail",
-            "essentials:sudo");
+            "ban",
+            "pardon",
+            "banlist",
+            "unban",
+            "jail",
+            "unjail",
+            "mute",
+            "unmute",
+            "sudo",
+            "*",
+            "all",
+            "reset",
+            "cleardata"
+    );
 
     public static boolean isBadCommand(String command) {
-        return badCommands.contains(command.toLowerCase());
+        for (String bad : badCommands) {
+            if (command.contains(bad)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -26,10 +26,11 @@ import io.github.thebusybiscuit.slimefun4.implementation.items.armor.SlimefunArm
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
 
 public class CustomArmorPiece extends SlimefunArmorPiece implements ProtectiveArmor {
     @Override
@@ -67,7 +68,7 @@ public class CustomArmorPiece extends SlimefunArmorPiece implements ProtectiveAr
     }
 
     @Override
-    public @NotNull ProtectionType[] getProtectionTypes() {
+    public @NonNull ProtectionType[] getProtectionTypes() {
         return protectionTypes;
     }
 
@@ -76,8 +77,9 @@ public class CustomArmorPiece extends SlimefunArmorPiece implements ProtectiveAr
         return fullSet;
     }
 
-    @Nullable @Override
+    @Override
+    @Nullable
     public NamespacedKey getArmorSetId() {
-        return new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, projectId + "_" + armorKey);
+        return Keys.newKey(projectId + "_" + armorKey);
     }
 }

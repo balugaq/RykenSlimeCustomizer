@@ -1,19 +1,20 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.blocks;
 
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.core.attributes.EnergyNetComponent;
 import io.github.thebusybiscuit.slimefun4.core.networks.energy.EnergyNetComponentType;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
-import org.jetbrains.annotations.Nullable;
+import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.AdvancedCustomMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 import java.io.File;
 
@@ -22,6 +23,9 @@ public interface MachineTicker extends DataCache, RecipesHolder, CustomMenuHolde
     Access<AbstractRecipe> lastRecipeAccessor = () -> AbstractRecipe.class;
 
     Type getType();
+
+    @Override
+    SlimefunItem getSlimefunItem();
 
     @Override
     default EnergyNetComponentType getEnergyComponentType() {
@@ -35,13 +39,15 @@ public interface MachineTicker extends DataCache, RecipesHolder, CustomMenuHolde
     default void init() {
         var menu = getCustomMenu();
         if (menu == null) {
-            ExceptionHandler.handleWarning("未找到菜单 " + getSlimefunItem().getId() + " 使用默认菜单");
-            this.createPreset(getSlimefunItem(), getSlimefunItem().getItemName(), this::constructMenu);
+            Debug.warn("未找到菜单 " + getSlimefunItem().getId() + " 使用默认菜单");
+            this.createPreset(getSlimefunItem(), getSlimefunItem().getItemName(), preset -> {
+                CustomMenuHolder.constructMenu(preset, getProgressSlot(), getProgressBar());
+            });
             return;
         }
         createPreset(getSlimefunItem(), menu::apply);
-        if (menu.getProgressBarItem() != null) {
-            getMachineProcessor().setProgressBar(menu.getProgressBarItem());
+        if (menu.getProgressBar() != null) {
+            getMachineProcessor().setProgressBar(menu.getProgressBar());
         }
     }
 
@@ -69,11 +75,19 @@ public interface MachineTicker extends DataCache, RecipesHolder, CustomMenuHolde
             var tpc = section.getString("type");
             var typeOptional = CommonUtils.getEnum(Type.class, tpc);
             if (typeOptional.isEmpty()) {
-                Debug.warning(file, section, " 机器类型 (type) 非法: " + tpc + ", 已转换为 RECIPE ");
+                Debug.warn(file, section, " 机器类型 (type) 非法: " + tpc + ", 已转换为 RECIPE");
                 type = Type.RECIPE;
+            } else {
+                type = typeOptional.get();
             }
-        };
+        }
         return type.createTicker(file, sf, section, menu, addon);
+    }
+
+    default void createGUI(Player p, int index) {
+        if (index >= getRecipes().size()) return;
+        AbstractRecipe recipe = getRecipes().get(index);
+        Recipe.openGUI(p, getCustomMenu(), getInputSlots(), getOutputSlots(), recipe, getSlimefunItem());
     }
 
     @NullMarked
@@ -94,10 +108,6 @@ public interface MachineTicker extends DataCache, RecipesHolder, CustomMenuHolde
 
         Type(TickerCreator tickerCreator) {
             this.tickerCreator = tickerCreator;
-        }
-
-        Type(Type type) {
-            this(type.tickerCreator);
         }
     }
 }

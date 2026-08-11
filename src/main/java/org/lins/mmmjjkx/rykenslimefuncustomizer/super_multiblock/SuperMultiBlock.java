@@ -27,8 +27,8 @@ import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSuperMultiBlockMachine;
@@ -75,7 +75,7 @@ public class SuperMultiBlock extends SuperMultiBlockManager implements Asynchron
         return getLayers().length;
     }
 
-    public SuperMultiBlock(@NotNull CustomSuperMultiBlockMachine machine, @NotNull Location coreLocation, @NotNull HorizonDirection direction) {
+    public SuperMultiBlock(@NonNull CustomSuperMultiBlockMachine machine, @NonNull Location coreLocation, @NonNull HorizonDirection direction) {
         this.machine = machine;
         this.coreLocation = coreLocation;
         this.direction = direction;
@@ -92,7 +92,7 @@ public class SuperMultiBlock extends SuperMultiBlockManager implements Asynchron
         this.layers = layers.intStream().sorted().toArray();
     }
 
-    @NotNull
+    @NonNull
     public SuperMultiBlockDefinition getDefinition() {
         return machine.getDefinition();
     }
@@ -123,12 +123,12 @@ public class SuperMultiBlock extends SuperMultiBlockManager implements Asynchron
     }
 
     @Nullable
-    public MultiBlockPart getPart(@NotNull Location location) {
+    public MultiBlockPart getPart(@NonNull Location location) {
         Vector3i offset = new Vector3i(location.toVector().subtract(coreLocation.toVector()));
         return getDefinition().getMap(direction).get(offset);
     }
 
-    @NotNull
+    @NonNull
     public Set<Location> getLocations() {
         return getDefinition().getLocations(coreLocation, direction);
     }

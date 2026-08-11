@@ -7,6 +7,7 @@ import lombok.Getter;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.AContainer;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -153,5 +154,9 @@ public class AdvancedCustomMachine extends AContainer {
 
     public boolean tick() {
         return true;
+    }
+
+    public void openGUI(Player p, int index) {
+        ticker.createGUI(p, index);
     }
 }

@@ -29,21 +29,21 @@ import io.github.thebusybiscuit.slimefun4.api.player.PlayerProfile;
 import io.github.thebusybiscuit.slimefun4.core.guide.SlimefunGuideImplementation;
 import io.github.thebusybiscuit.slimefun4.core.guide.SlimefunGuideMode;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
-import net.guizhanss.guizhanlib.minecraft.helper.inventory.ItemStackHelper;
+import net.guizhanss.minecraft.guizhanlib.gugu.minecraft.helpers.inventory.ItemStackHelper;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
-import org.jetbrains.annotations.NotNull;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
+import org.jspecify.annotations.NonNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
 
 import java.util.List;
 
 @SuppressWarnings({"deprecation", "removal"})
-public class SaveditemsGroup extends MixedGroup<@NotNull SaveditemsGroup> {
+public class SaveditemsGroup extends MixedGroup<@NonNull SaveditemsGroup> {
     public static SaveditemsGroup instance;
-    public static final NamespacedKey SOURCE_KEY = new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "source");
+    public static final NamespacedKey SOURCE_KEY = Keys.newKey("source");;
 
     public SaveditemsGroup(final NamespacedKey key, final ItemStack item) {
         super(key, item);
@@ -53,16 +53,16 @@ public class SaveditemsGroup extends MixedGroup<@NotNull SaveditemsGroup> {
     @Override
     public boolean isVisible(
             final Player player,
-            final @NotNull PlayerProfile playerProfile,
-            final @NotNull SlimefunGuideMode slimefunGuideMode) {
+            final @NonNull PlayerProfile playerProfile,
+            final @NonNull SlimefunGuideMode slimefunGuideMode) {
         return player.isOp();
     }
 
     @Override
-    public @NotNull ChestMenu generateMenu(
-            @NotNull Player player,
-            @NotNull PlayerProfile playerProfile,
-            @NotNull SlimefunGuideMode slimefunGuideMode) {
+    public @NonNull ChestMenu generateMenu(
+            @NonNull Player player,
+            @NonNull PlayerProfile playerProfile,
+            @NonNull SlimefunGuideMode slimefunGuideMode) {
         ChestMenu chestMenu = new ChestMenu(ItemStackHelper.getDisplayName(this.getItem(player)));
 
         Format format = Formats.sub;

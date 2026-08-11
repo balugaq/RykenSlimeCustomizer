@@ -35,7 +35,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NonNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +56,7 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
     public RSCItemGroupJEG(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent) {
         super(key, item, tier);
 
-        ExceptionHandler.debugLog(() -> "创建物品组: " + key + " type=" + type.name());
+        Debug.debug(() -> "创建物品组: " + key + " type=" + type.name());
 
         contents = new ArrayList<>();
         this.addon = addon;
@@ -67,17 +67,17 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
     }
 
     public void addContent(SlimefunItem sf) {
-        ExceptionHandler.debugLog(() -> "已添加物品 " + sf.getId() + " 至 " + getKey());
+        Debug.debug(() -> "已添加物品 " + sf.getId() + " 至 " + getKey());
         contents.add(sf);
     }
 
     public void addContent(ItemGroup itemGroup) {
-        ExceptionHandler.debugLog(() -> "已添加物品组 " + itemGroup.getKey().getKey() + " 至 " + getKey());
+        Debug.debug(() -> "已添加物品组 " + itemGroup.getKey().getKey() + " 至 " + getKey());
         contents.add(itemGroup);
     }
 
     public void addContent(String action) {
-        ExceptionHandler.debugLog(() -> "已添加 Action " + action + " 至 " + getKey());
+        Debug.debug(() -> "已添加 Action " + action + " 至 " + getKey());
         contents.add(action);
     }
 

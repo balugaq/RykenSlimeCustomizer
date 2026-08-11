@@ -19,7 +19,6 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine;
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.core.networks.energy.EnergyNetComponentType;
-import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import org.bukkit.configuration.ConfigurationSection;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
@@ -34,12 +33,12 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class MachineReader extends YamlReader<AbstractEmptyMachine<?>> {
     @Override
@@ -66,8 +65,6 @@ public class MachineReader extends YamlReader<AbstractEmptyMachine<?>> {
         CustomMenu menu = CommonUtils.getIf(addon.getMenus(), m -> m.getId().equalsIgnoreCase(id));
 
         AbstractEmptyMachine<?> machine;
-        CustomNoEnergyMachine defaultNoEnergyMachine = new CustomNoEnergyMachine(base, menu, input, output, eval, -1);
-
         if (section.contains("energy")) {
             ConfigurationSection energySettings = section.getConfigurationSection("energy");
             if (energySettings == null) {
@@ -81,12 +78,10 @@ public class MachineReader extends YamlReader<AbstractEmptyMachine<?>> {
             }
             MachineRecord record = new MachineRecord(capacity);
             String encType = energySettings.getString("type");
-            Pair<ExceptionHandler.HandleResult, EnergyNetComponentType> enc = CommonUtils.getEnum(
-                    "无法读取在附属" + addon.getAddonId() + "中的机器" + s + "的能源设置，已转为无电机器，原因: 错误的能源网络组件类型" + encType,
-                    EnergyNetComponentType.class,
-                    encType);
-            if (enc.getFirstValue() == ExceptionHandler.HandleResult.FAILED) {
-                return defaultNoEnergyMachine;
+            Optional<EnergyNetComponentType> enc = CommonUtils.getEnum(EnergyNetComponentType.class, encType);
+            if (enc.isEmpty()) {
+                Debug.warn(file, energySettings, "错误的能源网络组件类型 (type):" + encType + " 已转为无电机器");
+                return new CustomNoEnergyMachine(base, menu, input, output, eval, -1);
             }
 
             if (energySettings.contains("energyOutput")) {
@@ -95,10 +90,10 @@ public class MachineReader extends YamlReader<AbstractEmptyMachine<?>> {
                     Debug.error(file, section, "缺少或配置错误 '能源输出' (energyOutput)");
                     return null;
                 } else {
-                    machine = new CustomEnergyGenerator(base, menu, input, output, record, enc.getSecondValue(), eval, energyOutput);
+                    machine = new CustomEnergyGenerator(base, menu, input, output, record, enc.get(), eval, energyOutput);
                 }
             } else {
-                machine = new CustomMachine(base, menu, input, output, record, enc.getSecondValue(), eval);
+                machine = new CustomMachine(base, menu, input, output, record, enc.get(), eval);
             }
         } else {
             List<Integer> workSlots = new ArrayList<>();

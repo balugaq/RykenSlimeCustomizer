@@ -20,7 +20,7 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock;
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import org.bukkit.Location;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public class MultiBlockMultiBlockPart extends SlimefunMultiBlockPart {
     public MultiBlockMultiBlockPart(SlimefunItemStack target) {
@@ -28,7 +28,7 @@ public class MultiBlockMultiBlockPart extends SlimefunMultiBlockPart {
     }
 
     @Override
-    public boolean isBuilt(@NotNull SuperMultiBlock ancestor, @NotNull Location partLocation) {
+    public boolean isBuilt(@NonNull SuperMultiBlock ancestor, @NonNull Location partLocation) {
         SuperMultiBlock smb = SuperMultiBlockManager.getInstance().getCoreStorage().get(partLocation);
         return smb != null && smb.isFullyFormedCached();
     }

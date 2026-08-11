@@ -33,8 +33,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.parent.AbstractEmptyMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.ScriptedEvalBreakHandler;
@@ -92,7 +92,7 @@ public class CustomNoEnergyMachine extends AbstractEmptyMachine<MachineOperation
             addItemHandler(
                     new BlockPlaceHandler(false) {
                         @Override
-                        public void onPlayerPlace(@NotNull BlockPlaceEvent e) {
+                        public void onPlayerPlace(@NonNull BlockPlaceEvent e) {
                             CustomNoEnergyMachine.this.eval.evalFunction("onPlace", e);
                         }
                     },
@@ -100,7 +100,7 @@ public class CustomNoEnergyMachine extends AbstractEmptyMachine<MachineOperation
                     new BlockBreakHandler(false, false) {
                         @Override
                         public void onPlayerBreak(
-                                @NotNull BlockBreakEvent e, @NotNull ItemStack item, @NotNull List<ItemStack> drops) {
+                                @NonNull BlockBreakEvent e, @NonNull ItemStack item, @NonNull List<ItemStack> drops) {
                             MachineOperation operation = getMachineProcessor().getOperation(e.getBlock());
                             if (operation != null) {
                                 getMachineProcessor().endOperation(e.getBlock());
@@ -134,7 +134,7 @@ public class CustomNoEnergyMachine extends AbstractEmptyMachine<MachineOperation
                         }
                     });
                 }
-                this.processor.setProgressBar(menu.getProgressBarItem());
+                this.processor.setProgressBar(menu.getProgressBar());
             }
 
             createPreset(this, this.menu::apply);
@@ -180,7 +180,7 @@ public class CustomNoEnergyMachine extends AbstractEmptyMachine<MachineOperation
         };
     }
 
-    @NotNull @Override
+    @NonNull @Override
     public MachineProcessor<MachineOperation> getMachineProcessor() {
         return processor;
     }

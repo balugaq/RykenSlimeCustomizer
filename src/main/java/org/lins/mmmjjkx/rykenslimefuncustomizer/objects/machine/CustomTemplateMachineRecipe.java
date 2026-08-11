@@ -17,16 +17,18 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine;
 
+import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
 import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.Getter;
+import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.AbstractRecipe;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.InputWrapper;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.InvIndex;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.ItemWrapper;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SingleItemRecipeGuideListener;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.Recipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.BlockMenuUtil;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.StackUtils;
@@ -45,27 +47,32 @@ public class CustomTemplateMachineRecipe extends CustomMachineRecipe {
     public CustomTemplateMachineRecipe(
         int templateSlot,
         ItemStack templateStack,
-        AbstractRecipe recipe,
+        CustomMachineRecipe recipe,
         boolean moreOutputIfMoreTemplates
     ) {
-        this(recipe.getTicks() * 2, recipe.getInput(), recipe.getOutput(), recipe.getChances(), recipe.isChooseOne(), recipe.isForDisplayOnly(), recipe.isHide(), recipe.getNoConsume(), templateSlot, templateStack, moreOutputIfMoreTemplates);
+        this(recipe.getTicks() * 2, recipe.getInputs(), recipe.getOutput(), recipe.getChances(), recipe.isChooseOne(), recipe.isForDisplayOnly(), recipe.isHide(), templateSlot, templateStack, moreOutputIfMoreTemplates);
     }
     public CustomTemplateMachineRecipe(
             int seconds,
-            ItemStack[] input,
+            List<InputWrapper> input,
             ItemStack[] output,
             IntList chances,
             boolean chooseOne,
             boolean forDisplayOnly,
             boolean hide,
-            IntList noConsumeIndexes,
             int templateSlot,
             ItemStack templateStack,
             boolean moreOutputIfMoreTemplates) {
-        super(seconds, input, output, chances, chooseOne, forDisplayOnly, hide, noConsumeIndexes);
+        super(seconds, input, output, chances, chooseOne, forDisplayOnly, hide);
         this.templateSlot = templateSlot;
         this.templateStack = templateStack;
         this.moreOutputIfMoreTemplates = moreOutputIfMoreTemplates;
+    }
+
+    @Override
+    public void formatGUI(ChestMenu inv, int[] inputSlots, int[] outputSlots) {
+        super.formatGUI(inv, inputSlots, outputSlots);
+        inv.addItem(templateSlot, templateStack, ChestMenuUtils.getEmptyClickHandler());
     }
 
     @Override
@@ -98,14 +105,18 @@ public class CustomTemplateMachineRecipe extends CustomMachineRecipe {
         return true;
     }
 
+    public ItemStack getDisplayTemplate() {
+        ItemStack templateItem = templateStack.clone();
+        CommonUtils.addLore(templateItem, true, "&b&l&o*模板物品不消耗*");
+        return templateItem;
+    }
+
     @Override
     public ItemStack getDisplayInput(int index) {
         if (getInputs().isEmpty()) {
-            ItemStack templateItem = templateStack.clone();
-            CommonUtils.addLore(templateItem, true, "&b&l&o*模板物品不消耗*");
-            return templateItem;
+            return getDisplayTemplate();
         } else {
-            return SingleItemRecipeGuideListener.tagItem(RECIPE_INPUT, index);
+            return Recipe.tagItem(RECIPE_INPUT, index);
         }
     }
 }

@@ -17,16 +17,22 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine;
 
+import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.Getter;
+import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.AbstractRecipe;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.InputWrapper;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.InvIndex;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.ItemWrapper;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SingleItemRecipeGuideListener;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.Recipe;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.AsyncChanceRecipeTask;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.BlockMenuUtil;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.StackUtils;
@@ -42,11 +48,9 @@ import static org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.RecipesHolder.RECI
 @NullMarked
 @Getter
 public class CustomMachineRecipe extends AbstractRecipe {
-    private final IntList chances;
-    private final IntList noConsume;
-
-    private final List<ItemWrapper> inputs;
+    private final List<InputWrapper> inputs;
     private final List<ItemWrapper> outputs;
+    private final IntList chances;
     private final boolean chooseOne;
     private final boolean forDisplayOnly;
     private final boolean hide;
@@ -63,34 +67,31 @@ public class CustomMachineRecipe extends AbstractRecipe {
 
     public CustomMachineRecipe(
             int seconds,
-            ItemStack[] input,
+            List<InputWrapper> input,
             ItemStack[] output,
             IntList chances,
             boolean chooseOne,
             boolean forDisplayOnly,
-            boolean hide,
-            IntList noConsumeIndexes) {
-        this(input, output, seconds * 2, chances, chooseOne, forDisplayOnly, hide, noConsumeIndexes);
+            boolean hide) {
+        this(input, output, seconds * 2, chances, chooseOne, forDisplayOnly, hide);
     }
 
     public CustomMachineRecipe(
-        ItemStack[] input,
+        List<InputWrapper> input,
         ItemStack[] output,
         int ticks,
         IntList chances,
         boolean chooseOne,
         boolean forDisplayOnly,
-        boolean hide,
-        IntList noConsumeIndexes) {
-        super(input, output, ticks);
+        boolean hide) {
+        super(input.stream().flatMap(InputWrapper::asArrayStream).toList().toArray(new ItemStack[0]), output, ticks);
 
-        this.inputs = InvIndex.mergeItems(input);
+        this.inputs = input;
         this.outputs = InvIndex.mergeItems(output);
         this.chances = chances;
         this.chooseOne = chooseOne;
         this.forDisplayOnly = forDisplayOnly;
         this.hide = hide;
-        this.noConsume = noConsumeIndexes;
     }
 
     public List<ItemWrapper> getMatchChanceResult(boolean chooseOne) {
@@ -116,6 +117,64 @@ public class CustomMachineRecipe extends AbstractRecipe {
 
         int result = new SecureRandom().nextInt(100);
         return result < chance;
+    }
+
+    @Override
+    public void formatGUI(ChestMenu inv, int[] inputSlots, int[] outputSlots) {
+        boolean overflowed = false;
+        int i = 0;
+        // input
+        for (var wrapper : getInputs()) {
+            for (ItemStack itemStack : wrapper.toStacks()) {
+                if (i == inputSlots.length) {
+                    overflowed = true;
+                }
+                if (overflowed) break;
+                inv.addItem(inputSlots[i++], Recipe.fakeItem(itemStack), ChestMenuUtils.getEmptyClickHandler());
+            }
+            if (overflowed) break;
+        }
+        if (overflowed) {
+            // generate info stack at the last slot
+            inv.addItem(inputSlots[inputSlots.length - 1], Recipe.asInputInfoStack(getInputs()), ChestMenuUtils.getEmptyClickHandler());
+        }
+
+        // output - choose one
+        if (isChooseOne()) {
+            DoubleList weightedChance = new DoubleArrayList();
+            int allChance = getChances().intStream().sum();
+            for (i = 0; i < getOutput().length; i++) {
+                int chance = getChances().getInt(i);
+                weightedChance.add((double) chance / (allChance * getOutput().length));
+            }
+
+            List<ItemStack> cycles = new ArrayList<>();
+            for (i = 0; i < getOutput().length; i++) {
+                cycles.add(Recipe.tagOutputChance(getOutput()[i], weightedChance.getDouble(i))); // 保留 1 位小数
+            }
+
+            AsyncChanceRecipeTask task = new AsyncChanceRecipeTask();
+            task.add(outputSlots[0], cycles);
+            task.run();
+            return;
+        }
+
+        // output - normal
+        overflowed = false;
+        for (i = 0; i < getOutput().length; i++) {
+            if (i == outputSlots.length) {
+                overflowed = true;
+            }
+            if (overflowed) break;
+
+            ItemStack output = getOutput()[i];
+            int chance = getChances().getInt(i);
+            inv.addItem(outputSlots[i], Recipe.tagOutputChance(output, chance), ChestMenuUtils.getEmptyClickHandler());
+        }
+        if (overflowed) {
+            // generate info stack at the last slot
+            inv.addItem(outputSlots[outputSlots.length - 1], Recipe.asOutputInfoStack(getOutput(), getChances()), ChestMenuUtils.getEmptyClickHandler());
+        }
     }
 
     @Override
@@ -170,7 +229,7 @@ public class CustomMachineRecipe extends AbstractRecipe {
     @Override
     public ItemStack getDisplayInput(int index) {
         if (inputs.size() == 1) return inputs.getFirst().getStack();
-        return SingleItemRecipeGuideListener.tagItem(RECIPE_INPUT, index);
+        return Recipe.tagItem(RECIPE_INPUT, index);
     }
 
     @Override
@@ -180,7 +239,7 @@ public class CustomMachineRecipe extends AbstractRecipe {
             CommonUtils.addLore(out, true, CommonUtils.richFormatSeconds(getTicks() / 2));
             return out;
         } else {
-            return SingleItemRecipeGuideListener.tagItem(RECIPE_OUTPUT, index);
+            return Recipe.tagItem(RECIPE_OUTPUT, index);
         }
     }
 }

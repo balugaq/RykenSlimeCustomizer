@@ -26,7 +26,6 @@ import net.byteflux.libby.Library;
 import net.guizhanss.guizhanlib.updater.GuizhanBuildsUpdater;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.BlockDisplay;
@@ -34,8 +33,8 @@ import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SaveditemsGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.commands.MainCommand;
@@ -47,7 +46,8 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.generations.Bloc
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSuperMultiBlockMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
 
 import java.io.File;
 import java.io.IOException;
@@ -96,7 +96,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
             killRSCEntity(world.getEntitiesByClass(BlockDisplay.class));
 //            killRSCEntity(world.getEntitiesByClass(Interaction.class));
         }
-        SuperMultiBlockManager.getInstance().getProjectiles().clear();
+        SuperMultiBlockManager.getProjectiles().clear();
 //        SuperMultiBlockManager.getInstance().getInteractions().clear();
     }
 
@@ -150,20 +150,21 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         getServer().getScheduler().runTaskLater(this, () -> runtime = true, 1);
 
         handleLogitech();
+        new JavaPlugin() {};
 
-        ExceptionHandler.info("============================");
-        ExceptionHandler.info("RykenSlimefunCustomizer加载成功！");
-        ExceptionHandler.info("原作者: lijinhong11");
-        ExceptionHandler.info("改作者: balugaq");
-        ExceptionHandler.info("项目主页: https://github.com/balugaq/RykenSlimeCustomizer");
-        ExceptionHandler.info("============================");
+        Debug.info("============================");
+        Debug.info("RykenSlimefunCustomizer加载成功！");
+        Debug.info("原作者: lijinhong11");
+        Debug.info("改作者: balugaq");
+        Debug.info("项目主页: https://github.com/balugaq/RykenSlimeCustomizer");
+        Debug.info("============================");
     }
 
     private void handleJEG() {
-        ExceptionHandler.info("已检测到JustEnoughGuide，正在适配...");
+        Debug.info("已检测到JustEnoughGuide，正在适配...");
         try {
             SaveditemsGroup itemGroup = new SaveditemsGroup(
-                new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "saveditems"),
+                Keys.newKey("saveditems"),
                 new CustomItemStack(Material.COMMAND_BLOCK, "&c保存的物品 (RSC saveditems)"));
 
             SaveditemsGroup.instance = itemGroup;
@@ -205,7 +206,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
                                 });
                                 itemGroup.addItem(item);
                             } catch (Exception e) {
-                                ExceptionHandler.handleError("无法读取 " + path, e);
+                                Debug.error("无法读取 " + path, e);
                             }
                         });
                 } catch (IOException e) {
@@ -215,7 +216,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
             itemGroup.register(this);
         } catch (Exception e) {
-            ExceptionHandler.handleError("JustEnoughGuide版本过低，无法适配", e);
+            Debug.error("JustEnoughGuide版本过低，无法适配", e);
         }
     }
 
@@ -234,7 +235,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
                     machineListField = Class.forName("me.matl114.logitech.Utils.RecipeSupporter").getDeclaredField("STACKMACHINE_LIST");
                     materialGeneratorListField = Class.forName("me.matl114.logitech.Utils.RecipeSupporter").getDeclaredField("STACKMGENERATOR_LIST");
                 } catch (ClassNotFoundException | NoSuchFieldException ignored2) {
-                    ExceptionHandler.debugLog(() -> "无法自动禁用机器在逻辑工艺中的可堆叠属性!");
+                    Debug.debug(() -> "无法自动禁用机器在逻辑工艺中的可堆叠属性!");
                     machineListField = null;
                     materialGeneratorListField = null;
                 }
@@ -248,21 +249,21 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
                 STACKMACHINE_LIST = (Map<SlimefunItem, Integer>) machineListField.get(null);
                 STACKMGENERATOR_LIST = (Map<SlimefunItem, Integer>) materialGeneratorListField.get(null);
             } catch (IllegalAccessException e) {
-                ExceptionHandler.debugLog(() -> "无法自动禁用机器在逻辑工艺中的可堆叠属性!");
+                Debug.debug(() -> "无法自动禁用机器在逻辑工艺中的可堆叠属性!");
                 return;
             }
 
             for (var sf : new ArrayList<>(Slimefun.getRegistry().getAllSlimefunItems())) {
                 if (!isNotStackable(sf)) continue;
                 if (STACKMACHINE_LIST.remove(sf) != null) {
-                    ExceptionHandler.debugLog(() -> "已删除STACKMACHINE_LIST中的" + sf);
+                    Debug.debug(() -> "已删除STACKMACHINE_LIST中的" + sf);
                 }
                 if (STACKMGENERATOR_LIST.remove(sf) != null) {
-                    ExceptionHandler.debugLog(() -> "已删除STACKMGENERATOR_LIST中的" + sf);
+                    Debug.debug(() -> "已删除STACKMGENERATOR_LIST中的" + sf);
                 }
             }
             logitechNotStackableIds = null; // gc
-            ExceptionHandler.info("已自动禁用机器在逻辑工艺中的可堆叠属性!");
+            Debug.info("已自动禁用机器在逻辑工艺中的可堆叠属性!");
         }, 300L); // wait recipe supporter
     }
 
@@ -293,7 +294,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         }
     }
 
-    @NotNull @Override
+    @NonNull @Override
     public JavaPlugin getJavaPlugin() {
         return this;
     }
@@ -426,6 +427,8 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
     }
 
     public static void debug(Callable<String> callable) {
-        ExceptionHandler.debugLog(callable);
+        Debug.debug(callable);
     }
 }
+
+尚未测试完成，先放在这里堵一下编译

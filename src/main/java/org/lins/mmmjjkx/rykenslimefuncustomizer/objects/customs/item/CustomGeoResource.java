@@ -26,9 +26,10 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
 
 import java.util.function.BiFunction;
 
@@ -68,7 +69,7 @@ public class CustomGeoResource extends UnplaceableBlock implements GEOResource {
     }
 
     @Override
-    public int getDefaultSupply(@NotNull World.Environment environment, @NotNull Biome biome) {
+    public int getDefaultSupply(World.@NonNull Environment environment, @NonNull Biome biome) {
         return supply.apply(environment, biome);
     }
 
@@ -77,7 +78,7 @@ public class CustomGeoResource extends UnplaceableBlock implements GEOResource {
         return maxDeviation;
     }
 
-    @NotNull @Override
+    @NonNull @Override
     public String getName() {
         return name;
     }
@@ -88,7 +89,7 @@ public class CustomGeoResource extends UnplaceableBlock implements GEOResource {
     }
 
     @Override
-    public @NotNull NamespacedKey getKey() {
-        return new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, getId());
+    public @NonNull NamespacedKey getKey() {
+        return Keys.newKey(getId());
     }
 }

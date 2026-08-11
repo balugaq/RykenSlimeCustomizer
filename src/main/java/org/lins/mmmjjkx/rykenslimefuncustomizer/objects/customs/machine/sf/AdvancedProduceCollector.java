@@ -24,7 +24,7 @@ import io.github.thebusybiscuit.slimefun4.implementation.items.electric.machines
 import io.github.thebusybiscuit.slimefun4.implementation.items.electric.machines.entities.ProduceCollector;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 
@@ -48,7 +48,7 @@ public class AdvancedProduceCollector extends ProduceCollector {
     }
 
     @Override
-    public void addProduce(@NotNull AnimalProduce produce) {
+    public void addProduce(@NonNull AnimalProduce produce) {
         produce.setTicks(produce.getTicks() / speed);
         super.addProduce(produce);
     }

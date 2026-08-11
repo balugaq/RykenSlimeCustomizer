@@ -24,11 +24,11 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.ProjectAddonManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ZipUtils;
 
 import java.io.File;
@@ -40,16 +40,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 
-public class GithubUpdater {
+public class GitHubUpdater {
     public static final File downloadFolder =
             new File(RykenSlimefunCustomizer.INSTANCE.getDataFolder(), "temp-downloads");
 
     public static boolean checkAndUpdate(
-            @NotNull String currentVer,
-            @NotNull String author,
-            @NotNull String repo,
-            @NotNull String prjId,
-            @NotNull String folderName) {
+            @NonNull String currentVer,
+            @NonNull String author,
+            @NonNull String repo,
+            @NonNull String prjId,
+            @NonNull String folderName) {
         try (CloseableHttpClient client = HttpClients.createDefault()) {
             String url = "https://api.github.com/repos/" + author + "/" + repo + "/releases/latest";
             HttpGet get = new HttpGet(url);
@@ -61,9 +61,7 @@ public class GithubUpdater {
             String releaseName = release.getName();
 
             if (releaseName == null) {
-                RykenSlimefunCustomizer.INSTANCE
-                        .getLogger()
-                        .log(Level.WARNING, "无法检查附属 " + prjId + "的更新: 已到达GitHub API速率限制(60请求/h)");
+                Debug.warn("无法检查附属 " + prjId + "的更新: 已到达GitHub API速率限制 (60请求/h)");
                 return false;
             }
 
@@ -72,8 +70,7 @@ public class GithubUpdater {
             }
 
             if (!Objects.equals(currentVer, releaseName)) {
-                if (release.isPrerelease()
-                        && !RykenSlimefunCustomizer.INSTANCE.getConfig().getBoolean("update.pre-releases", false)) {
+                if (release.isPrerelease() && !RykenSlimefunCustomizer.INSTANCE.getConfig().getBoolean("update.pre-releases", false)) {
                     return false;
                 }
 
@@ -132,10 +129,10 @@ public class GithubUpdater {
                     String id = infoYml.getString("id", "");
 
                     if (!id.equals(prjId)) {
-                        ExceptionHandler.info(
+                        Debug.info(
                                 "&a成功更新附属 " + prjId + "!" + "\n" + "&b注意：原先的附属ID为 &e" + prjId + " &b现在已变更为 &d" + id);
                     } else {
-                        ExceptionHandler.info("&a成功更新附属 " + prjId + "!");
+                        Debug.info("&a成功更新附属 " + prjId + "!");
                     }
 
                     return true;
@@ -147,9 +144,5 @@ public class GithubUpdater {
             RykenSlimefunCustomizer.INSTANCE.getLogger().log(Level.WARNING, "无法更新附属 " + prjId, e);
             return false;
         }
-    }
-
-    public static void unzip(File zipFile, File desDirectory) throws IOException {
-        ZipUtils.unzip(zipFile, desDirectory);
     }
 }

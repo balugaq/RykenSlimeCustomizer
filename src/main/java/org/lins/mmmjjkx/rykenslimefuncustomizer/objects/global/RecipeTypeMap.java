@@ -18,7 +18,7 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global;
 
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 
 import java.lang.reflect.Field;

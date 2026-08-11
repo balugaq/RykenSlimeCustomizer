@@ -36,7 +36,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.Visible;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -57,12 +57,10 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
     public ItemGroup readEach(String s) {
         ConfigurationSection section = configuration.getConfigurationSection(s);
         if (section == null) return null;
-        ExceptionHandler.HandleResult conflict = ExceptionHandler.handleGroupIdConflict(s);
-
-        if (conflict == ExceptionHandler.HandleResult.FAILED) return null;
+        if (!CommonUtils.passItemGroupIdConflictCheck(s)) return null;
 
         ConfigurationSection item = section.getConfigurationSection("item");
-        ItemStack stack = CommonUtils.readItem(item, false, addon);
+        ItemStack stack = CommonUtils.readItem(file, item, addon);
         if (stack == null) {
             Debug.error(file, section, "缺少或配置错误 '物品' (item)");
             return null;
@@ -74,7 +72,7 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
             Debug.error(file, section, "缺少或配置错误 '物品组类型' (type): " + type);
             return null;
         }
-        NamespacedKey key = new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, s);
+        NamespacedKey key = Keys.newKey(s);
 
         int tier = section.getInt("tier", 3);
 
@@ -95,7 +93,7 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
                         Debug.error(file, section, "无法将 LockedItemGroup 添加到 NestedItemGroup 中 (parent): " + par);
                         return null;
                     }
-                    ExceptionHandler.debugLog(() -> "由于技术限制原因，物品组 " + key + " 无法成为可嵌套物品组，因为其父物品组为 NestedItemGroup");
+                    Debug.debug(() -> "由于技术限制原因，物品组 " + key + " 无法成为可嵌套物品组，因为其父物品组为 NestedItemGroup");
                     SubItemGroup group = new SubItemGroup(key, nig, stack, tier);
                     nig.addSubGroup(group);
                     group.register(RykenSlimefunCustomizer.INSTANCE);
@@ -116,12 +114,12 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
             for (String ig : section.getStringList("parents")) {
                 NamespacedKey nk = NamespacedKey.fromString(ig.toLowerCase());
                 if (nk == null) {
-                    Debug.warning(file, section, "NamespacedKey 非法 (parents): " + ig);
+                    Debug.warn(file, section, "NamespacedKey 非法 (parents): " + ig);
                     continue;
                 }
                 parents.add(nk);
             }
-            ExceptionHandler.debugLog(() -> "由于技术限制原因，物品组 LockedItemGroup: " + key + " 无法成为可嵌套物品组");
+            Debug.debug(() -> "由于技术限制原因，物品组 LockedItemGroup: " + key + " 无法成为可嵌套物品组");
             ItemGroup group = new LockedItemGroup(key, stack, tier, parents.toArray(new NamespacedKey[0]));
             if (parent != null) {
                 parent.addContent(group);

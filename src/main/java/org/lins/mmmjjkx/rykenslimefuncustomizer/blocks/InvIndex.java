@@ -1,13 +1,12 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.blocks;
 
-import it.unimi.dsi.fastutil.ints.IntSet;
 import lombok.Data;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.StackUtils;
 
 import java.util.ArrayList;
@@ -95,18 +94,14 @@ public class InvIndex {
         return false;
     }
 
-    public boolean matches(ItemWrapper wrapper) {
-        return getConsumableAmount(wrapper.getStack()) >= wrapper.getAmount();
+    public boolean matches(InputWrapper wrapper) {
+        return getConsumableAmount(wrapper) >= wrapper.getAmount();
     }
 
-    public int getConsumableAmount(ItemStack item) {
-        return getConsumableAmount(item, IntSet.of());
-    }
-
-    public int getConsumableAmount(ItemStack item, IntSet noConsumes) {
-        for (SlotWrapper wrapper : inputs) {
-            if (StackUtils.itemsMatch(wrapper.getStack(), item)) {
-                return wrapper.getConsumableAmount(noConsumes);
+    public int getConsumableAmount(InputWrapper wrapper) {
+        for (SlotWrapper wp : inputs) {
+            if (StackUtils.itemsMatch(wrapper.getStack(), wp.getStack())) {
+                return wp.getConsumableAmount(wrapper.getNoConsume());
             }
         }
         return 0;

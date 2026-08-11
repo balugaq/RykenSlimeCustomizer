@@ -19,8 +19,8 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item;
 
 import io.github.thebusybiscuit.slimefun4.core.handlers.ItemConsumptionHandler;
 import io.github.thebusybiscuit.slimefun4.implementation.items.SimpleSlimefunItem;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.RSCItemGroupLegacy;
@@ -39,7 +39,7 @@ public class CustomFood extends SimpleSlimefunItem<ItemConsumptionHandler> {
         register(RykenSlimefunCustomizer.INSTANCE);
     }
 
-    @NotNull @Override
+    @NonNull @Override
     public ItemConsumptionHandler getItemHandler() {
         return (e, p, i) -> {
             if (eval != null) {

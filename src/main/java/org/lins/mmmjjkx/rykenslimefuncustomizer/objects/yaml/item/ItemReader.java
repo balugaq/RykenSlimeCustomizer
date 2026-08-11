@@ -37,14 +37,13 @@ import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.matcher.ElementMatchers;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.item.CustomDefaultItem;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.parent.CustomItem;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.DropFromBlock;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun.WitherProofBlockImpl;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
@@ -74,7 +73,7 @@ public class ItemReader extends YamlReader<SlimefunItem> {
         boolean addRadiationLore = section.getBoolean("add_radiation_lore", true);
         Optional<Radioactivity> radioactivity = CommonUtils.getEnum(Radioactivity.class, radio);
         if (radioactivity.isEmpty()) {
-            Debug.warning(file, section, "错误的辐射等级级别: " + radio + " 已跳过");
+            Debug.warn(file, section, "错误的辐射等级级别: " + radio + " 已跳过");
             return instance;
         }
 
@@ -110,19 +109,19 @@ public class ItemReader extends YamlReader<SlimefunItem> {
         if (section.contains("rainbow")) {
             String materialType = section.getString("rainbow", "");
             if (!base.sfis().getType().isBlock()) {
-                Debug.warning(file, section, "非方块无法设置彩虹属性 (rainbow) 已跳过");
+                Debug.warn(file, section, "非方块无法设置彩虹属性 (rainbow) 已跳过");
             } else {
                 if (materialType.equalsIgnoreCase("CUSTOM")) {
                     List<String> materials = section.getStringList("rainbow_materials");
                     if (materials.isEmpty()) {
-                        Debug.warning(file, section, "未设置彩虹属性材料 (rainbow_materials) 已跳过");
+                        Debug.warn(file, section, "未设置彩虹属性材料 (rainbow_materials) 已跳过");
                     } else {
                         List<Material> colorMaterials = new ArrayList<>();
 
                         for (String materialS : materials) {
                             Optional<Material> material = CommonUtils.getMaterial(materialS);
                             if (material.isEmpty()) {
-                                Debug.warning(file, section, "错误的彩虹属性材料 (rainbow_materials): " + materialS + " 已跳过");
+                                Debug.warn(file, section, "错误的彩虹属性材料 (rainbow_materials): " + materialS + " 已跳过");
                                 continue;
                             }
                             colorMaterials.add(material.get());
@@ -156,7 +155,7 @@ public class ItemReader extends YamlReader<SlimefunItem> {
 
         if (section.getBoolean("anti_wither", false)) {
             if (!base.sfis().getType().isBlock()) {
-                Debug.warning(file, section, "非方块无法设置防凋零属性 已跳过");
+                Debug.warn(file, section, "非方块无法设置防凋零属性 已跳过");
             } else {
                 Class<? extends CustomItem> clazz = ClassUtils.generateClass(
                     instance.getClass(),
@@ -210,7 +209,7 @@ public class ItemReader extends YamlReader<SlimefunItem> {
         instance.setUseableInWorkbench(section.getBoolean("vanilla", false));
 
         if (section.contains("drop_from")) {
-            resolveDropFrom(section, base);
+            resolveDropFrom(file, section, base.sfis(), addon);
         }
 
         instance.register(RykenSlimefunCustomizer.INSTANCE);
@@ -221,7 +220,7 @@ public class ItemReader extends YamlReader<SlimefunItem> {
     private CustomItem resolveEnergyCapacity(ConfigurationSection section, CustomItem instance, @Nullable ScriptEval eval, BaseResult base, Object[] constructorArgs) throws InvocationTargetException, InstantiationException, IllegalAccessException {
         double energyCapacity = section.getDouble("energy_capacity");
         if (energyCapacity < 1) {
-            Debug.warning(file, section, "能源容量 (energy_capacity) 超出范围", 1.0d, Float.MAX_VALUE);
+            Debug.warn(file, section, "能源容量 (energy_capacity) 超出范围", 1.0d, Float.MAX_VALUE);
             return null;
         }
 
@@ -254,54 +253,6 @@ public class ItemReader extends YamlReader<SlimefunItem> {
             instance.addItemHandler((ItemUseHandler) PlayerRightClickEvent::cancel);
         }
         return instance;
-    }
-
-    private void resolveDropFrom(ConfigurationSection section, BaseResult base) {
-        int chance = CommonUtils.clamp(section.getInt("chance", 100), 1, 100, file, section, "'概率 (chance) 非法'");;
-        int amount = section.isInt("drop_amount") ? section.getInt("drop_amount", 1) : -1;
-
-        String dropMaterial = section.getString("drop_from", "");
-        Optional<Material> xm = CommonUtils.getMaterial(dropMaterial);
-        if (xm.isEmpty()) {
-            Debug.warning(file, section, "掉落方块材料类型 (drop_from) 无效 已跳过");
-            return;
-        }
-        Material material = xm.get();
-        if (amount != -1) {
-            DropFromBlock.addDrop(material, new DropFromBlock.Drop(base.sfis(), chance, addon, amount, amount));
-            return;
-        }
-
-        int min, max;
-        resolve_amount:
-        {
-            String between = section.getString("drop_amount", "1");
-            if (between.contains("-")) {
-                String[] split = between.split("-");
-                if (split.length != 2) {
-                    Debug.warning(file, section, "掉落数量区间 (drop_amount) 非法，已将掉落数量转为 " + base.sfis().getAmount());
-                    min = max = base.sfis().getAmount();
-                    break resolve_amount;
-                }
-
-                try {
-                    min = Integer.parseInt(split[0]);
-                    max = Integer.parseInt(split[1]);
-                } catch (NumberFormatException e) {
-                    Debug.warning(file, section, "掉落数量区间 (drop_amount) 非法，已将掉落数量转为 " + base.sfis().getAmount());
-                    min = max = base.sfis().getAmount();
-                }
-            } else {
-                try {
-                    min = max = Integer.parseInt(between);
-                } catch (NumberFormatException e) {
-                    Debug.warning(file, section, "掉落数量 (drop_amount) 非法，已将掉落数量转为 " + base.sfis().getAmount());
-                    min = max = 1;
-                }
-            }
-        }
-
-        DropFromBlock.addDrop(material, new DropFromBlock.Drop(base.sfis(), chance, addon, min, max));
     }
 
     @Override

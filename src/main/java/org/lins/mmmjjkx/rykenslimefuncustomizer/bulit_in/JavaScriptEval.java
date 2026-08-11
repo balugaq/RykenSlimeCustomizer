@@ -34,13 +34,13 @@ import org.graalvm.polyglot.PolyglotAccess;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.io.IOAccess;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.BlockMenuUtil;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 
 import java.io.File;
 import java.io.IOException;
@@ -67,7 +67,7 @@ public class JavaScriptEval extends ScriptEval {
             .currentWorkingDirectory(getAddon().getScriptsFolder().toPath().toAbsolutePath())
             .build();
 
-    private JavaScriptEval(@NotNull File js, ProjectAddon addon) {
+    private JavaScriptEval(@NonNull File js, ProjectAddon addon) {
         super(js, addon);
 
         advancedSetup();
@@ -80,11 +80,11 @@ public class JavaScriptEval extends ScriptEval {
     }
 
     @Nullable
-    public static JavaScriptEval create(@NotNull File js, ProjectAddon addon) {
+    public static JavaScriptEval create(@NonNull File js, ProjectAddon addon) {
         try {
             return new JavaScriptEval(js, addon);
         } catch (Throwable e) {
-            ExceptionHandler.handleError("无法加载脚本 " + js.getAbsolutePath(), e);
+            Debug.error("无法加载脚本 " + js.getAbsolutePath(), e);
             return null;
         }
     }
@@ -128,14 +128,14 @@ public class JavaScriptEval extends ScriptEval {
             Value bindings = jsEngine.getBindings("js");
 
             if (!bindings.hasMember(funName)) {
-                ExceptionHandler.debugLog(() -> "在附属" + addon.getAddonId() + "中加载脚本" + getFile().getName() + "时遇到了问题: " + "不存在函数 " + funName);
+                Debug.debug(() -> "在附属" + addon.getAddonId() + "中加载脚本" + getFile().getName() + "时遇到了问题: " + "不存在函数 " + funName);
                 failedFunctions.add(funName);
                 return null;
             }
 
             Value member = bindings.getMember(funName);
             if (!member.canExecute()) {
-                ExceptionHandler.debugLog(() -> "在附属" + addon.getAddonId() + "中加载脚本" + getFile().getName() + "时遇到了问题: " + "函数 " + funName + " 不可执行");
+                Debug.debug(() -> "在附属" + addon.getAddonId() + "中加载脚本" + getFile().getName() + "时遇到了问题: " + "函数 " + funName + " 不可执行");
                 failedFunctions.add(funName);
                 return null;
             }
@@ -146,7 +146,7 @@ public class JavaScriptEval extends ScriptEval {
 
         try {
             Value result = function.execute(args);
-            ExceptionHandler.debugLog(
+            Debug.debug(
                     "运行了 " + getAddon().getAddonName() + "的脚本" + getFile().getName() + "中的函数 " + funName);
             return result;
         } catch (IllegalStateException e) {
@@ -167,12 +167,12 @@ public class JavaScriptEval extends ScriptEval {
     private void handleExecutionError(Throwable e, String funName) {
         functionCache.remove(funName);
 
-        ExceptionHandler.debugLog("由于开启了 debug 模式，此次脚本运行不会被记录为失败");
+        Debug.debug("由于开启了 debug 模式，此次脚本运行不会被记录为失败");
         if (!RykenSlimefunCustomizer.INSTANCE.getConfig().getBoolean("debug")) {
             failedFunctions.add(funName);
         }
 
-        ExceptionHandler.handleError(
+        Debug.error(
                 "在运行" + getAddon().getAddonName() + "的脚本" + getFile().getName() + "时发生错误", e);
     }
 
@@ -185,7 +185,7 @@ public class JavaScriptEval extends ScriptEval {
                 jsEngine.eval(
                         Source.newBuilder("js", getFileContext(), "JavaScript").build());
             } catch (IOException e) {
-                ExceptionHandler.handleError(
+                Debug.error(
                         "在加载" + getAddon().getAddonName() + "的脚本" + getFile().getName() + "时发生错误", e);
             }
         }

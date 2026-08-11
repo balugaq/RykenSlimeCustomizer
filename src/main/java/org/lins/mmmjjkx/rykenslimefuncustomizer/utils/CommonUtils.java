@@ -19,14 +19,19 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.utils;
 
 import io.github.projectunified.uniitem.all.AllItemProvider;
 import io.github.projectunified.uniitem.api.ItemKey;
+import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
+import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
+import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerHead;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerSkin;
 import lombok.SneakyThrows;
 import net.guizhanss.guizhanlib.minecraft.utils.compatibility.EnchantmentX;
 import net.guizhanss.guizhanlib.minecraft.utils.compatibility.ItemFlagX;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -42,18 +47,25 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Contract;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.InputDesc;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.InputWrapper;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.RecipeTypeMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -90,12 +102,12 @@ public class CommonUtils {
         return Optional.of(m);
     }
 
-    @NotNull public static ItemStack[] readRecipe(File file, ConfigurationSection section, ProjectAddon addon) {
+    @NonNull public static ItemStack[] readRecipe(File file, @Nullable ConfigurationSection section, ProjectAddon addon) {
         return readRecipe(file, section, addon, 9);
     }
 
-    @NotNull
-    public static ItemStack[] readRecipe(File file, ConfigurationSection section, @NotNull ProjectAddon addon, int size) {
+    @NonNull
+    public static ItemStack[] readRecipe(File file, @Nullable ConfigurationSection section, @NonNull ProjectAddon addon, int size) {
         if (section == null) return new ItemStack[size];
         ItemStack[] itemStacks = new ItemStack[size];
         for (int i = 0; i < size; i++) {
@@ -103,6 +115,35 @@ public class CommonUtils {
             itemStacks[i] = readItem(file, section1, addon);
         }
         return itemStacks;
+    }
+
+    public static List<InputWrapper> readInputs(File file, @Nullable ConfigurationSection section, @NonNull ProjectAddon addon) {
+        if (section == null) return Collections.emptyList();
+        List<InputDesc> descs = new ArrayList<>();
+        for (String k : section.getKeys(false)) {
+            ConfigurationSection item = section.getConfigurationSection(k);
+            if (item == null) continue;
+            var stack = readItem(file, item, addon);
+            if (stack == null) continue;
+            descs.add(new InputDesc(stack, item.getInt("slot", -1), item.getBoolean("noConsume", false)));
+        }
+
+        List<InputWrapper> wrappers = new ArrayList<>();
+        for (var desc : descs) {
+            boolean matched = false;
+            for (var wrapper : wrappers) {
+                // pre-merge all items
+                if (StackUtils.itemsMatch(wrapper.getStack(), desc.itemStack())) {
+                    wrapper.merge(desc);
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                wrappers.add(InputWrapper.create(desc));
+            }
+        }
+        return wrappers;
     }
 
     @SneakyThrows
@@ -132,7 +173,7 @@ public class CommonUtils {
 
         String[] parts = color.split(",");
         if (parts.length != 3) {
-            Debug.warning(file, section, "物品颜色 (color) 非法: " + Arrays.toString(parts) + " 已跳过");
+            Debug.warn(file, section, "物品颜色 (color) 非法: " + Arrays.toString(parts) + " 已跳过");
             return;
         }
 
@@ -154,11 +195,11 @@ public class CommonUtils {
                     fem.addItemFlags(ItemFlagX.HIDE_ADDITIONAL_TOOLTIP);
                 }
                 default -> {
-                    Debug.warning(file, section, "物品不支持使用物品颜色 (color): " + meta.getClass().getSimpleName() + " 已跳过");
+                    Debug.warn(file, section, "物品不支持使用物品颜色 (color): " + meta.getClass().getSimpleName() + " 已跳过");
                 }
             }
         } catch (NumberFormatException e) {
-            ExceptionHandler.handleError("物品颜色 (color) 非法: " + Arrays.toString(parts));
+            Debug.error("物品颜色 (color) 非法: " + Arrays.toString(parts));
         }
     }
 
@@ -209,7 +250,7 @@ public class CommonUtils {
 
                     return item;
                 } catch (NoClassDefFoundError e) {
-                    Debug.error(file, section, "无法加载 UniItem 依赖! 无法识别物品.");
+                    Debug.error(file, section, "无法加载 UniItem 依赖! 无法识别物品.", e);
                     return null;
                 }
             }
@@ -254,10 +295,10 @@ public class CommonUtils {
                 return stack;
             }
             default -> {
-                Debug.warning(file, section, "无法识别的类型: " + type + " 尝试以原版物品重新加载...");
+                Debug.warn(file, section, "无法识别的类型: " + type + " 尝试以原版物品重新加载...");
                 var mc = getBaseItemStack(file, section, "mc", material, addon);
                 if (mc != null) return mc;
-                Debug.warning(file, section, "无法识别的类型: " + type + " 尝试以粘液物品重新加载...");
+                Debug.warn(file, section, "无法识别的类型: " + type + " 尝试以粘液物品重新加载...");
                 var sf = getBaseItemStack(file, section, "slimefun", material, addon);
                 if (sf != null) return sf;
                 Debug.error(file, section, "无法识别的类型: " + type + " 无法加载!");
@@ -292,7 +333,7 @@ public class CommonUtils {
         String finalType = type;
         ItemStack itemStack = CommonUtils.readPipe(material, s -> getBaseItemStack(file, section, finalType, material, addon));
         if (itemStack == null) {
-            Debug.warning(file, section, "无法识别对应的物品，已转为石头.");
+            Debug.warn("无法识别上面的物品，已转为石头.");
             itemStack = createDefaultItem();
         }
 
@@ -304,7 +345,7 @@ public class CommonUtils {
         itemStack.setItemMeta(meta);
 
         if (amount > 100 || amount < -1) {
-            Debug.warning(file, section, "物品数量超出范围 (amount): " + amount, -1, 100);
+            Debug.warn(file, section, "物品数量 (amount) 超出范围: " + amount, -1, 100);
         } else {
             itemStack.setAmount(amount);
         }
@@ -314,7 +355,7 @@ public class CommonUtils {
             for (String enchant : enchants) {
                 String[] s2 = enchant.split(" ");
                 if (s2.length != 2) {
-                    Debug.warning(file, section, "附魔格式非法 (enchantments): " + enchant + " 已跳过");
+                    Debug.warn(file, section, "附魔格式非法 (enchantments): " + enchant + " 已跳过");
                     continue;
                 }
 
@@ -322,7 +363,7 @@ public class CommonUtils {
 
                 Enchantment enchantment = Enchantment.getByKey(NamespacedKey.minecraft(enchantName.toLowerCase()));
                 if (enchantment == null) {
-                    Debug.warning(file, section, "未知的附魔 (enchantments): " + enchantName + " 已跳过");
+                    Debug.warn(file, section, "未知的附魔 (enchantments): " + enchantName + " 已跳过");
                     continue;
                 }
 
@@ -330,7 +371,7 @@ public class CommonUtils {
                     int lvl = Integer.parseInt(s2[1]);
                     itemStack.addUnsafeEnchantment(enchantment, lvl);
                 } catch (NumberFormatException e) {
-                    Debug.warning(file, section, "附魔格式非法 (enchantments): " + enchant + " 已跳过");
+                    Debug.warn(file, section, "附魔格式非法 (enchantments): " + enchant + " 已跳过");
                     continue;
                 }
             }
@@ -496,8 +537,10 @@ public class CommonUtils {
         return newArray;
     }
 
+    @Contract("null, _ -> null")
     @Nullable
-    public static <T> T readPipe(String s, Function<String, @Nullable T> parser) {
+    public static <T> T readPipe(@Nullable String s, Function<String, @Nullable T> parser) {
+        if (s == null) return null;
         for (String part : Arrays.stream(s.split("\\|")).map(String::trim).toList()) {
             T r = parser.apply(part);;
             if (r != null) return r;
@@ -507,12 +550,12 @@ public class CommonUtils {
 
     public static int clamp(int v, int a, int b, File file, ConfigurationSection section, String msg) {
         if (v < a) {
-            Debug.warning(file, section, msg + "，已转为 " + a, a, b);
+            Debug.warn(file, section, msg + "，已转为 " + a, a, b);
             v = a;
         }
 
         if (v > b) {
-            Debug.warning(file, section, msg + "，已转为 " + b, a, b);
+            Debug.warn(file, section, msg + "，已转为 " + b, a, b);
             v = b;
         }
 
@@ -521,12 +564,12 @@ public class CommonUtils {
 
     public static float clamp(float v, float a, float b, File file, ConfigurationSection section, String msg) {
         if (v < a) {
-            Debug.warning(file, section, msg + "，已转为 " + a, a, b);
+            Debug.warn(file, section, msg + "，已转为 " + a, a, b);
             v = a;
         }
 
         if (v > b) {
-            Debug.warning(file, section, msg + "，已转为 " + b, a, b);
+            Debug.warn(file, section, msg + "，已转为 " + b, a, b);
             v = b;
         }
 
@@ -535,18 +578,19 @@ public class CommonUtils {
 
     public static float clamp(float v, float a, float def, float b, File file, ConfigurationSection section, String msg) {
         if (v < a) {
-            Debug.warning(file, section, msg + "，已转为 " + def, a, b);
+            Debug.warn(file, section, msg + "，已转为 " + def, a, b);
             v = a;
         }
 
         if (v > b) {
-            Debug.warning(file, section, msg + "，已转为 " + def, a, b);
+            Debug.warn(file, section, msg + "，已转为 " + def, a, b);
             v = b;
         }
 
         return v;
     }
 
+    @NonNull
     public static <T extends Enum<T>> Optional<T> getEnum(Class<T> enumClass, String name) {
         return readPipe(name, n -> {
             try {
@@ -567,5 +611,57 @@ public class CommonUtils {
                 return Optional.empty();
             }
         });
+    }
+
+    public static boolean passItemIdConflictCheck(String id) {
+        SlimefunItem i = SlimefunItem.getById(id);
+        if (i == null) return true;
+        Debug.error("ID 冲突: " + id + " 与 " + i.getAddon().getName() + "中的物品发生了 ID 冲突");
+        return false;
+    }
+
+    public static boolean passItemGroupIdConflictCheck(String id) {
+        ItemGroup ig = getIf(Slimefun.getRegistry().getAllItemGroups(),
+            i -> i.getKey().getKey().equalsIgnoreCase(id));
+        if (ig == null) return true;
+        Debug.error("ID 冲突: " + id + " 与粘液附属 " + ig.getAddon().getName() + " 中的物品组发生 ID 冲突");
+        return false;
+    }
+
+    public static @Nullable ItemGroup getItemGroup(ProjectAddon addon, @Nullable String id) {
+        var v = readPipe(id, p -> {
+            var v1 = getIf(addon.getItemGroups(), i -> i.getKey().getKey().equalsIgnoreCase(id));
+            if (v1 == null) return getIf(Slimefun.getRegistry().getAllItemGroups(), i -> i.getKey().getKey().equalsIgnoreCase(id));
+            return v1;
+        });
+
+        if (v == null) Debug.error("无法找到物品组 (item_group): " + id);
+        return v;
+    }
+
+    public static @Nullable RecipeType getRecipeType(String fieldName) {
+        try {
+            Field field = RecipeType.class.getDeclaredField(fieldName);
+            return (RecipeType) field.get(null);
+        } catch (NoSuchFieldException e) {
+            RecipeType recipeType = RecipeTypeMap.getRecipeType(fieldName);
+            return recipeType;
+        } catch (IllegalAccessException ignored) {
+            // it doesn't happen
+        }
+        return null;
+    }
+
+    public static Component decorate(String message) {
+        if (RykenSlimefunCustomizer.addonManager.getLoadingAddon() != null) {
+            message = "[" + RykenSlimefunCustomizer.addonManager.getLoadingAddon() + "] " + message;
+        }
+        return LegacyComponentSerializer.legacyAmpersand().deserialize(CMIChatColor.translate(message));
+    }
+
+    public static boolean passMenuIdConflictCheck(String id, ProjectAddon addon) {
+        if (getIf(addon.getMenus(), m -> m.getId().equalsIgnoreCase(id)) == null) return true;
+        Debug.error("ID 冲突：已存在菜单 ID 为" + id + "的菜单");
+        return false;
     }
 }

@@ -40,7 +40,7 @@ import org.bukkit.event.block.LeavesDecayEvent;
 import org.bukkit.event.block.TNTPrimeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.Asynchronized;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
@@ -51,39 +51,39 @@ public class SuperMultiBlockListener extends SuperMultiBlockManager implements L
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBlockPlace(@NotNull BlockPlaceEvent e) {
+    public void onBlockPlace(@NonNull BlockPlaceEvent e) {
         markDirty(e.getBlock().getLocation());
         runAsyncLater(() -> tryModifyMenu(e.getBlock().getLocation()));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBlockBreak(@NotNull BlockBreakEvent e) {
+    public void onBlockBreak(@NonNull BlockBreakEvent e) {
         markDirty(e.getBlock().getLocation());
         runAsyncLater(() -> getMenuModified().remove(e.getBlock().getLocation()));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBlockExplode(@NotNull BlockExplodeEvent e) {
+    public void onBlockExplode(@NonNull BlockExplodeEvent e) {
         for (var block : e.blockList()) {
             markDirty(block.getLocation());
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onEntityExplode(@NotNull EntityExplodeEvent e) {
+    public void onEntityExplode(@NonNull EntityExplodeEvent e) {
         for (var block : e.blockList()) {
             markDirty(block.getLocation());
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBlockDamage(@NotNull BlockDamageEvent e) {
+    public void onBlockDamage(@NonNull BlockDamageEvent e) {
         markDirty(e.getBlock().getLocation());
     }
 
     // blockfade event
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBlockFade(@NotNull BlockFadeEvent e) {
+    public void onBlockFade(@NonNull BlockFadeEvent e) {
         markDirty(e.getBlock().getLocation());
     }
 
@@ -128,12 +128,12 @@ public class SuperMultiBlockListener extends SuperMultiBlockManager implements L
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onBlockPhysics(@NotNull BlockPhysicsEvent e) {
+    public void onBlockPhysics(@NonNull BlockPhysicsEvent e) {
         markDirty(e.getBlock().getLocation());
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-    public void onPlayerInteract(@NotNull PlayerInteractEvent e) {
+    public void onPlayerInteract(@NonNull PlayerInteractEvent e) {
         if (e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         Block b = e.getClickedBlock();
         if (b == null) return;
@@ -142,7 +142,7 @@ public class SuperMultiBlockListener extends SuperMultiBlockManager implements L
         }
     }
 
-    private void markDirty(@NotNull Location location) {
+    private void markDirty(@NonNull Location location) {
         markDirty(location, true);
     }
 }

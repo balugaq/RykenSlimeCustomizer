@@ -30,8 +30,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.event.HandlerList;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.ScriptableEventListener;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomAddonConfig;
@@ -51,7 +51,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomWo
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.parent.AbstractEmptyMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.DropFromBlock;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.RecipeTypeMap;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -66,19 +66,18 @@ public final class ProjectAddon {
     private boolean markedAsDepend = false;
 
     // info.yml
-    private @NotNull final String addonId;
-    private @NotNull final String addonName;
-    private @NotNull final String addonVersion;
-    private @NotNull final List<String> pluginDepends;
-    private @NotNull final List<String> depends;
-    private @NotNull final String description;
-    private @NotNull final List<String> authors;
-    private @NotNull final File folder;
-    private @Nullable final List<String> enabledTexts;
+    private @NonNull final String addonId;
+    private @NonNull final String addonName;
+    private @NonNull final String addonVersion;
+    private @NonNull final List<String> pluginDepends;
+    private @NonNull final List<String> depends;
+    private @NonNull final String description;
+    private @NonNull final List<String> authors;
+    private @NonNull final File folder;
     //
-    private @NotNull final Map<String, SlimefunItemStack> preloadItems = new HashMap<>();
+    private @NonNull final Map<String, SlimefunItemStack> preloadItems = new HashMap<>();
     //
-    private @Nullable String githubRepo;
+    private @Nullable String gitHubRepo;
     private @Nullable String downloadZipName;
     private @Nullable String idPattern;
     //
@@ -268,13 +267,13 @@ public final class ProjectAddon {
 
             return id.toUpperCase();
         } else {
-            ExceptionHandler.handleError("无法获取id");
-            ExceptionHandler.handleError("configuredId: " + (configuredId == null ? "null" : configuredId));
-            ExceptionHandler.handleError("id_alias: " + (id_alias == null ? "null" : id_alias));
-            ExceptionHandler.handleError("idPattern: " + (idPattern == null ? "null" : idPattern));
+            Debug.error("无法获取id");
+            Debug.error("configuredId: " + (configuredId == null ? "null" : configuredId));
+            Debug.error("id_alias: " + (id_alias == null ? "null" : id_alias));
+            Debug.error("idPattern: " + (idPattern == null ? "null" : idPattern));
             String randomId = "RSC_UNKNOWN_ID_" + ((int) (Math.random() * 1_000_000));
-            ExceptionHandler.handleError("分配随机id");
-            ExceptionHandler.handleError("randomId: " + randomId);
+            Debug.error("分配随机id");
+            Debug.error("randomId: " + randomId);
             return randomId;
         }
     }

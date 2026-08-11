@@ -7,7 +7,6 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 @NullMarked
 @Data
@@ -48,16 +47,20 @@ public class ItemWrapper implements Cloneable {
         return countStack(amount);
     }
 
-    public Stream<ItemStack> toStackStream() {
+    public List<ItemStack> toStacks() {
+        return toStacks(amount);
+    }
+
+    public List<ItemStack> toStacks(int amt) {
         List<ItemStack> list = new ArrayList<>();
-        for (int i = 0; i < countStack() - 1; i++) {
+        for (int i = 0; i < countStack(amt) - 1; i++) {
             list.add(stack.asQuantity(stack.getMaxStackSize()));
         }
-        int left = amount - (stack.getMaxStackSize() * (countStack() - 1));
+        int left = amt - (stack.getMaxStackSize() * (countStack(amt) - 1));
         if (left > 0) {
             list.add(stack.asQuantity(left));
         }
-        return list.stream();
+        return list;
     }
 
     @Override

@@ -25,7 +25,7 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 
 import java.util.List;
@@ -44,7 +44,7 @@ public class ScriptedEvalBreakHandler extends BlockBreakHandler {
 
     @Override
     public void onPlayerBreak(
-            BlockBreakEvent blockBreakEvent, @NotNull ItemStack itemStack, @NotNull List<ItemStack> list) {
+            BlockBreakEvent blockBreakEvent, @NonNull ItemStack itemStack, @NonNull List<ItemStack> list) {
         Block block = blockBreakEvent.getBlock();
         Location loc = block.getLocation();
         BlockMenu bm = StorageCacheUtils.getMenu(loc);

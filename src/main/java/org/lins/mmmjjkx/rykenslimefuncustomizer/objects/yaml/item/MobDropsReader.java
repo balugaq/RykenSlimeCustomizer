@@ -19,7 +19,6 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.item;
 
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -33,7 +32,6 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 import java.io.File;
 import java.util.List;
@@ -53,21 +51,17 @@ public class MobDropsReader extends YamlReader<CustomMobDrop> {
     @Override
     public CustomMobDrop readEach(String s) {
         ConfigurationSection section = configuration.getConfigurationSection(s);
-        String id = addon.getId(s, section.getString("id_alias"));
+        if (section == null) return null;
+        String id = getId(s);
+        if (!CommonUtils.passItemIdConflictCheck(id)) return null;
 
-        ExceptionHandler.HandleResult result = ExceptionHandler.handleIdConflict(id);
-        if (result == ExceptionHandler.HandleResult.FAILED) return null;
-
-        String igId = section.getString("item_group");
-
-        Pair<ExceptionHandler.HandleResult, ItemGroup> group = ExceptionHandler.handleItemGroupGet(addon, igId);
-        if (group.getFirstValue() == ExceptionHandler.HandleResult.FAILED) return null;
+        ItemGroup group = CommonUtils.getItemGroup(addon, section.getString("item_group"));
+        if (group == null) return null;
 
         SlimefunItemStack sfis = getPreloadItem(id);
         if (sfis == null) return null;
 
         String type = section.getString("entity");
-
         Optional<EntityType> entity = CommonUtils.getEnum(EntityType.class, type);
         if (entity.isEmpty()) {
             Debug.error(file, section, "错误的生物类型 (entity): " + type);
@@ -77,7 +71,7 @@ public class MobDropsReader extends YamlReader<CustomMobDrop> {
         EntityType entityType = entity.get();
 
         Material eggMaterial = CommonUtils.getEnum(Material.class, entityType + "_SPAWN_EGG").orElse(Material.EGG);
-        int chance = CommonUtils.clamp(section.getInt("chance", 100), 1, 100, file, section, "'概率 (chance) 非法'");
+        int chance = CommonUtils.clamp(section.getInt("chance", 100), 1, 100, file, section, "'掉落概率 (chance) 非法'");
 
         Component lore = t("&a击杀 ")
                 .append(t("&b"))
@@ -91,7 +85,7 @@ public class MobDropsReader extends YamlReader<CustomMobDrop> {
         });
         ItemStack[] recipe = new ItemStack[] {null, null, null, null, itemStack, null, null, null, null};
 
-        return new CustomMobDrop(group.getSecondValue(), sfis, recipe, chance, entityType, sfis);
+        return new CustomMobDrop(group, sfis, recipe, chance, entityType, sfis);
     }
 
     public Component t(String s) {

@@ -26,7 +26,7 @@ public class RecipeMachineTickerCreator implements TickerCreator {
         return readRecipes(file, inputSize, outputSize, section, section.getConfigurationSection("recipes"), addon);
     }
 
-    public @Nullable List<? extends AbstractRecipe> readRecipes(File file, int inputSize, int outputSize, ConfigurationSection section, @Nullable ConfigurationSection recipes, ProjectAddon addon) {
+    public @Nullable List<CustomMachineRecipe> readRecipes(File file, int inputSize, int outputSize, ConfigurationSection section, @Nullable ConfigurationSection recipes, ProjectAddon addon) {
         if (recipes == null) return Collections.emptyList();
         List<CustomMachineRecipe> list = new ArrayList<>();
         for (String key : recipes.getKeys(false)) {
@@ -37,13 +37,8 @@ public class RecipeMachineTickerCreator implements TickerCreator {
                 Debug.error(file, recipe, "缺少或配置错误 '配方耗时' (seconds)");
                 continue;
             }
-            ConfigurationSection inputs = recipe.getConfigurationSection("input");
-            if (inputs == null) {
-                Debug.error(file, recipe, "缺少 '输入物品' (input)");
-                continue;
-            }
-            ItemStack[] input = CommonUtils.readRecipe(inputs, addon, inputSize);
-            if (input == null) {
+            List<InputWrapper> input = CommonUtils.readInputs(file, recipe.getConfigurationSection("input"), addon);
+            if (input.isEmpty()) {
                 Debug.error(file, recipe, "缺少 '输入物品' (input)");
                 continue;
             }
@@ -58,7 +53,7 @@ public class RecipeMachineTickerCreator implements TickerCreator {
             for (String k : outputs.getKeys(false)) {
                 ConfigurationSection outputCfg = outputs.getConfigurationSection(k);
                 if (outputCfg == null) break;
-                var item = CommonUtils.readItem(outputCfg, true, addon);
+                var item = CommonUtils.readItem(file, outputCfg, addon);
                 if (item == null) {
                     Debug.error(file, outputCfg, "物品配置错误 (output)");
                     continue;

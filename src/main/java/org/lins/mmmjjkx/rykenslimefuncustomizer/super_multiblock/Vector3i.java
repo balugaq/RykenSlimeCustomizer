@@ -19,7 +19,7 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock;
 
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Objects;
 
@@ -34,29 +34,29 @@ public final class Vector3i extends org.joml.Vector3i {
         this.z = z;
     }
 
-    public Vector3i(@NotNull Vector vector) {
+    public Vector3i(@NonNull Vector vector) {
         this.x = vector.getBlockX();
         this.y = vector.getBlockY();
         this.z = vector.getBlockZ();
     }
 
-    @NotNull
+    @NonNull
     public Vector toVector() {
         return new Vector(x, y, z);
     }
 
-    @NotNull
-    public Location addTo(@NotNull Location location) {
+    @NonNull
+    public Location addTo(@NonNull Location location) {
         return location.clone().add(x, y, z);
     }
 
-    @NotNull
-    public Vector3i add(@NotNull Vector3i other) {
+    @NonNull
+    public Vector3i add(@NonNull Vector3i other) {
         return new Vector3i(x + other.x, y + other.y, z + other.z);
     }
 
-    @NotNull
-    public Vector3i subtract(@NotNull Vector3i other) {
+    @NonNull
+    public Vector3i subtract(@NonNull Vector3i other) {
         return new Vector3i(x - other.x, y - other.y, z - other.z);
     }
 

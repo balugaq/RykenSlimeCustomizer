@@ -209,7 +209,7 @@ public class BlockMenuUtil {
     }
 
     public static boolean fits(@Nonnull BlockMenu blockMenu, @Nonnull LinkedOutput output, int... slots) {
-        int emptySlots = 0;
+        int emptySlots = 0; // fast index
         for (int slot : slots) {
             if (output.linkedOutput().containsKey(slot)) continue;
             ItemStack stack = blockMenu.getItemInSlot(slot);
@@ -228,7 +228,6 @@ public class BlockMenuUtil {
             }
             linked.put(slot, item.asQuantity(ap));
         }
-
 
         // try to push free output
         for (ItemWrapper wrapper : output.freeOutputWrappers()) {

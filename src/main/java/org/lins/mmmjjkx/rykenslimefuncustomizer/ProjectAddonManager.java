@@ -24,15 +24,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.events.AddonDisableEvent;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.events.AddonEnableEvent;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddonLoader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.RecipeTypeMap;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -99,7 +99,7 @@ public final class ProjectAddonManager {
         for (File folder : folders) {
             debug(() -> "Loading addon folder " + folder.getName());
             if (folder.isFile()) {
-                ExceptionHandler.handleError(folder.getName() + " 不是文件夹！无法加载此附属！");
+                Debug.error(folder.getName() + " 不是文件夹！无法加载此附属！");
                 continue;
             }
 
@@ -107,9 +107,9 @@ public final class ProjectAddonManager {
             if (!info.exists()) {
                 File sc = new File(folder, "sc-addon.yml");
                 if (sc.exists()) {
-                    ExceptionHandler.handleError("无法读取到附属信息，看来你错误地将SC配置文件放入了RSC中");
+                    Debug.error("无法读取到附属信息，看来你错误地将SC配置文件放入了RSC中");
                 } else {
-                    ExceptionHandler.handleError("无法获取附属信息，你是否错误地将SC配置文件放入了RSC中？或者说是错误地删除了info.yml文件？");
+                    Debug.error("无法获取附属信息，你是否错误地将SC配置文件放入了RSC中？或者说是错误地删除了info.yml文件？");
                 }
                 skip.add(folder.getName());
                 continue;
@@ -118,7 +118,7 @@ public final class ProjectAddonManager {
             YamlConfiguration infoConfig = YamlConfiguration.loadConfiguration(info);
             String id = infoConfig.getString("id");
             if (id == null || id.isBlank()) {
-                ExceptionHandler.handleError("在名称为 " + folder.getName() + "的文件夹中有无效的附属ID，导致此附属无法加载！");
+                Debug.error("在名称为 " + folder.getName() + "的文件夹中有无效的附属ID，导致此附属无法加载！");
                 skip.add(folder.getName());
                 continue;
             }
@@ -126,7 +126,7 @@ public final class ProjectAddonManager {
             if (projectIds.containsKey(id)) {
                 ProjectAddon addon = projectAddons.get(id);
                 if (addon == null) {
-                    ExceptionHandler.handleError("无法正常加载附属 " + id + "！请检查所有附属内容！");
+                    Debug.error("无法正常加载附属 " + id + "！请检查所有附属内容！");
                     continue;
                 }
 
@@ -134,7 +134,7 @@ public final class ProjectAddonManager {
                     continue;
                 }
 
-                ExceptionHandler.handleError("在名称为 " + folder.getName() + "的文件夹中有重复的附属ID，导致此附属无法加载！");
+                Debug.error("在名称为 " + folder.getName() + "的文件夹中有重复的附属ID，导致此附属无法加载！");
                 skip.add(folder.getName());
             } else {
                 projectIds.put(id, folder);
@@ -148,9 +148,7 @@ public final class ProjectAddonManager {
 
             YamlConfiguration infoConfig = YamlConfiguration.loadConfiguration(new File(folder, Constants.INFO_FILE));
             String id = infoConfig.getString("id");
-            if (projectAddons.containsKey(id)) {
-                continue;
-            }
+            if (projectAddons.containsKey(id)) continue;
 
             try {
                 ProjectAddonLoader loader = new ProjectAddonLoader(folder, projectIds, id);
@@ -162,19 +160,19 @@ public final class ProjectAddonManager {
                 setLoadingAddon(null);
             } catch (Exception e) {
                 if (folder.isFile()) {
-                    ExceptionHandler.handleError(folder.getName() + " 不是文件夹！无法加载此附属！");
+                    Debug.error(folder.getName() + " 不是文件夹！无法加载此附属！");
                     continue;
                 }
                 e.printStackTrace();
             }
         }
 
-        ExceptionHandler.info("已加载的附属列表：");
+        Debug.info("已加载的附属列表：");
         for (ProjectAddon addon : projectAddons.values()) {
-            ExceptionHandler.info(
+            Debug.info(
                     addon.getAddonName() + " (" + addon.getAddonId() + ")" + " 版本号: " + addon.getAddonVersion());
         }
-        ExceptionHandler.info("共计" + projectAddons.size() + "个附属被加载");
+        Debug.info("共计" + projectAddons.size() + "个附属被加载");
     }
 
     public void checkFiles() {
@@ -183,7 +181,7 @@ public final class ProjectAddonManager {
             boolean b = Arrays.stream(Objects.requireNonNull(folder.listFiles()))
                     .anyMatch(f -> f.isFile() && !f.getName().equalsIgnoreCase("config.yml"));
             if (b) {
-                ExceptionHandler.handleWarning(
+                Debug.warn(
                         "你应当在 \"plugin/RykenSlimefunCustomizer/addons/附属文件夹\" 中存入配置文件，而不是在 \"plugin/RykenSlimefunCustomizer\" 中");
             }
         }
@@ -227,16 +225,16 @@ public final class ProjectAddonManager {
         return projectIds.get(id);
     }
 
-    @NotNull
-    public Map<ItemStack[], ItemStack> getPreaddRecipes(@NotNull String s) {
+    @NonNull
+    public Map<ItemStack[], ItemStack> getPreaddRecipes(@NonNull String s) {
         return preaddRecipes.getOrDefault(s, new HashMap<>());
     }
 
-    public void addPreaddRecipe(@NotNull String s, @NotNull ItemStack[] input, @NotNull ItemStack output) {
+    public void addPreaddRecipe(@NonNull String s, @NonNull ItemStack[] input, @NonNull ItemStack output) {
         preaddRecipes.computeIfAbsent(s, k -> new HashMap<>()).put(input, output);
     }
 
     private void debug(Supplier<String> message) {
-        ExceptionHandler.debugLog(message.get());
+        Debug.debug(message.get());
     }
 }

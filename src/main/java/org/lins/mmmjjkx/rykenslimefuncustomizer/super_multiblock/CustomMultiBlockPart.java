@@ -19,28 +19,28 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock;
 
 import org.bukkit.Location;
 import org.graalvm.polyglot.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 
 public class CustomMultiBlockPart implements MultiBlockPart {
     private final JavaScriptEval eval;
     private final DisplayDescriptor descriptor;
 
-    public CustomMultiBlockPart(@NotNull JavaScriptEval eval, @Nullable DisplayDescriptor descriptor) {
+    public CustomMultiBlockPart(@NonNull JavaScriptEval eval, @Nullable DisplayDescriptor descriptor) {
         this.eval = eval;
         this.descriptor = descriptor;
     }
 
     @Override
-    public boolean isOfPart(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
+    public boolean isOfPart(@NonNull SuperMultiBlock superMultiBlockInstance, @NonNull Location partLocation) {
         Value result = eval.evalFunction("isOfPart", partLocation, superMultiBlockInstance);
         return result != null && result.asBoolean();
     }
 
     @Override
     @Nullable
-    public DisplayDescriptor getDisplayDescriptor(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
+    public DisplayDescriptor getDisplayDescriptor(@NonNull SuperMultiBlock superMultiBlockInstance, @NonNull Location partLocation) {
         if (descriptor != null) return descriptor;
         Value result = eval.evalFunction("getDisplayDescriptor", partLocation, superMultiBlockInstance);
         if (result == null) return null;

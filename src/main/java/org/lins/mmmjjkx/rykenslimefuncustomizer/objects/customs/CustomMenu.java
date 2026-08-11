@@ -30,11 +30,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.CustomMenuHolder;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.RSCClickHandler;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.MenuReader;
 
@@ -44,7 +45,7 @@ import java.util.Map;
 @SuppressWarnings("deprecation")
 public class CustomMenu {
     @Getter
-    private final JavaScriptEval eval;
+    private final ScriptEval eval;
 
     @Getter
     private final String title;
@@ -59,7 +60,7 @@ public class CustomMenu {
     private int size;
 
     @Getter
-    private ItemStack progress;
+    private ItemStack progressBar;
 
     @Setter
     private boolean playerInvClickable;
@@ -103,10 +104,10 @@ public class CustomMenu {
             SlimefunItem item = Slimefun.getRegistry().getSlimefunItemIds().get(preset.getID());
             if (item instanceof CustomMenuHolder holder) {
                 this.progressSlot = holder.getCustomMenu() != null ? holder.getCustomMenu().getProgressSlot() : 22;
-                this.progress = holder.getProgressBar();
+                this.progressBar = holder.getProgressBar();
             } else if (item instanceof AContainer container) {
                 this.progressSlot = 22;
-                this.progress = container.getProgressBar();
+                this.progressBar = container.getProgressBar();
             }
 
             this.size = preset.getSize();
@@ -116,17 +117,17 @@ public class CustomMenu {
     public CustomMenu(
             String id,
             String title,
-            @NotNull Map<Integer, ItemStack> mi,
+            @NonNull Map<Integer, ItemStack> mi,
             boolean playerInvClickable,
-            int progress,
+            int progressSlot,
             @Nullable ItemStack progressBar,
-            @Nullable JavaScriptEval eval) {
+            @Nullable ScriptEval eval) {
 
         this.id = id;
         this.title = CMIChatColor.translate(title);
         this.eval = eval;
-        this.progress = progressBar != null ? progressBar.clone() : mi.get(progress);
-        this.progressSlot = progress;
+        this.progressBar = progressBar != null ? progressBar.clone() : mi.get(progressSlot);
+        this.progressSlot = progressSlot;
         this.playerInvClickable = playerInvClickable;
 
         this.items = mi;
@@ -160,7 +161,7 @@ public class CustomMenu {
         }
 
         if (size > 54 || size < 0) {
-            throw new IllegalArgumentException("Size must be between 0 and 54");
+            throw new IllegalArgumentException("Size must be in [9, 54]");
         }
         if (size % 9 != 0) {
             throw new IllegalArgumentException("Size must be a multiple of 9");
@@ -185,10 +186,6 @@ public class CustomMenu {
 
     private ChestMenu.MenuClickHandler getClickHandler(int slot) {
         return clickHandlers.getOrDefault(slot, (player, i, itemStack, clickAction) -> true);
-    }
-
-    @Nullable public ItemStack getProgressBarItem() {
-        return progress;
     }
 
     private void cloneFromPresetInventory(BlockMenuPreset preset) {
@@ -227,7 +224,7 @@ public class CustomMenu {
         clickHandlers.put(i, onClick);
     }
 
-    public void apply(BlockMenuPreset preset) {
+    public void apply(ChestMenu preset) {
         preset.setPlayerInventoryClickable(playerInvClickable);
 
         if (size != MenuReader.NOT_SET) {
@@ -242,7 +239,7 @@ public class CustomMenu {
         preset.addMenuCloseHandler(menuCloseHandler);
     }
 
-    @Nullable public ChestMenu.MenuClickHandler getMenuClickHandler(int workSlot) {
+    public ChestMenu.@Nullable MenuClickHandler getMenuClickHandler(int workSlot) {
         return clickHandlers.get(workSlot);
     }
 }

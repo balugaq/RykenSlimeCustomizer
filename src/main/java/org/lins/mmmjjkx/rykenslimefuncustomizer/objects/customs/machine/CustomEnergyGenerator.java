@@ -18,22 +18,18 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine;
 
 import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
-import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
-import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.attributes.EnergyNetProvider;
 import io.github.thebusybiscuit.slimefun4.core.networks.energy.EnergyNetComponentType;
 import org.bukkit.Location;
-import org.bukkit.inventory.ItemStack;
 import org.graalvm.polyglot.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.machine.MachineRecord;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 
 import java.util.List;
 
@@ -57,7 +53,7 @@ public class CustomEnergyGenerator extends CustomMachine implements EnergyNetPro
     }
 
     @Override
-    public int getGeneratedOutput(@NotNull Location l, @NotNull SlimefunBlockData data) {
+    public int getGeneratedOutput(@NonNull Location l, @NonNull SlimefunBlockData data) {
         if (!SuperMultiBlockManager.canTick(l)) return 0;
         if (eval == null) {
             return defaultOutput;
@@ -67,7 +63,7 @@ public class CustomEnergyGenerator extends CustomMachine implements EnergyNetPro
                 if (result != null) {
                     return result.asInt();
                 } else {
-                    ExceptionHandler.handleWarning(
+                    Debug.warn(
                             "getGeneratedOutput() 返回了一个非整数值: " + result + " 导致自定义发电机的默认输出值将被使用， 请找附属对应作者修复此问题！");
                     return defaultOutput;
                 }

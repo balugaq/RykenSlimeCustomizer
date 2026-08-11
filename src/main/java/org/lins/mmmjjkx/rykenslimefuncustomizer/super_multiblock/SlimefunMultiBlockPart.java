@@ -24,27 +24,27 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 public class SlimefunMultiBlockPart implements MultiBlockPart {
     protected final SlimefunItemStack target;
     protected final BlockData blockData;
 
-    public SlimefunMultiBlockPart(@NotNull SlimefunItemStack target) {
+    public SlimefunMultiBlockPart(@NonNull SlimefunItemStack target) {
         this.target = target;
         this.blockData = Bukkit.createBlockData(target.getType());
     }
 
     @Override
-    public boolean isOfPart(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
+    public boolean isOfPart(@NonNull SuperMultiBlock superMultiBlockInstance, @NonNull Location partLocation) {
         SlimefunItem sfItem = StorageCacheUtils.getSfItem(partLocation);
         return sfItem != null && sfItem.getId().equals(target.getItemId());
     }
 
     @Override
     @Nullable
-    public DisplayDescriptor getDisplayDescriptor(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation) {
+    public DisplayDescriptor getDisplayDescriptor(@NonNull SuperMultiBlock superMultiBlockInstance, @NonNull Location partLocation) {
         return new BlockDisplayDescriptor(blockData);
     }
 }

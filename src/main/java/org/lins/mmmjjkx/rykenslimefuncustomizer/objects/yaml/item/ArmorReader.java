@@ -33,7 +33,6 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -60,16 +59,15 @@ public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
 
         boolean fullSet = section.getBoolean("fullSet", false);
 
-        Pair<ExceptionHandler.HandleResult, ItemGroup> group =
-                ExceptionHandler.handleItemGroupGet(addon, section.getString("item_group", ""));
-        if (group.getFirstValue() == ExceptionHandler.HandleResult.FAILED) return null;
+        ItemGroup group = CommonUtils.getItemGroup(addon, section.getString("item_group"));
+        if (group == null) return null;
 
         List<String> pt = section.getStringList("protection_types");
         List<ProtectionType> protectionTypes = new ArrayList<>();
         for (String type : pt) {
             Optional<ProtectionType> result = CommonUtils.getEnum(ProtectionType.class, type);
             if (result.isEmpty()) {
-                Debug.warning(file, section, " 盔甲保护类型 (protection_types) 非法: " + type);
+                Debug.warn(file, section, " 盔甲保护类型 (protection_types) 非法: " + type);
                 continue;
             }
             protectionTypes.add(result.get());
@@ -80,11 +78,8 @@ public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
             ConfigurationSection pieceSection = section.getConfigurationSection(check);
             if (pieceSection == null) continue;
 
-            String pieceId = addon.getId(
-                    s + "_" + check.toUpperCase(), section.getString("id_alias", pieceSection.getString("id", "")));
-
-            ExceptionHandler.HandleResult result = ExceptionHandler.handleIdConflict(pieceId);
-            if (result == ExceptionHandler.HandleResult.FAILED) return null;
+            String pieceId = addon.getId(s + "_" + check.toUpperCase(), section.getString("id_alias", pieceSection.getString("id", "")));
+            if (!CommonUtils.passItemIdConflictCheck(pieceId)) return null;
 
             Pair<RecipeType, ItemStack[]> recipePair = getRecipe(pieceSection, addon);
             RecipeType rt = recipePair.getFirstValue();
@@ -99,7 +94,7 @@ public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
             for (String effect : effects) {
                 String[] split = effect.split(" ");
                 if (split.length != 2) {
-                    Debug.warning(file, pieceSection, "药水格式非法 (potion_effects) " + effect);
+                    Debug.warn(file, pieceSection, "药水格式非法 (potion_effects) " + effect);
                     continue;
                 }
                 String effectName = split[0];
@@ -107,12 +102,12 @@ public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
 
                 PotionEffectType type = PotionEffectType.getByName(effectName);
                 if (type == null) {
-                    Debug.warning(file, pieceSection, "药水效果类型非法 (potion_effects) " + effectName);
+                    Debug.warn(file, pieceSection, "药水效果类型非法 (potion_effects) " + effectName);
                     continue;
                 }
 
                 if (amplifier < 0) {
-                    Debug.warning(file, pieceSection, "药水效果等级非法 (potion_effects) " + effect, 1, Integer.MAX_VALUE);
+                    Debug.warn(file, pieceSection, "药水效果等级非法 (potion_effects) " + effect, 1, Integer.MAX_VALUE);
                     continue;
                 }
 
@@ -124,14 +119,14 @@ public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
             }
 
             pieces.add(new CustomArmorPiece(
-                    group.getSecondValue(),
+                    group,
                     sfis,
                     rt,
                     recipe,
-                    potionEffects.toArray(new PotionEffect[] {}),
+                    potionEffects.toArray(new PotionEffect[0]),
                     fullSet,
                     s,
-                    protectionTypes.toArray(new ProtectionType[] {}),
+                    protectionTypes.toArray(new ProtectionType[0]),
                     addon.getAddonId()));
         }
 
@@ -152,15 +147,15 @@ public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
         for (String check : CHECKS) {
             ConfigurationSection piece = section.getConfigurationSection(check);
             if (piece == null) {
-                Debug.warning(file, section, "缺失配置 '盔甲部件' (" + check + ")");
+                Debug.warn(file, section, "缺失配置 '盔甲部件' (" + check + ")");
                 continue;
             }
 
 
-            ItemStack stack = CommonUtils.readItem(piece, false, addon);
+            ItemStack stack = CommonUtils.readItem(file, piece, addon);
 
             if (stack == null) {
-                Debug.warning(file, piece, "缺失配置 '盔甲部件' (" + check + ")");
+                Debug.warn(file, piece, "缺失配置 '盔甲部件' (" + check + ")");
                 continue;
             }
 

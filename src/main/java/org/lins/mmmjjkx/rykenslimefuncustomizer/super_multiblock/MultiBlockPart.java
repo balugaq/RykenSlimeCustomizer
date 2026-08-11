@@ -18,17 +18,17 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock;
 
 import org.bukkit.Location;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 public interface MultiBlockPart {
-    boolean isOfPart(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation);
+    boolean isOfPart(@NonNull SuperMultiBlock superMultiBlockInstance, @NonNull Location partLocation);
 
     @Nullable
-    DisplayDescriptor getDisplayDescriptor(@NotNull SuperMultiBlock superMultiBlockInstance, @NotNull Location partLocation);
+    DisplayDescriptor getDisplayDescriptor(@NonNull SuperMultiBlock superMultiBlockInstance, @NonNull Location partLocation);
 
     // 独立于 isOfPart，这专门给多方块套娃使用的，即多方块里套了另一个多方块的情况
-    default boolean isBuilt(@NotNull SuperMultiBlock ancestor, @NotNull Location partLocation) {
+    default boolean isBuilt(@NonNull SuperMultiBlock ancestor, @NonNull Location partLocation) {
         return true;
     }
 }

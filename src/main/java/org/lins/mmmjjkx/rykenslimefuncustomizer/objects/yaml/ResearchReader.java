@@ -20,14 +20,12 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.researches.Research;
-import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
 
 import java.io.File;
 import java.util.List;
@@ -80,23 +78,22 @@ public class ResearchReader extends YamlReader<Research> {
         if (hasCurrency) {
             currency = section.getDouble("currencyCost");
             if (currency < 0) {
-                Debug.warning(file, section, "缺少或配置错误 '研究货币花费' (currencyCost)", 1, Integer.MAX_VALUE);
+                Debug.warn(file, section, "缺少或配置错误 '研究货币花费' (currencyCost)", 1, Integer.MAX_VALUE);
                 hasCurrency = false;
             }
         }
 
         Research research;
         if (hasCurrency) {
-            research = new Research(
-                    new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, s), researchId, name, cost, currency);
+            research = new Research(Keys.newKey(s), researchId, name, cost, currency);
         } else {
-            research = new Research(new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, s), researchId, name, cost);
+            research = new Research(Keys.newKey(s), researchId, name, cost);
         }
 
         for (String item : items) {
             SlimefunItem sfItem = SlimefunItem.getById(item);
             if (sfItem == null) {
-                Debug.warning(file, section, "不是粘液物品 (item): " + item);
+                Debug.warn(file, section, "不是粘液物品 (item): " + item);
                 continue;
             }
             research.addItems(sfItem);

@@ -19,17 +19,15 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml;
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
-import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomRecipeType;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine.MultiBlockMachineReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
 
 import java.io.File;
 import java.util.List;
@@ -49,7 +47,7 @@ public class RecipeTypesReader extends YamlReader<RecipeType> {
         ConfigurationSection section = configuration.getConfigurationSection(s);
         if (section == null) return null;
 
-        ItemStack item = CommonUtils.readItem(section, false, addon);
+        ItemStack item = CommonUtils.readItem(file, section, addon);
         if (item == null) {
             Debug.error(file, section, "缺少或配置错误 '物品' (item)");
             return null;
@@ -57,12 +55,13 @@ public class RecipeTypesReader extends YamlReader<RecipeType> {
 
         String bindToMultiblock = section.getString("bind-to-multiblock");
         if (bindToMultiblock != null) {
-            return new CustomRecipeType(new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, s.toLowerCase()), item, (recipe, result) -> {
+            Debug.debug(file, () -> "已绑定配方类型 " + s + " -> 多方块 " + bindToMultiblock);
+            return new CustomRecipeType(Keys.newKey(s), item, (recipe, result) -> {
                 MultiBlockMachineReader.addPreaddRecipe(bindToMultiblock, recipe, result);
             }, (a, b) -> {/* unregister recipe is not supported yet*/});
         }
 
-        return new CustomRecipeType(new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, s.toLowerCase()), item);
+        return new CustomRecipeType(Keys.newKey(s), item);
     }
 
     // 配方类型不需要预加载物品

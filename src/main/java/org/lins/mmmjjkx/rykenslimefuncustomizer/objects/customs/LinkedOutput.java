@@ -32,8 +32,12 @@ public record LinkedOutput(
         ItemStack[] freeOutput,
         List<ItemWrapper> freeOutputWrappers,
         Map<Integer, ItemStack> linkedOutput,
-        int[] freeChances,
+        IntList freeChance,
         Map<Integer, Integer> linkedChances) {
+
+    public int size() {
+        return freeOutput.length + linkedOutput.size();
+    }
 
     public ItemStack[] toArray() {
         ItemStack[] result = new ItemStack[freeOutput.length + linkedOutput.size()];
@@ -48,8 +52,8 @@ public record LinkedOutput(
     }
 
     public IntList chancesToList() {
-        IntList result = new IntArrayList(freeChances.length + linkedChances.size());
-        for (int chance : freeChances) {
+        IntList result = new IntArrayList(freeChance.size() + linkedChances.size());
+        for (int chance : freeChance) {
             result.add(chance);
         }
         result.addAll(linkedChances.values());
@@ -74,7 +78,7 @@ public record LinkedOutput(
         List<ItemStack> itemStacks = new ArrayList<>();
 
         for (int i = 0; i < freeOutput().length; i++) {
-            if (CustomMachineRecipe.matchChance(freeChances()[i])) {
+            if (CustomMachineRecipe.matchChance(freeChance().getInt(i))) {
                 itemStacks.add(freeOutput()[i]);
                 if (chooseOne) return itemStacks;
             }

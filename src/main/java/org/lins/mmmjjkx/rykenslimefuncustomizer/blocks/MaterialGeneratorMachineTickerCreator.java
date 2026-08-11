@@ -32,7 +32,7 @@ public class MaterialGeneratorMachineTickerCreator implements TickerCreator {
             for (String key : outputItems.getKeys(false)) {
                 ConfigurationSection outputCfg = outputItems.getConfigurationSection(key);
                 if (outputCfg == null) break;
-                var item = CommonUtils.readItem(outputCfg, true, addon);
+                var item = CommonUtils.readItem(file, outputCfg, addon);
                 if (item == null) {
                     Debug.error(file, outputCfg, "物品配置错误 (outputs)");
                     continue;
@@ -48,7 +48,7 @@ public class MaterialGeneratorMachineTickerCreator implements TickerCreator {
 
         ConfigurationSection outputItem = section.getConfigurationSection("outputItem");
         if (outputItem != null) {
-            var item = CommonUtils.readItem(outputItem, true, addon);
+            var item = CommonUtils.readItem(file, outputItem, addon);
             if (item == null) {
                 Debug.error(file, outputItem, "物品配置错误 (outputItem)");
             } else {
@@ -67,14 +67,13 @@ public class MaterialGeneratorMachineTickerCreator implements TickerCreator {
             return null;
         }
         return List.of(new CustomMachineRecipe(
-            new ItemStack[0],
+            List.of(),
             outputs.stream().toList().toArray(new ItemStack[0]),
             tickRate,
             chances,
             chooseOne,
             false,
-            false,
-            IntList.of()
+            false
         ));
     }
 
