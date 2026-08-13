@@ -62,6 +62,10 @@ public class Debug {
         getLogger().warn(CommonUtils.decorate("&e" + message));
     }
 
+    public static void warn(String message, Throwable e) {
+        getLogger().warn(CommonUtils.decorate("&e" + message), e);
+    }
+
     public static ComponentLogger getLogger() {
         return RykenSlimefunCustomizer.INSTANCE.getComponentLogger();
     }

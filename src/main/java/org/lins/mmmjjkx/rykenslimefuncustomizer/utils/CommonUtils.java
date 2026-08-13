@@ -31,7 +31,6 @@ import lombok.SneakyThrows;
 import net.guizhanss.guizhanlib.minecraft.utils.compatibility.EnchantmentX;
 import net.guizhanss.guizhanlib.minecraft.utils.compatibility.ItemFlagX;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -48,21 +47,24 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Contract;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.UnknownNullability;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.InputDesc;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.blocks.InputWrapper;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.BuiltInItems;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.InputDesc;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.InputWrapper;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.RecipeTypeMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -71,7 +73,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+@NullMarked
 public class CommonUtils {
     private static final Map<String, String> materialMappings = Map.of(
         "GRASS", "SHORT_GRASS",
@@ -82,7 +87,8 @@ public class CommonUtils {
         "IRON_CHAIN", "CHAIN"
     );
 
-    @Nullable public static <T> T getIf(Iterable<T> iterable, Predicate<T> filter) {
+    @Nullable
+    public static <T> T getIf(@Nullable Iterable<T> iterable, Predicate<T> filter) {
         if (iterable == null) return null;
 
         for (T t : iterable) {
@@ -102,12 +108,11 @@ public class CommonUtils {
         return Optional.of(m);
     }
 
-    @NonNull public static ItemStack[] readRecipe(File file, @Nullable ConfigurationSection section, ProjectAddon addon) {
+    public static @Nullable ItemStack[] readRecipe(File file, @Nullable ConfigurationSection section, ProjectAddon addon) {
         return readRecipe(file, section, addon, 9);
     }
 
-    @NonNull
-    public static ItemStack[] readRecipe(File file, @Nullable ConfigurationSection section, @NonNull ProjectAddon addon, int size) {
+    public static @Nullable ItemStack[] readRecipe(File file, @Nullable ConfigurationSection section, ProjectAddon addon, int size) {
         if (section == null) return new ItemStack[size];
         ItemStack[] itemStacks = new ItemStack[size];
         for (int i = 0; i < size; i++) {
@@ -117,7 +122,7 @@ public class CommonUtils {
         return itemStacks;
     }
 
-    public static List<InputWrapper> readInputs(File file, @Nullable ConfigurationSection section, @NonNull ProjectAddon addon) {
+    public static List<InputWrapper> readInputs(File file, @Nullable ConfigurationSection section, ProjectAddon addon) {
         if (section == null) return Collections.emptyList();
         List<InputDesc> descs = new ArrayList<>();
         for (String k : section.getKeys(false)) {
@@ -147,7 +152,7 @@ public class CommonUtils {
     }
 
     @SneakyThrows
-    @Nullable public static ItemStack readItem(File file, ConfigurationSection section, ProjectAddon addon) {
+    @Nullable public static ItemStack readItem(File file, @Nullable ConfigurationSection section, ProjectAddon addon) {
         if (section == null) return null;
 
         String type = section.getString("material_type", "mc");
@@ -199,7 +204,8 @@ public class CommonUtils {
                 }
             }
         } catch (NumberFormatException e) {
-            Debug.error("物品颜色 (color) 非法: " + Arrays.toString(parts));
+            Debug.warn("物品颜色 (color) 非法: " + color + " 已跳过");
+            return;
         }
     }
 
@@ -225,16 +231,11 @@ public class CommonUtils {
                 return new CustomItemStack(head);
             }
             case "slimefun", "sf" -> {
-                SlimefunItemStack sfis = addon.getPreloadItems().get(material.toUpperCase());
+                SlimefunItemStack sfis = addon.getSfStack(material);
                 if (sfis != null) return sfis.clone();
 
-                SlimefunItem sfItem = SlimefunItem.getById(material.toUpperCase());
-                if (sfItem != null) {
-                    return sfItem.getItem().clone();
-                } else {
-                    Debug.error(file, section, "无法找到粘液物品: " + material);
-                    return null;
-                }
+                Debug.warn(file, section, "无法找到粘液物品: " + material);
+                return null;
             }
             case "uniitem" -> {
                 try {
@@ -242,7 +243,7 @@ public class CommonUtils {
                     String[] split = material.split("::");
                     ItemStack item = provider.item(new ItemKey(split[0], split[1]));
                     if (item == null) {
-                        Debug.error(file, section, "无法读取 UniItem 物品!");
+                        Debug.warn(file, section, "无法读取 UniItem 物品!");
                         return null;
                     }
 
@@ -250,40 +251,33 @@ public class CommonUtils {
 
                     return item;
                 } catch (NoClassDefFoundError e) {
-                    Debug.error(file, section, "无法加载 UniItem 依赖! 无法识别物品.", e);
+                    Debug.warn(file, section, "无法加载 UniItem 依赖! 无法识别物品.", e);
                     return null;
                 }
             }
             case "saveditem" -> {
                 File saveditemFile = new File(addon.getSavedItemsFolder(), material + ".yml");
                 if (!saveditemFile.exists()) {
-                    Debug.error(file, section, "保存物品对应的文件不存在: " + material);
+                    Debug.warn(file, section, "保存物品对应的文件不存在: " + material);
                     return null;
                 }
 
                 var cfg = YamlConfiguration.loadConfiguration(saveditemFile);
-                var itemCfg = cfg.getConfigurationSection("item");
-                if (itemCfg == null) {
-                    Debug.error(file, section, "无法识别对应的保存物品: " + material);
-                    return null;
-                }
 
-                if (itemCfg.contains("v")) {
-                    itemCfg.set("v", Bukkit.getUnsafe().getDataVersion());
-                }
+                fixVersionCode(saveditemFile);
 
                 ItemStack itemStack = cfg.getItemStack("item");
                 if (itemStack != null) {
                     return itemStack;
                 } else {
-                    Debug.error(file, section, "无法识别对应的保存物品: " + material);
+                    Debug.warn(file, section, "无法识别对应的保存物品: " + material);
                     return null;
                 }
             }
             case "mc", "minecraft", "vanilla" -> {
                 Optional<Material> mat = getMaterial(material);
                 if (mat.isEmpty()) {
-                    Debug.error(file, section, "无法识别粘液物品: " + material);
+                    Debug.warn(file, section, "无法识别粘液物品: " + material);
                     return null;
                 }
 
@@ -294,6 +288,14 @@ public class CommonUtils {
 
                 return stack;
             }
+            case "built_in" -> {
+                var stack = BuiltInItems.createStack(material);
+                if (stack == null) {
+                    Debug.warn(file, section, "无法识别内置物品: " + material);
+                    return null;
+                }
+                return stack;
+            }
             default -> {
                 Debug.warn(file, section, "无法识别的类型: " + type + " 尝试以原版物品重新加载...");
                 var mc = getBaseItemStack(file, section, "mc", material, addon);
@@ -301,7 +303,7 @@ public class CommonUtils {
                 Debug.warn(file, section, "无法识别的类型: " + type + " 尝试以粘液物品重新加载...");
                 var sf = getBaseItemStack(file, section, "slimefun", material, addon);
                 if (sf != null) return sf;
-                Debug.error(file, section, "无法识别的类型: " + type + " 无法加载!");
+                Debug.warn(file, section, "无法识别的类型: " + type + " 无法加载!");
                 return null;
             }
         }
@@ -333,7 +335,7 @@ public class CommonUtils {
         String finalType = type;
         ItemStack itemStack = CommonUtils.readPipe(material, s -> getBaseItemStack(file, section, finalType, material, addon));
         if (itemStack == null) {
-            Debug.warn("无法识别上面的物品，已转为石头.");
+            Debug.warn("无法识别 " + material + " ，已转为石头.");
             itemStack = createDefaultItem();
         }
 
@@ -451,18 +453,44 @@ public class CommonUtils {
             YamlConfiguration configuration2 = new YamlConfiguration();
             configuration2.load(file);
 
-            completeFile0(configuration, configuration2);
+            completeFile(configuration, configuration2);
             configuration2.save(file);
         } catch (Exception e) {
             Debug.error("无法找到文件 " + resourceFile + " 的同步，请检查插件文件是否损坏!", e);
         }
     }
 
-    public static void completeFile(YamlConfiguration origin, YamlConfiguration dest) {
-        completeFile0(origin, dest);
+    private static void fixVersionCode(File file) {
+        try {
+            String fileContext = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+            Pattern p = Pattern.compile("v: \\S\\d*");
+
+            Matcher matcher = p.matcher(fileContext);
+            if (matcher.find()) {
+                int s = matcher.start();
+                int e = matcher.end();
+                String replace = fileContext.substring(s, e);
+                int v = Integer.parseInt(replace.replace("v: ", ""));
+
+                if (v > Bukkit.getUnsafe().getDataVersion()) {
+                    String r2 = replace.replaceFirst(
+                        String.valueOf(v),
+                        String.valueOf(Bukkit.getUnsafe().getDataVersion()));
+                    fileContext = fileContext.replace(replace, r2);
+                    Files.writeString(
+                        file.toPath(),
+                        fileContext,
+                        StandardCharsets.UTF_8,
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.TRUNCATE_EXISTING);
+                }
+            }
+        } catch (IOException e) {
+            Debug.error("", e);
+        }
     }
 
-    private static void completeFile0(YamlConfiguration origin, YamlConfiguration dest) {
+    public static void completeFile(YamlConfiguration origin, YamlConfiguration dest) {
         for (String key : origin.getKeys(true)) {
             Object value = origin.get(key);
             if (value instanceof List<?>) {
@@ -516,7 +544,7 @@ public class CommonUtils {
         }
     }
 
-    public static ItemStack[] removeNulls(ItemStack[] origin) {
+    public static ItemStack[] removeNulls(@Nullable ItemStack[] origin) {
         int count = 0;
         for (ItemStack element : origin) {
             if (element != null) {
@@ -538,7 +566,7 @@ public class CommonUtils {
     }
 
     @Contract("null, _ -> null")
-    @Nullable
+    @UnknownNullability
     public static <T> T readPipe(@Nullable String s, Function<String, @Nullable T> parser) {
         if (s == null) return null;
         for (String part : Arrays.stream(s.split("\\|")).map(String::trim).toList()) {
@@ -590,12 +618,11 @@ public class CommonUtils {
         return v;
     }
 
-    @NonNull
-    public static <T extends Enum<T>> Optional<T> getEnum(Class<T> enumClass, String name) {
-        return readPipe(name, n -> {
+    public static <T extends Enum<T>> Optional<T> getEnum(Class<T> enumClass, @Nullable String name) {
+        return Optional.ofNullable(readPipe(name, n -> {
             try {
                 var values = enumClass.getEnumConstants();
-                if (values == null) return Optional.empty();
+                if (values == null) return null;
                 T bValue = null;
                 for (T enumValue : values) {
                     // 模糊匹配
@@ -603,20 +630,20 @@ public class CommonUtils {
                         bValue = enumValue;
                     }
                     if (enumValue.name().equals(name)) {
-                        return Optional.of(enumValue);
+                        return enumValue;
                     }
                 }
-                return Optional.ofNullable(bValue);
+                return bValue;
             } catch (NullPointerException | IllegalArgumentException ignored) {
-                return Optional.empty();
+                return null;
             }
-        });
+        }));
     }
 
     public static boolean passItemIdConflictCheck(String id) {
-        SlimefunItem i = SlimefunItem.getById(id);
-        if (i == null) return true;
-        Debug.error("ID 冲突: " + id + " 与 " + i.getAddon().getName() + "中的物品发生了 ID 冲突");
+        SlimefunItem sf = SlimefunItem.getById(id);
+        if (sf == null) return true;
+        Debug.error("ID 冲突: " + id + " 与 " + sf.getAddon().getName() + " 中的物品发生了 ID 冲突");
         return false;
     }
 
@@ -644,8 +671,7 @@ public class CommonUtils {
             Field field = RecipeType.class.getDeclaredField(fieldName);
             return (RecipeType) field.get(null);
         } catch (NoSuchFieldException e) {
-            RecipeType recipeType = RecipeTypeMap.getRecipeType(fieldName);
-            return recipeType;
+            return RecipeTypeMap.getRecipeType(fieldName);
         } catch (IllegalAccessException ignored) {
             // it doesn't happen
         }
@@ -653,10 +679,11 @@ public class CommonUtils {
     }
 
     public static Component decorate(String message) {
-        if (RykenSlimefunCustomizer.addonManager.getLoadingAddon() != null) {
+        if (RykenSlimefunCustomizer.addonManager != null
+            && RykenSlimefunCustomizer.addonManager.getLoadingAddon() != null) {
             message = "[" + RykenSlimefunCustomizer.addonManager.getLoadingAddon() + "] " + message;
         }
-        return LegacyComponentSerializer.legacyAmpersand().deserialize(CMIChatColor.translate(message));
+        return ComponentUtils.legacyDeserialize(CMIChatColor.translate(message));
     }
 
     public static boolean passMenuIdConflictCheck(String id, ProjectAddon addon) {

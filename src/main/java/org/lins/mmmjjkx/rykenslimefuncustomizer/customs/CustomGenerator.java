@@ -1,0 +1,267 @@
+/*
+ * RykenSlimefunCustomizer
+ * Copyright (C) 2026 lijinhong11(mmmjjjkx) and balugaq
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package org.lins.mmmjjkx.rykenslimefuncustomizer.customs;
+
+import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
+import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
+import io.github.thebusybiscuit.slimefun4.core.attributes.EnergyNetProvider;
+import io.github.thebusybiscuit.slimefun4.core.attributes.MachineProcessHolder;
+import io.github.thebusybiscuit.slimefun4.core.handlers.BlockBreakHandler;
+import io.github.thebusybiscuit.slimefun4.core.machines.MachineProcessor;
+import io.github.thebusybiscuit.slimefun4.implementation.SlimefunItems;
+import io.github.thebusybiscuit.slimefun4.implementation.handlers.SimpleBlockBreakHandler;
+import io.github.thebusybiscuit.slimefun4.implementation.items.electric.AbstractEnergyProvider;
+import io.github.thebusybiscuit.slimefun4.implementation.operations.FuelOperation;
+import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
+import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
+import io.github.thebusybiscuit.slimefun4.utils.itemstack.ItemStackWrapper;
+import lombok.Getter;
+import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineFuel;
+import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.menu.CustomMenu;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.super_multiblock.SuperMultiBlockManager;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
+
+import javax.annotation.Nonnull;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class CustomGenerator extends AbstractEnergyProvider
+        implements MachineProcessHolder<FuelOperation>, EnergyNetProvider {
+    @Override
+    public void load() {
+        if (!hidden) {
+            RSCItemGroupLegacy.addItemToGroup(getItemGroup(), this);
+        }
+
+        getRecipeType().register(getRecipe(), getRecipeOutput());
+    }
+
+    @Getter
+    private final MachineProcessor<FuelOperation> processor = new MachineProcessor<>(this);
+
+    private final int capacity;
+    private final List<Integer> input;
+    private final List<Integer> output;
+    private final CustomMenu menu;
+    private final int production;
+
+    public CustomGenerator(
+            YamlReader.BaseResult base,
+            @Nullable CustomMenu menu,
+            int capacity,
+            List<Integer> input,
+            List<Integer> output,
+            int production,
+            List<MachineFuel> machineFuels) {
+        super(base.itemGroup(), base.sfis(), base.recipeType(), base.recipe());
+        this.processor.setProgressBar(this.getProgressBar());
+
+        this.addItemHandler(this.onBlockBreak());
+        this.registerDefaultFuelTypes();
+
+        if (menu != null) {
+            this.processor.setProgressBar(menu.getProgressBar());
+
+            createPreset(this, menu::apply);
+        }
+
+        this.capacity = capacity;
+        this.input = input;
+        this.output = output;
+        this.production = production;
+        this.menu = menu;
+
+        for (MachineFuel fuel : machineFuels) {
+            registerFuel(fuel);
+        }
+
+        register(RykenSlimefunCustomizer.INSTANCE);
+    }
+
+    @Override
+    public int getGeneratedOutput(@Nonnull Location l, @Nonnull SlimefunBlockData data) {
+        if (!SuperMultiBlockManager.canTick(l)) return 0;
+
+        BlockMenu inv = StorageCacheUtils.getMenu(l);
+        FuelOperation operation = processor.getOperation(l);
+
+        int progressSlot = (menu == null || menu.getProgressSlot() == -1) ? 22 : menu.getProgressSlot();
+
+        if (inv != null) {
+            if (operation != null) {
+                if (!operation.isFinished()) {
+                    processor.updateProgressBar(inv, progressSlot, operation);
+
+                    if (isChargeable()) {
+                        int charge = getCharge(l, data);
+
+                        if (getCapacity() - charge >= getEnergyProduction()) {
+                            operation.addProgress(1);
+                            return getEnergyProduction();
+                        }
+
+                        return 0;
+                    } else {
+                        operation.addProgress(1);
+                        return getEnergyProduction();
+                    }
+                } else {
+                    ItemStack fuel = operation.getIngredient();
+
+                    if (isBucket(fuel)) {
+                        inv.pushItem(new ItemStack(Material.BUCKET), getOutputSlots());
+                    }
+
+                    if (operation.getResult() != null) {
+                        inv.pushItem(operation.getResult().clone(), getOutputSlots());
+                    }
+
+                    ItemStack progress;
+                    if (menu == null) {
+                        progress = ChestMenuUtils.getBackground();
+                    } else {
+                        progress = menu.getItems().getOrDefault(progressSlot, ChestMenuUtils.getBackground());
+                    }
+
+                    inv.replaceExistingItem(progressSlot, progress);
+
+                    processor.endOperation(l);
+                    return 0;
+                }
+            } else {
+                Map<Integer, Integer> found = new HashMap<>();
+                MachineFuel fuel = findRecipe(inv, found);
+
+                if (fuel != null) {
+                    for (Map.Entry<Integer, Integer> entry : found.entrySet()) {
+                        inv.consumeItem(entry.getKey(), entry.getValue());
+                    }
+
+                    processor.startOperation(l, new FuelOperation(fuel));
+                }
+
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+    private boolean isBucket(ItemStack item) {
+        if (item == null) {
+            return false;
+        }
+
+        ItemStackWrapper wrapper = ItemStackWrapper.wrap(item);
+        return item.getType() == Material.LAVA_BUCKET
+                || item.getType() == Material.WATER_BUCKET
+                || SlimefunUtils.isItemSimilar(wrapper, SlimefunItems.FUEL_BUCKET, true)
+                || SlimefunUtils.isItemSimilar(wrapper, SlimefunItems.OIL_BUCKET, true);
+    }
+
+    private MachineFuel findRecipe(BlockMenu menu, Map<Integer, Integer> found) {
+        for (MachineFuel fuel : fuelTypes) {
+            for (int slot : getInputSlots()) {
+                if (fuel.test(menu.getItemInSlot(slot))) {
+                    found.put(slot, fuel.getInput().getAmount());
+                    return fuel;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Nonnull
+    protected BlockBreakHandler onBlockBreak() {
+        return new SimpleBlockBreakHandler() {
+            public void onBlockBreak(@NonNull Block b) {
+                BlockMenu inv = StorageCacheUtils.getMenu(b.getLocation());
+                if (inv != null) {
+                    inv.dropItems(b.getLocation(), CustomGenerator.this.getInputSlots());
+                    inv.dropItems(b.getLocation(), CustomGenerator.this.getOutputSlots());
+                }
+
+                CustomGenerator.this.processor.endOperation(b);
+            }
+        };
+    }
+
+    @NonNull @Override
+    public String getInventoryTitle() {
+        return "";
+    }
+
+    @NonNull @Override
+    // outside init
+    public ItemStack getProgressBar() {
+        return new ItemStack(Material.FLINT_AND_STEEL);
+    }
+
+    @Override
+    public int getEnergyProduction() {
+        return production;
+    }
+
+    @Override
+    public @NonNull MachineProcessor<FuelOperation> getMachineProcessor() {
+        return processor;
+    }
+
+    @Override
+    public int getCapacity() {
+        return capacity;
+    }
+
+    @Override
+    public int[] getInputSlots() {
+        if (this.input == null) return new int[0];
+
+        int[] input = new int[this.input.size()];
+        for (int i = 0; i < this.input.size(); i++) {
+            input[i] = this.input.get(i);
+        }
+        return input;
+    }
+
+    @Override
+    public int[] getOutputSlots() {
+        if (this.output == null) return new int[0];
+
+        int[] output = new int[this.output.size()];
+        for (int i = 0; i < this.output.size(); i++) {
+            output[i] = this.output.get(i);
+        }
+        return output;
+    }
+
+    /**
+     * Outside init
+     */
+    @Override
+    public void registerDefaultFuelTypes() {}
+}

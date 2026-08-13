@@ -38,12 +38,11 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.ProjectAddonManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SaveditemsGroup;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.super_multiblock.SuperMultiBlock;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.super_multiblock.SuperMultiBlockManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddonLoader;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlock;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 
@@ -83,14 +82,14 @@ public class MainCommand implements TabExecutor {
                 List<String> nameWithId = addons.stream()
                         .map(a -> a.getAddonName() + "(id: " + a.getAddonId() + ")")
                         .toList();
-                String component = "&a已加载的附属: ";
+                StringBuilder component = new StringBuilder("&a已加载的附属: ");
                 for (String nwi : nameWithId) {
-                    component = component.concat("&a" + nwi);
+                    component.append("&a").append(nwi);
                     if (nameWithId.indexOf(nwi) != (nameWithId.size() - 1)) {
-                        component = component.concat("&6, ");
+                        component.append("&6, ");
                     }
                 }
-                sender.sendMessage(component);
+                sender.sendMessage(component.toString());
                 return true;
             } else if (args[0].equalsIgnoreCase("reloadPlugin")) {
                 if (!sender.hasPermission("rsc.command") || !sender.hasPermission("rsc.command.reloadPlugin")) {
@@ -102,7 +101,7 @@ public class MainCommand implements TabExecutor {
                 if (RykenSlimefunCustomizer.INSTANCE.getConfig().getBoolean("saveExample")) {
                     RykenSlimefunCustomizer.saveExample();
                 }
-                sendMessage(sender, "&a重载插件成功！");
+                sendMessage(sender, "&a重载配置成功！");
                 return true;
             } else if (args[0].equalsIgnoreCase("resaveitems")) {
                 if (!sender.hasPermission("rsc.command") || !sender.hasPermission("rsc.command.resaveitems")) {
@@ -162,7 +161,7 @@ public class MainCommand implements TabExecutor {
 
                 SuperMultiBlock smb = SuperMultiBlockManager.getInstance().getSuperMultiBlock(b.getLocation());
                 if (smb == null) {
-                    smb = SuperMultiBlockManager.getInstance().getCoreStorage().get(b.getLocation());
+                    smb = SuperMultiBlockManager.getCoreStorage().get(b.getLocation());
                     if (smb == null) {
                         sendMessage(player, "&4你必须要看向一个超大多方块才能执行此指令");
                         return false;
@@ -188,24 +187,13 @@ public class MainCommand implements TabExecutor {
                     return false;
                 }
 
-                YamlConfiguration forId = YamlConfiguration.loadConfiguration(new File(file, "info.yml"));
-                if (forId.getString("id", null) == null) {
-                    sendMessage(sender, "&4没有在info.yml里找到ID，无法加载！");
-                    return false;
-                }
-
-                String id = forId.getString("id");
-                if (RykenSlimefunCustomizer.addonManager.isLoaded(id)) {
+                if (RykenSlimefunCustomizer.addonManager.isLoaded(file)) {
                     sendMessage(sender, "&4此附属已经被加载了！");
                     return false;
                 }
 
-                ProjectAddonLoader loader =
-                        new ProjectAddonLoader(file, RykenSlimefunCustomizer.addonManager.getProjectIds(), id);
-                ProjectAddon addon = loader.load();
-                if (addon != null) {
-                    RykenSlimefunCustomizer.addonManager.addProjectAddon(addon);
-                    sendMessage(sender, "&a加载此附属成功！");
+                if (RykenSlimefunCustomizer.addonManager.loadAddon(file)) {
+                    sendMessage(sender, "&a加载附属成功！");
                 } else {
                     sendMessage(sender, "&c附属加载失败！");
                 }
@@ -223,8 +211,7 @@ public class MainCommand implements TabExecutor {
                     return false;
                 }
 
-                addon.unregister();
-                RykenSlimefunCustomizer.addonManager.removeProjectAddon(addon);
+                RykenSlimefunCustomizer.addonManager.unloadAddon(addon);
 
                 sendMessage(sender, "&a卸载此附属成功！");
                 return true;
@@ -304,15 +291,7 @@ public class MainCommand implements TabExecutor {
                     return false;
                 }
 
-                addon.unregister();
-                RykenSlimefunCustomizer.addonManager.removeProjectAddon(addon);
-
-                File folder = addon.getFolder();
-                ProjectAddonLoader pal =
-                        new ProjectAddonLoader(folder, RykenSlimefunCustomizer.addonManager.getProjectIds(), prjId);
-                ProjectAddon addonNew = pal.load();
-                if (addonNew != null) {
-                    RykenSlimefunCustomizer.addonManager.addProjectAddon(addonNew);
+                if (RykenSlimefunCustomizer.addonManager.reloadAddon(addon)) {
                     sendMessage(sender, "&a重载成功！");
                 } else {
                     sendMessage(sender, "&c重载失败！");

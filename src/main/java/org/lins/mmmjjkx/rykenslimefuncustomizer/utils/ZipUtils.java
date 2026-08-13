@@ -36,14 +36,12 @@ public final class ZipUtils {
     public static void unzip(File zipFile, File desDirectory) throws IOException {
         if (!desDirectory.exists()) {
             boolean mkdirSuccess = desDirectory.mkdirs();
-            if (!mkdirSuccess) {
+            if (!mkdirSuccess)
                 throw new IOException("创建解压目标文件夹失败");
-            }
         }
 
-        if (!zipFile.exists()) {
+        if (!zipFile.exists())
             throw new FileNotFoundException("找不到压缩包");
-        }
 
         try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile))) {
             ZipEntry zipEntry = zipInputStream.getNextEntry();
@@ -79,10 +77,8 @@ public final class ZipUtils {
     }
 
     public static void mkdir(File file) {
-        if (file == null || file.exists()) {
-            return;
-        }
-        mkdir(file.getParentFile());
+        if (file == null || file.exists()) return;
+        if (!file.getParentFile().exists()) mkdir(file.getParentFile());
         file.mkdirs();
     }
 }

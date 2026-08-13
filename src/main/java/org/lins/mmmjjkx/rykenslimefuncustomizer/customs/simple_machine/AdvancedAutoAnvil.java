@@ -1,0 +1,104 @@
+/*
+ * RykenSlimefunCustomizer
+ * Copyright (C) 2026 lijinhong11(mmmjjjkx) and balugaq
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package org.lins.mmmjjkx.rykenslimefuncustomizer.customs.simple_machine;
+
+import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
+import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
+import io.github.thebusybiscuit.slimefun4.implementation.SlimefunItems;
+import io.github.thebusybiscuit.slimefun4.implementation.items.electric.machines.AutoAnvil;
+import io.github.thebusybiscuit.slimefun4.utils.SlimefunUtils;
+import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe;
+import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.super_multiblock.SuperMultiBlockManager;
+
+public class AdvancedAutoAnvil extends AutoAnvil {
+    @Override
+    public void load() {
+        if (!hidden) {
+            RSCItemGroupLegacy.addItemToGroup(getItemGroup(), this);
+        }
+
+        getRecipeType().register(getRecipe(), getRecipeOutput());
+    }
+
+    private final int repairFactor;
+    private final int speed;
+
+    public AdvancedAutoAnvil(
+            ItemGroup itemGroup,
+            int repairFactor,
+            SlimefunItemStack item,
+            RecipeType recipeType,
+            ItemStack[] recipe,
+            int speed) {
+        super(itemGroup, repairFactor, item, recipeType, recipe);
+
+        this.repairFactor = repairFactor;
+        this.speed = speed;
+    }
+
+    protected MachineRecipe findNextRecipe(BlockMenu menu) {
+        if (!SuperMultiBlockManager.canTick(menu.getLocation())) return null;
+
+        for (int slot : this.getInputSlots()) {
+            ItemStack ductTape = menu.getItemInSlot(
+                    slot == this.getInputSlots()[0] ? this.getInputSlots()[1] : this.getInputSlots()[0]);
+            ItemStack item = menu.getItemInSlot(slot);
+            if (item != null
+                    && item.getType().getMaxDurability() > 0
+                    && ((Damageable) item.getItemMeta()).getDamage() > 0) {
+                if (SlimefunUtils.isItemSimilar(ductTape, SlimefunItems.DUCT_TAPE, true, false)) {
+                    ItemStack repairedItem = this.repair(item);
+                    if (!menu.fits(repairedItem, this.getOutputSlots())) {
+                        return null;
+                    }
+
+                    for (int inputSlot : this.getInputSlots()) {
+                        menu.consumeItem(inputSlot);
+                    }
+
+                    return new MachineRecipe(
+                            30 / this.speed, new ItemStack[] {ductTape, item}, new ItemStack[] {repairedItem});
+                }
+                break;
+            }
+        }
+
+        return null;
+    }
+
+    private ItemStack repair(ItemStack item) {
+        ItemStack repaired = item.clone();
+        ItemMeta meta = repaired.getItemMeta();
+        short maxDurability = item.getType().getMaxDurability();
+        int repairPercentage = 100 / this.repairFactor;
+        short durability = (short) (((Damageable) meta).getDamage() - maxDurability / repairPercentage);
+        if (durability < 0) {
+            durability = 0;
+        }
+
+        ((Damageable) meta).setDamage(durability);
+        repaired.setItemMeta(meta);
+        return repaired;
+    }
+}

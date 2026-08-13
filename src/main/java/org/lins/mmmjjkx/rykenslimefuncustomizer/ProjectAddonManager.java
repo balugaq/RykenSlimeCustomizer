@@ -17,22 +17,20 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer;
 
-import io.github.thebusybiscuit.slimefun4.libraries.commons.lang.Validate;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddonLoader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.events.AddonDisableEvent;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.events.AddonEnableEvent;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddonLoader;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.RecipeTypeMap;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.RecipeTypeMap;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -43,134 +41,102 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+@NullMarked
 public final class ProjectAddonManager {
-    public static File ADDONS_DIRECTORY;
-    public static File CONFIGS_DIRECTORY;
-
-    private final Map<String, ProjectAddon> projectAddons = new HashMap<>();
-    private final Map<String, Map<ItemStack[], ItemStack>> preaddRecipes = new HashMap<>();
+    public static File ADDONS_DIRECTORY = new File(RykenSlimefunCustomizer.INSTANCE.getDataFolder(), "addons");
+    public static File CONFIGS_DIRECTORY = new File(RykenSlimefunCustomizer.INSTANCE.getDataFolder(), "addon_configs");
 
     @Getter
-    private final Map<String, File> projectIds = new HashMap<>();
+    private final Map<String, File> projectIds = new HashMap<>(); // 查找所有文件夹
+    private final Map<String, ProjectAddon> projectAddons = new HashMap<>(); // 查找已加载附属
+    private final Map<String, Map<ItemStack[], ItemStack>> preaddRecipes = new HashMap<>();
 
     @Getter
     @Setter
     @Nullable private String loadingAddon;
 
     public ProjectAddonManager() {
-        ADDONS_DIRECTORY = new File(RykenSlimefunCustomizer.INSTANCE.getDataFolder(), "addons");
-        CONFIGS_DIRECTORY = new File(RykenSlimefunCustomizer.INSTANCE.getDataFolder(), "addon_configs");
-
-        if (!CONFIGS_DIRECTORY.exists()) {
-            CONFIGS_DIRECTORY.mkdirs();
-        }
+        if (!ADDONS_DIRECTORY.exists()) ADDONS_DIRECTORY.mkdirs();
+        if (!CONFIGS_DIRECTORY.exists()) CONFIGS_DIRECTORY.mkdirs();
     }
 
-    public void addProjectAddon(ProjectAddon addon) {
-        Validate.notNull(addon, "addon");
-        if (!projectAddons.containsKey(addon.getAddonId())) {
-            projectIds.put(addon.getAddonId(), addon.getFolder());
-            projectAddons.put(addon.getAddonId(), addon);
-        }
-        Bukkit.getPluginManager().callEvent(new AddonEnableEvent(addon));
-    }
-
-    public void removeProjectAddon(ProjectAddon addon) {
-        Validate.notNull(addon, "addon");
-
+    public void unloadAddon(ProjectAddon addon) {
+        addon.unregister();
         projectIds.remove(addon.getAddonId());
         projectAddons.remove(addon.getAddonId());
         Bukkit.getPluginManager().callEvent(new AddonDisableEvent(addon));
     }
 
-    public void setup(Plugin inst) {
-        File addons = new File(inst.getDataFolder(), "addons");
-        if (!addons.exists()) {
-            debug(() -> "Created addons folder");
-            addons.mkdirs();
-            return;
-        }
-
-        File[] folders = addons.listFiles();
-        if (folders == null) return;
-
-        List<String> skip = new ArrayList<>();
-
-        for (File folder : folders) {
-            debug(() -> "Loading addon folder " + folder.getName());
-            if (folder.isFile()) {
-                Debug.error(folder.getName() + " 不是文件夹！无法加载此附属！");
-                continue;
-            }
-
-            File info = new File(folder, Constants.INFO_FILE);
-            if (!info.exists()) {
-                File sc = new File(folder, "sc-addon.yml");
-                if (sc.exists()) {
-                    Debug.error("无法读取到附属信息，看来你错误地将SC配置文件放入了RSC中");
-                } else {
-                    Debug.error("无法获取附属信息，你是否错误地将SC配置文件放入了RSC中？或者说是错误地删除了info.yml文件？");
-                }
-                skip.add(folder.getName());
-                continue;
-            }
-
-            YamlConfiguration infoConfig = YamlConfiguration.loadConfiguration(info);
-            String id = infoConfig.getString("id");
-            if (id == null || id.isBlank()) {
-                Debug.error("在名称为 " + folder.getName() + "的文件夹中有无效的附属ID，导致此附属无法加载！");
-                skip.add(folder.getName());
-                continue;
-            }
-
-            if (projectIds.containsKey(id)) {
-                ProjectAddon addon = projectAddons.get(id);
-                if (addon == null) {
-                    Debug.error("无法正常加载附属 " + id + "！请检查所有附属内容！");
-                    continue;
-                }
-
-                if (addon.isMarkedAsDepend()) {
-                    continue;
-                }
-
-                Debug.error("在名称为 " + folder.getName() + "的文件夹中有重复的附属ID，导致此附属无法加载！");
-                skip.add(folder.getName());
-            } else {
-                projectIds.put(id, folder);
+    public void checkSC(File prjFolder) {
+        List<String> scFiles = List.of(
+            "sc-addon.yml",
+            "categories.yml",
+            "mob-drops.yml",
+            "geo-resources.yml",
+            "solar-generators.yml",
+            "material-generators.yml"
+        );
+        for (String scFile : scFiles) {
+            File sc = new File(prjFolder, scFile);
+            if (sc.exists()) {
+                Debug.error("你错误地将 SC 配置文件放入了 RSC 中! 你必须转换为 RSC 附属才可使用！查阅 https://rsc.slimefun.cn/#/addon/sc-to-rsc");
+                return;
             }
         }
+        Debug.warn("在名称为 " + prjFolder.getName() + " 的文件夹下不存在 RSC 附属配置文件!");
+    }
 
+    public boolean reloadAddon(ProjectAddon addon) {
+        unloadAddon(addon);
+        return loadAddon(addon.getFolder());
+    }
+
+    public boolean loadAddon(File prjFolder) {
+        debug(() -> "Loading addon folder: " + prjFolder.getName());
+
+        File info = new File(prjFolder, Constants.INFO_FILE);
+        if (!info.exists()) {
+            checkSC(prjFolder);
+            return false;
+        }
+
+        YamlConfiguration infoConfig = YamlConfiguration.loadConfiguration(info);
+        String id = infoConfig.getString("id");
+        if (id == null || id.isBlank()) {
+            Debug.error(info, infoConfig, "无效的附属 ID (id) !");
+            return false;
+        }
+
+        if (projectIds.containsKey(id)) {
+            Debug.error("ID 冲突: " + id + " 与 " + projectIds.get(id).getName() + " 下的附属使用了相同的附属 ID! 导致此附属无法加载!");
+            return false;
+        }
+        projectIds.put(id, prjFolder);
+
+        ProjectAddonLoader loader = new ProjectAddonLoader(prjFolder);
+        setLoadingAddon(id);
+        ProjectAddon addon = loader.load();
+        if (addon != null) {
+            projectAddons.put(addon.getAddonId(), addon);
+            Bukkit.getPluginManager().callEvent(new AddonEnableEvent(addon));
+        }
+        setLoadingAddon(null);
+        return true;
+    }
+
+    public void setup() {
         checkFiles();
+        File[] files = ADDONS_DIRECTORY.listFiles();
+        if (files == null) return;
 
-        for (File folder : folders) {
-            if (skip.contains(folder.getName())) continue;
-
-            YamlConfiguration infoConfig = YamlConfiguration.loadConfiguration(new File(folder, Constants.INFO_FILE));
-            String id = infoConfig.getString("id");
-            if (projectAddons.containsKey(id)) continue;
-
-            try {
-                ProjectAddonLoader loader = new ProjectAddonLoader(folder, projectIds, id);
-                setLoadingAddon(id);
-                ProjectAddon addon = loader.load();
-                if (addon != null) {
-                    projectAddons.put(addon.getAddonId(), addon);
-                }
-                setLoadingAddon(null);
-            } catch (Exception e) {
-                if (folder.isFile()) {
-                    Debug.error(folder.getName() + " 不是文件夹！无法加载此附属！");
-                    continue;
-                }
-                e.printStackTrace();
-            }
+        for (File file : files) {
+            if (file.isFile()) continue;
+            loadAddon(file);
         }
 
         Debug.info("已加载的附属列表：");
         for (ProjectAddon addon : projectAddons.values()) {
-            Debug.info(
-                    addon.getAddonName() + " (" + addon.getAddonId() + ")" + " 版本号: " + addon.getAddonVersion());
+            Debug.info(addon.getAddonName() + " (" + addon.getAddonId() + ")" + " 版本号: " + addon.getAddonVersion());
         }
         Debug.info("共计" + projectAddons.size() + "个附属被加载");
     }
@@ -181,13 +147,12 @@ public final class ProjectAddonManager {
             boolean b = Arrays.stream(Objects.requireNonNull(folder.listFiles()))
                     .anyMatch(f -> f.isFile() && !f.getName().equalsIgnoreCase("config.yml"));
             if (b) {
-                Debug.warn(
-                        "你应当在 \"plugin/RykenSlimefunCustomizer/addons/附属文件夹\" 中存入配置文件，而不是在 \"plugin/RykenSlimefunCustomizer\" 中");
+                Debug.warn("你应当在 \"plugin/RykenSlimefunCustomizer/addons/附属文件夹\" 中存入配置文件，而不是在 \"plugin/RykenSlimefunCustomizer\" 中");
             }
         }
     }
 
-    public void reload(Plugin plugin) {
+    public void reload() {
         for (ProjectAddon addon : projectAddons.values()) {
             addon.unregister();
         }
@@ -197,7 +162,11 @@ public final class ProjectAddonManager {
 
         RecipeTypeMap.clearRecipeTypes();
 
-        setup(plugin);
+        setup();
+    }
+
+    public boolean isLoaded(File file) {
+        return projectAddons.values().stream().map(ProjectAddon::getFolder).toList().contains(file);
     }
 
     public boolean isLoaded(String id) {
@@ -213,6 +182,7 @@ public final class ProjectAddonManager {
         return true;
     }
 
+    @Nullable
     public ProjectAddon get(String id) {
         return projectAddons.get(id);
     }
@@ -225,12 +195,11 @@ public final class ProjectAddonManager {
         return projectIds.get(id);
     }
 
-    @NonNull
-    public Map<ItemStack[], ItemStack> getPreaddRecipes(@NonNull String s) {
+    public Map<ItemStack[], ItemStack> getPreaddRecipes(String s) {
         return preaddRecipes.getOrDefault(s, new HashMap<>());
     }
 
-    public void addPreaddRecipe(@NonNull String s, @NonNull ItemStack[] input, @NonNull ItemStack output) {
+    public void addPreaddRecipe(String s, ItemStack[] input, ItemStack output) {
         preaddRecipes.computeIfAbsent(s, k -> new HashMap<>()).put(input, output);
     }
 

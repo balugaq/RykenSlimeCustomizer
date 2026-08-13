@@ -35,16 +35,16 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SaveditemsGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.commands.MainCommand;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.BlockListener;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SingleItemRecipeGuideListener;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.CustomSuperMultiBlockMachine;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.generations.BlockPopulator;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.super_multiblock.SuperMultiBlockManager;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.DropFromBlockListener;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.RecipeViewListener;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SuperMultiBlockListener;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.generations.BlockPopulator;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSuperMultiBlockMachine;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
@@ -109,6 +109,15 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         }
     }
 
+    public static void reload() {
+        INSTANCE.reloadConfig();
+        addonManager.reload();
+
+        if (INSTANCE.getConfig().getBoolean("saveExample")) {
+            saveExample();
+        }
+    }
+
     @Override
     public void onEnable() {
         INSTANCE = this;
@@ -126,10 +135,10 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
         getCommand("rykenslimefuncustomizer").setExecutor(new MainCommand());
 
-        addonManager.setup(this);
+        addonManager.setup();
 
-        new BlockListener();
-        new SingleItemRecipeGuideListener();
+        new DropFromBlockListener();
+        new RecipeViewListener();
         new SuperMultiBlockListener();
 
         for (World world : Bukkit.getWorlds()) {
@@ -137,7 +146,13 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         }
 
         if (jeg) {
-            handleJEG();
+            try {
+                handleJEG();
+            } catch (ClassNotFoundException e) {
+                Debug.error("JustEnoughGuide 版本过低，无法适配", e);
+            } catch (IOException e) {
+                Debug.error("", e);
+            }
         }
 
         if (getConfig().getBoolean("pluginUpdate", false)
@@ -150,7 +165,6 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         getServer().getScheduler().runTaskLater(this, () -> runtime = true, 1);
 
         handleLogitech();
-        new JavaPlugin() {};
 
         Debug.info("============================");
         Debug.info("RykenSlimefunCustomizer加载成功！");
@@ -160,64 +174,56 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         Debug.info("============================");
     }
 
-    private void handleJEG() {
+    private void handleJEG() throws ClassNotFoundException, IOException {
         Debug.info("已检测到JustEnoughGuide，正在适配...");
-        try {
-            SaveditemsGroup itemGroup = new SaveditemsGroup(
-                Keys.newKey("saveditems"),
-                new CustomItemStack(Material.COMMAND_BLOCK, "&c保存的物品 (RSC saveditems)"));
 
-            SaveditemsGroup.instance = itemGroup;
+        SaveditemsGroup itemGroup = new SaveditemsGroup(
+            Keys.newKey("saveditems"),
+            new CustomItemStack(Material.COMMAND_BLOCK, "&c保存的物品 (RSC saveditems)"));
 
-            for (ProjectAddon addon : addonManager.getAllAddons()) {
-                File savedItemsFolder = addon.getSavedItemsFolder();
-                if (!savedItemsFolder.exists()) continue;
+        SaveditemsGroup.instance = itemGroup;
 
-                String prjId = addon.getAddonId();
+        for (ProjectAddon addon : addonManager.getAllAddons()) {
+            File savedItemsFolder = addon.getSavedItemsFolder();
+            if (!savedItemsFolder.exists()) continue;
 
-                try (var stream = Files.walk(savedItemsFolder.toPath())) {
-                    stream.filter(path -> path.toFile().isFile()
-                            && (path.toString().endsWith(".yml")
-                            || path.toString().endsWith(".yaml")))
-                        .forEach(path -> {
-                            try {
-                                File file = path.toFile();
-                                debug(() -> "Loading saveditem: "+ file.toPath().toAbsolutePath());
-                                YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                                ItemStack item = config.getItemStack("item");
-                                if (item == null) {
-                                    return;
-                                }
+            String prjId = addon.getAddonId();
 
-                                // 计算相对于saveditems文件夹的路径
-                                String relativePath = savedItemsFolder
-                                    .toPath()
-                                    .relativize(path)
-                                    .toString();
-                                // 移除文件扩展名
-                                String pathWithoutExt =
-                                    relativePath.substring(0, relativePath.lastIndexOf("."));
-                                // 格式: prjId;相对路径
-                                String source = prjId + ";" + pathWithoutExt;
+            var stream = Files.walk(savedItemsFolder.toPath());
+            stream
+                .filter(path -> path.toFile().isFile() && (path.toString().endsWith(".yml") || path.toString().endsWith(".yaml")))
+                .forEach(path -> {
+                    File file = path.toFile();
+                    debug(() -> "Loading saveditem: " + file.toPath().toAbsolutePath());
+                    YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+                    ItemStack item = config.getItemStack("item");
+                    if (item == null) {
+                        return;
+                    }
 
-                                item.editMeta(meta -> {
-                                    meta.getPersistentDataContainer()
-                                        .set(SaveditemsGroup.SOURCE_KEY, PersistentDataType.STRING, source);
-                                });
-                                itemGroup.addItem(item);
-                            } catch (Exception e) {
-                                Debug.error("无法读取 " + path, e);
-                            }
-                        });
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+                    // 计算相对于saveditems文件夹的路径
+                    String relativePath = savedItemsFolder.toPath().relativize(path).toString();
+                    // 移除文件扩展名
+                    String pathWithoutExt =
+                        relativePath.substring(0, relativePath.lastIndexOf("."));
+                    // 格式: prjId;相对路径
+                    String source = prjId + ";" + pathWithoutExt;
 
-            itemGroup.register(this);
-        } catch (Exception e) {
-            Debug.error("JustEnoughGuide版本过低，无法适配", e);
+                    item.editMeta(meta -> {
+                        meta.getPersistentDataContainer()
+                            .set(SaveditemsGroup.SOURCE_KEY, PersistentDataType.STRING, source);
+                    });
+                    itemGroup.addItem(item);
+                });
         }
+
+        itemGroup.register(this);
+
+    }
+
+    private boolean isNotStackable(SlimefunItem sf) {
+        return (getConfig().getBoolean("super-multi-block-stackable", false) && sf instanceof CustomSuperMultiBlockMachine)
+            || (logitechNotStackableIds != null && logitechNotStackableIds.contains(sf.getId()));
     }
 
     private void handleLogitech() {
@@ -240,7 +246,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
                     materialGeneratorListField = null;
                 }
             }
-            if (machineListField == null || materialGeneratorListField == null) return;
+            if (machineListField == null) return;
             machineListField.setAccessible(true);
             materialGeneratorListField.setAccessible(true);
             Map<SlimefunItem, Integer> STACKMACHINE_LIST;
@@ -267,11 +273,6 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         }, 300L); // wait recipe supporter
     }
 
-    private boolean isNotStackable(SlimefunItem sf) {
-        return (getConfig().getBoolean("super-multi-block-stackable", false) && sf instanceof CustomSuperMultiBlockMachine)
-            || (logitechNotStackableIds != null && logitechNotStackableIds.contains(sf.getId()));
-    }
-
     @Override
     public void onDisable() {
         for (World world : Bukkit.getWorlds()) {
@@ -282,16 +283,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         smbm = null;
 
         // Plugin shutdown logic
-        getLogger().info("RykenSlimeCustomizer已卸载!");
-    }
-
-    public static void reload() {
-        INSTANCE.reloadConfig();
-        addonManager.reload(INSTANCE);
-
-        if (INSTANCE.getConfig().getBoolean("saveExample")) {
-            saveExample();
-        }
+        Debug.info("RykenSlimeCustomizer 已卸载!");
     }
 
     @NonNull @Override

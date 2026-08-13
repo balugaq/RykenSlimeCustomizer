@@ -273,7 +273,7 @@ import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
 
 public class ScriptableEventListener implements Listener {
     /**

@@ -50,7 +50,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @UtilityClass
-@SuppressWarnings("deprecation")
+@SuppressWarnings({"deprecation", "removal"})
 public class StackUtils {
     public static boolean itemsMatch(@Nullable ItemStack cache, @Nullable ItemStack itemStack) {
         return itemsMatch(cache, itemStack, false, false, false);
@@ -368,8 +368,14 @@ public class StackUtils {
 
         // Potion
         if (metaOne instanceof PotionMeta instanceOne && metaTwo instanceof PotionMeta instanceTwo) {
-            if (!Objects.equals(instanceOne.getBasePotionData(), instanceTwo.getBasePotionData())) {
-                return true;
+            if (MinecraftVersion.current().isAtLeast(MinecraftVersion.V1_20_6)) {
+                if (instanceOne.getBasePotionType() != instanceTwo.getBasePotionType()) {
+                    return true;
+                }
+            } else {
+                if (!Objects.equals(instanceOne.getBasePotionData(), instanceTwo.getBasePotionData())) {
+                    return true;
+                }
             }
             if (instanceOne.hasCustomEffects() != instanceTwo.hasCustomEffects()) {
                 return true;

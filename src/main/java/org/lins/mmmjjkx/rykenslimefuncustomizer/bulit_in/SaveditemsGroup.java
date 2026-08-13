@@ -40,7 +40,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
 
 import java.util.List;
 
-@SuppressWarnings({"deprecation", "removal"})
+@SuppressWarnings("deprecation")
 public class SaveditemsGroup extends MixedGroup<@NonNull SaveditemsGroup> {
     public static SaveditemsGroup instance;
     public static final NamespacedKey SOURCE_KEY = Keys.newKey("source");;

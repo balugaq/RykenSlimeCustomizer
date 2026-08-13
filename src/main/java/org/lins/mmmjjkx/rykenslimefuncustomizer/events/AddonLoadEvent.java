@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jspecify.annotations.NonNull;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddonLoader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddonLoader;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
