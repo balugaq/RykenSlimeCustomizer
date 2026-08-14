@@ -432,5 +432,3 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         Debug.debug(callable);
     }
 }
-
-//尚未测试完成，先放在这里堵一下编译
