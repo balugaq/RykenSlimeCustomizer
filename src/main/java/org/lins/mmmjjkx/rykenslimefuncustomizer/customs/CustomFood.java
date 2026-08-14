@@ -22,7 +22,7 @@ import io.github.thebusybiscuit.slimefun4.implementation.items.SimpleSlimefunIte
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 
@@ -51,7 +51,7 @@ public class CustomFood extends SimpleSlimefunItem<ItemConsumptionHandler> {
     @Override
     public void load() {
         if (!hidden) {
-            RSCItemGroupLegacy.addItemToGroup(getItemGroup(), this);
+            BaseRSCItemGroup.addItemToGroup(getItemGroup(), this);
         }
 
         getRecipeType().register(getRecipe(), getRecipeOutput());

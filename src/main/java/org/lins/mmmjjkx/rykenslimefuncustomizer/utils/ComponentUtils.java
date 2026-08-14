@@ -125,6 +125,7 @@ public class ComponentUtils {
     }
 
     public static String fromLegacy(String legacy, String character) {
+        legacy = HexColorParser.parse(legacy);
         StringBuilder sb = new StringBuilder(legacy.length());
         char prefix = character.charAt(0);
 
@@ -134,19 +135,11 @@ public class ComponentUtils {
             if (c == prefix && i + 1 < legacy.length()) {
                 char next = legacy.charAt(i + 1);
 
-                if (next == '#') {
-                    if (i + 7 < legacy.length()) {
-                        sb.append("<").append(legacy, i + 1, i + 8).append(">");
-                        i += 7;
-                        continue;
-                    }
-                } else {
-                    String replace = legacyReplacement(next);
-                    if (replace != null) {
-                        sb.append(replace);
-                        i++;
-                        continue;
-                    }
+                String replace = legacyReplacement(next);
+                if (replace != null) {
+                    sb.append(replace);
+                    i++;
+                    continue;
                 }
             }
 

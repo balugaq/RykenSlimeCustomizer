@@ -86,14 +86,7 @@ public final class ProjectAddonManager {
         Debug.warn("在名称为 " + prjFolder.getName() + " 的文件夹下不存在 RSC 附属配置文件!");
     }
 
-    public boolean reloadAddon(ProjectAddon addon) {
-        unloadAddon(addon);
-        return loadAddon(addon.getFolder());
-    }
-
-    public boolean loadAddon(File prjFolder) {
-        debug(() -> "Loading addon folder: " + prjFolder.getName());
-
+    public boolean preloadAddon(File prjFolder) {
         File info = new File(prjFolder, Constants.INFO_FILE);
         if (!info.exists()) {
             checkSC(prjFolder);
@@ -112,15 +105,24 @@ public final class ProjectAddonManager {
             return false;
         }
         projectIds.put(id, prjFolder);
+        return true;
+    }
 
+
+
+    public boolean reloadAddon(ProjectAddon addon) {
+        unloadAddon(addon);
+        return loadAddon(addon.getFolder());
+    }
+
+    public boolean loadAddon(File prjFolder) {
+        debug(() -> "Loading addon folder: " + prjFolder.getName());
         ProjectAddonLoader loader = new ProjectAddonLoader(prjFolder);
-        setLoadingAddon(id);
         ProjectAddon addon = loader.load();
-        if (addon != null) {
-            projectAddons.put(addon.getAddonId(), addon);
-            Bukkit.getPluginManager().callEvent(new AddonEnableEvent(addon));
-        }
         setLoadingAddon(null);
+        if (addon == null) return false;
+        projectAddons.put(addon.getAddonId(), addon);
+        Bukkit.getPluginManager().callEvent(new AddonEnableEvent(addon));
         return true;
     }
 

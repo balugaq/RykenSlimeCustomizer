@@ -24,6 +24,7 @@ import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.Library;
 import net.guizhanss.guizhanlib.updater.GuizhanBuildsUpdater;
+import net.kyori.adventure.internal.properties.AdventureProperties;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -121,6 +122,15 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
     @Override
     public void onEnable() {
         INSTANCE = this;
+
+        if (!Boolean.TRUE.equals(AdventureProperties.TEXT_WARN_WHEN_LEGACY_FORMATTING_DETECTED.value())) {
+            Debug.warn("=======================================================================");
+            Debug.warn("检测到 net.kyori.adventure.text.warnWhenLegacyFormattingDetected = false");
+            Debug.warn("为了避免大量无效日志刷屏，我们强烈建议您添加以下 JVM 参数以禁止警告:               ");
+            Debug.warn("-Dnet.kyori.adventure.text.warn_when_legacy_formatting_detected=false  ");
+            Debug.warn("参见 https://docs.papermc.io/paper/reference/system-properties/#netkyoriadventuretextwarnwhenlegacyformattingdetected");
+            Debug.warn("=======================================================================");
+        }
 
         // Plugin startup logic
         CommonUtils.completeFile("config.yml");
@@ -423,4 +433,4 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
     }
 }
 
-尚未测试完成，先放在这里堵一下编译
+//尚未测试完成，先放在这里堵一下编译

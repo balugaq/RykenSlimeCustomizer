@@ -10,10 +10,10 @@ plugins {
 
 group = "org.lins.mmmjjkx"
 val archiveName = "RykenSlimeCustomizer"
-version = "30.0-Modified"
+version = "30.1-Modified"
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
 tasks.compileJava {
@@ -95,8 +95,7 @@ tasks.named<ProcessResources>("processResources") {
     filesMatching("**/*.yml") {
         expand(
             mapOf(
-                "version" to project.version,
-                "project" to mapOf("version" to project.version)
+                "version" to project.version
             )
         )
     }
@@ -140,7 +139,8 @@ tasks.runServer {
     jvmArgs(
         "-Dfile.encoding=UTF-8",
         "-Dsun.jnu.encoding=UTF-8",
-        "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5001"
+        "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5001",
+        "-Dnet.kyori.adventure.text.warn_when_legacy_formatting_detected=false"
     )
     maxHeapSize = "4G"
     minecraftVersion("1.20.1")

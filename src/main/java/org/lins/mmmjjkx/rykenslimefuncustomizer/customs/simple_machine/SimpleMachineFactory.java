@@ -38,7 +38,7 @@ import io.github.thebusybiscuit.slimefun4.implementation.items.electric.machines
 import io.github.thebusybiscuit.slimefun4.implementation.items.electric.machines.enchanting.AutoEnchanter;
 import io.github.thebusybiscuit.slimefun4.implementation.items.electric.machines.enchanting.BookBinder;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.AContainer;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 
 public class SimpleMachineFactory {
@@ -200,7 +200,7 @@ public class SimpleMachineFactory {
 
     public static void load(SlimefunItem sf) {
         if (!sf.isHidden()) {
-            RSCItemGroupLegacy.addItemToGroup(sf.getItemGroup(), sf);
+            BaseRSCItemGroup.addItemToGroup(sf.getItemGroup(), sf);
         }
 
         sf.getRecipeType().register(sf.getRecipe(), sf.getRecipeOutput());

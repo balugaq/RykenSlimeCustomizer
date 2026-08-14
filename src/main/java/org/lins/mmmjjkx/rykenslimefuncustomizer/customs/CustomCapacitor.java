@@ -3,7 +3,7 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.customs;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.core.attributes.EnergyNetComponent;
 import io.github.thebusybiscuit.slimefun4.core.networks.energy.EnergyNetComponentType;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 
 import javax.annotation.Nonnull;
@@ -14,7 +14,7 @@ public class CustomCapacitor extends SlimefunItem implements EnergyNetComponent 
     @Override
     public void load() {
         if (!hidden) {
-            RSCItemGroupLegacy.addItemToGroup(getItemGroup(), this);
+            BaseRSCItemGroup.addItemToGroup(getItemGroup(), this);
         }
 
         getRecipeType().register(getRecipe(), getRecipeOutput());

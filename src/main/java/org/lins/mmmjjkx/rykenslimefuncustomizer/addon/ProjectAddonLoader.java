@@ -33,7 +33,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.ScriptableEventListene
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.GenerationReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.ItemGroupReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.MenuReader;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.RecipeTypesReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.RecipeTypeReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.ResearchReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.item.ArmorReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.item.CapacitorsReader;
@@ -119,8 +119,8 @@ public class ProjectAddonLoader {
     public static boolean isLoadedOrTryLoad(String depend) {
         if (RykenSlimefunCustomizer.addonManager.isLoaded(depend)) return true;
 
-        var folder = new File(ProjectAddonManager.ADDONS_DIRECTORY, depend);
-        if (!folder.exists() || !folder.isDirectory()) return false;
+        var folder = RykenSlimefunCustomizer.addonManager.getProjectIds().get(depend);
+        if (folder == null) return false;
         return RykenSlimefunCustomizer.addonManager.loadAddon(folder);
     }
 
@@ -216,6 +216,7 @@ public class ProjectAddonLoader {
             Debug.error(infoYml, infoCfg, "缺少附属 ID (id)");
             return null;
         }
+        RykenSlimefunCustomizer.addonManager.setLoadingAddon(id);
 
         String name = infoCfg.getString("name");
         if (name == null) {
@@ -286,9 +287,9 @@ public class ProjectAddonLoader {
         addon.addTotalObjects(groupReader.getSize());
         addon.setItemGroups(groupReader.readAll());
 
-        RecipeTypesReader recipeTypesReader = new RecipeTypesReader(projectDir, addon);
-        addon.addTotalObjects(recipeTypesReader.getSize());
-        addon.setRecipeTypes(recipeTypesReader.readAll());
+        RecipeTypeReader recipeTypeReader = new RecipeTypeReader(projectDir, addon);
+        addon.addTotalObjects(recipeTypeReader.getSize());
+        addon.setRecipeTypes(recipeTypeReader.readAll());
         RecipeTypeMap.pushRecipeType(addon.getRecipeTypes());
 
         MobDropsReader mobDropsReader = new MobDropsReader(projectDir, addon);

@@ -27,7 +27,7 @@ import net.bytebuddy.matcher.ElementMatchers;
 import org.bukkit.configuration.ConfigurationSection;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
@@ -256,7 +256,7 @@ public class SuperReader extends YamlReader<SlimefunItem> {
             SlimefunItem sf = (SlimefunItem) instance;
 
             if (!sf.isHidden()) {
-                RSCItemGroupLegacy.addItemToGroup(sf.getItemGroup(), sf);
+                BaseRSCItemGroup.addItemToGroup(sf.getItemGroup(), sf);
             }
 
             sf.getRecipeType().register(sf.getRecipe(), sf.getRecipeOutput());

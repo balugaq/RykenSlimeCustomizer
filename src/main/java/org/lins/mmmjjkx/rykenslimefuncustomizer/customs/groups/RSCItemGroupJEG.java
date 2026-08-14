@@ -38,22 +38,25 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
-    private final List<Object> contents;
+    private List<Object> contents;
     private final ProjectAddon addon;
     private final GroupType type;
     private final Visible visible;
     private final boolean forceHidden;
     private final boolean hasParent;
+    private final int page;
 
     @Override
     public ProjectAddon getProjectAddon() {
         return addon;
     }
 
-    public RSCItemGroupJEG(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent) {
+    public RSCItemGroupJEG(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent, int page) {
         super(key, item, tier);
 
         Debug.debug(() -> "创建物品组: " + key + " type=" + type.name());
@@ -64,6 +67,7 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
         this.visible = visible;
         this.forceHidden = forceHidden;
         this.hasParent = hasParent;
+        this.page = page;
     }
 
     public void addContent(SlimefunItem sf) {
@@ -99,20 +103,19 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
 
     @Override
     public void open(Player p, PlayerProfile profile, SlimefunGuideMode mode) {
-        setup(p, profile, mode, 1);
+        profile.getGuideHistory().add(this, page); // no matter survival or cheat mode.
+        openPage(p, profile, mode, page);
     }
 
-    private ChestMenu jegSetup(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
+    private ChestMenu setup(Player p, PlayerProfile profile, SlimefunGuideMode mode) {
         ChestMenu menu = new ChestMenu(GuideUtil.getGuideTitle(mode));
-
-        profile.getGuideHistory().add(this, page); // no matter survival or cheat mode.
 
         Format format = type == GroupType.nested ? Formats.nested : Formats.sub;
         char c = type == GroupType.nested ? Formats.Char.ITEM_GROUP : Formats.Char.CONTENT;
         List<Object> validContent = this.contents.stream().filter(content -> isContentVisibleInGroup(content, p, profile, mode)).toList();
         int pages = (validContent.size() - 1) / format.getChars(c).size() + 1;
         GuideUtil.commonRender(menu, format, profile, p, this, page, pages, np -> {
-            setup(p, profile, mode, np);
+            openPage(p, profile, mode, np);
         });
 
         for (int i = 0; i < format.getChars(c).size(); i++) {
@@ -168,8 +171,10 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
         }
     }
 
-    private void setup(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
-        ChestMenu menu = jegSetup(p, profile, mode, page);
+    private void openPage(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
+        var group = new RSCItemGroupJEG(getKey(), getItem(p), getTier(), getProjectAddon(), type, visible, forceHidden, hasParent, page);
+        group.contents = contents;
+        ChestMenu menu = group.setup(p, profile, mode);
         menu.open(p);
     }
 }

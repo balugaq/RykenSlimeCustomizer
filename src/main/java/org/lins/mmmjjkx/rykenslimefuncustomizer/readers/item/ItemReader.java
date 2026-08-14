@@ -225,7 +225,7 @@ public class ItemReader extends YamlReader<SlimefunItem> {
             "Rechargeable",
             "Item",
             new Class[] {Rechargeable.class},
-            builder -> builder.method(ElementMatchers.isDeclaredBy(Rechargeable.class))
+            builder -> builder.method(ElementMatchers.isDeclaredBy(Rechargeable.class).and(ElementMatchers.named("getMaxItemCharge")))
                 .intercept(FixedValue.value((float) energyCapacity)));
 
         instance = (CustomItem) clazz.getDeclaredConstructors()[0].newInstance(constructorArgs);

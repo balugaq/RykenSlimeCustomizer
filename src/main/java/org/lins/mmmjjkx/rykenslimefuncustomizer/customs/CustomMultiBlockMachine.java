@@ -39,7 +39,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 
@@ -52,7 +52,7 @@ public class CustomMultiBlockMachine extends MultiBlockMachine {
     @Override
     public void load() {
         if (!hidden) {
-            RSCItemGroupLegacy.addItemToGroup(getItemGroup(), this);
+            BaseRSCItemGroup.addItemToGroup(getItemGroup(), this);
         }
 
         getRecipeType().register(getRecipe(), getRecipeOutput());

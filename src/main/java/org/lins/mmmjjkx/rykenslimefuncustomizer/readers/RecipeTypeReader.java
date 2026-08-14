@@ -32,13 +32,13 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
 import java.io.File;
 import java.util.List;
 
-public class RecipeTypesReader extends YamlReader<RecipeType> {
+public class RecipeTypeReader extends YamlReader<RecipeType> {
     @Override
     public String getFileName() {
         return Constants.RECIPE_TYPES_FILE;
     }
 
-    public RecipeTypesReader(File file, ProjectAddon addon) {
+    public RecipeTypeReader(File file, ProjectAddon addon) {
         super(file, addon);
     }
 

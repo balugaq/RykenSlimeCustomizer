@@ -42,7 +42,7 @@ public class MachineMenuPreviewGroup extends FlexItemGroup {
     private final SlimefunItem sf;
 
     public MachineMenuPreviewGroup(Player player, @Nullable CustomMenu menu, int[] inputSlots, int[] outputSlots, MachineRecipe recipe, SlimefunItem sf) {
-        super(Keys.newKey("placeholder"), new ItemStack(Material.AIR));
+        super(Keys.newKey("placeholder"), new ItemStack(Material.STONE));
         this.player = player;
         this.menu = menu;
         this.inputSlots = inputSlots;
@@ -106,7 +106,7 @@ public class MachineMenuPreviewGroup extends FlexItemGroup {
             // automatically insert a line at the top
             // bBBBMBBBB
             int newSize = inv.getSize() + 9;
-            for (int i = 9; i < newSize; i++) {
+            for (int i = newSize - 1; i >= 9; i--) {
                 inv.addItem(i, inv.getItemInSlot(i - 9), ChestMenuUtils.getEmptyClickHandler());
             }
 
@@ -143,20 +143,20 @@ public class MachineMenuPreviewGroup extends FlexItemGroup {
         });
     }
 
-    private boolean isBackground(ItemStack itemStack) {
-        if (!itemStack.getType().name().endsWith("_STAINED_GLASS_PANE")) return false;
+    private boolean isBackground(@Nullable ItemStack itemStack) {
+        if (itemStack == null || !itemStack.getType().name().endsWith("_STAINED_GLASS_PANE")) return false;
 
         if (!itemStack.hasItemMeta()) return false;
         ItemMeta meta = itemStack.getItemMeta();
         if (meta == null) return false;
 
         String name = meta.getDisplayName();
-        if (!name.isBlank()) return false;
+        if (!ChatColor.stripColor(name).isBlank()) return false;
 
         List<String> lore = meta.getLore();
-        if (lore.isEmpty()) return true;
+        if (lore == null || lore.isEmpty()) return true;
         for (String s : lore) {
-            if (!s.isBlank()) return false;
+            if (!ChatColor.stripColor(s).isBlank()) return false;
         }
 
         return true;

@@ -34,7 +34,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Sapling;
 import org.bukkit.inventory.ItemStack;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.super_multiblock.SuperMultiBlockManager;
 
 import javax.annotation.Nonnull;
@@ -45,7 +45,7 @@ public class AdvancedTreeGrowthAccelerator extends AbstractGrowthAccelerator {
     @Override
     public void load() {
         if (!hidden) {
-            RSCItemGroupLegacy.addItemToGroup(getItemGroup(), this);
+            BaseRSCItemGroup.addItemToGroup(getItemGroup(), this);
         }
 
         getRecipeType().register(getRecipe(), getRecipeOutput());

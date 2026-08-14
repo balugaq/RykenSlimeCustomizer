@@ -22,7 +22,7 @@ import io.github.thebusybiscuit.slimefun4.implementation.items.electric.generato
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.super_multiblock.SuperMultiBlockManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 
@@ -30,7 +30,7 @@ public class CustomSolarGenerator extends SolarGenerator {
     @Override
     public void load() {
         if (!hidden) {
-            RSCItemGroupLegacy.addItemToGroup(getItemGroup(), this);
+            BaseRSCItemGroup.addItemToGroup(getItemGroup(), this);
         }
 
         getRecipeType().register(getRecipe(), getRecipeOutput());

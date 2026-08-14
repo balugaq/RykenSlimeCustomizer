@@ -48,7 +48,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class JavaScriptEval extends ScriptEval {
-    private final Context jsEngine = Context.newBuilder("js")
+    private final ThreadLocal<Context> jsEngine = ThreadLocal.withInitial(() -> Context.newBuilder("js")
             .hostClassLoader(RykenSlimefunCustomizer.class.getClassLoader())
             .allowAllAccess(true)
             .allowHostAccess(UNIVERSAL_HOST_ACCESS)
@@ -64,7 +64,7 @@ public class JavaScriptEval extends ScriptEval {
             .allowHostClassLoading(true)
             .engine(Engine.newBuilder("js").allowExperimentalOptions(true).build())
             .currentWorkingDirectory(getAddon().getScriptsFolder().toPath().toAbsolutePath())
-            .build();
+            .build());
 
     private JavaScriptEval(@NonNull File js, ProjectAddon addon) {
         super(js, addon);
@@ -89,7 +89,7 @@ public class JavaScriptEval extends ScriptEval {
     }
 
     private void advancedSetup() {
-        JSRealm realm = JavaScriptLanguage.getJSRealm(jsEngine);
+        JSRealm realm = JavaScriptLanguage.getJSRealm(jsEngine.get());
         TruffleLanguage.Env env = realm.getEnv();
         addThing("SlimefunItems", env.asHostSymbol(SlimefunItems.class));
         addThing("SlimefunItem", env.asHostSymbol(SlimefunItem.class));
@@ -103,7 +103,7 @@ public class JavaScriptEval extends ScriptEval {
 
     @Override
     public void addThing(String name, Object value) {
-        jsEngine.getBindings("js").putMember(name, value);
+        jsEngine.get().getBindings("js").putMember(name, value);
     }
 
     @Override
@@ -124,7 +124,7 @@ public class JavaScriptEval extends ScriptEval {
         Value function = functionCache.get(funName);
 
         if (function == null) {
-            Value bindings = jsEngine.getBindings("js");
+            Value bindings = jsEngine.get().getBindings("js");
 
             if (!bindings.hasMember(funName)) {
                 Debug.debug(() -> "在附属" + addon.getAddonId() + "中加载脚本" + getFile().getName() + "时遇到了问题: " + "不存在函数 " + funName);
@@ -181,7 +181,7 @@ public class JavaScriptEval extends ScriptEval {
             try {
                 clearScriptCache();
 
-                jsEngine.eval(
+                jsEngine.get().eval(
                         Source.newBuilder("js", getFileContext(), "JavaScript").build());
             } catch (IOException e) {
                 Debug.error(

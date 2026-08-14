@@ -39,10 +39,12 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ReflectionUtil;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGroup {
-    private final List<Object> contents;
+    private List<Object> contents;
     private final ProjectAddon addon;
     private final GroupType type;
     private final Visible visible;
@@ -53,10 +55,6 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
     @Override
     public ProjectAddon getProjectAddon() {
         return addon;
-    }
-
-    public RSCItemGroupLegacy(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent) {
-        this(key, item, tier, addon, type, visible, forceHidden, hasParent, 1);
     }
 
     public RSCItemGroupLegacy(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent, int page) {
@@ -106,20 +104,22 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
 
     @Override
     public void open(Player p, PlayerProfile profile, SlimefunGuideMode mode) {
-        setup(p, profile, mode);
-    }
-
-    private void setup(Player p, PlayerProfile profile, SlimefunGuideMode mode) {
-        ChestMenu menu = legacySetup(p, profile, mode);
-        menu.open(p);
-    }
-    
-    private ChestMenu legacySetup(Player p, PlayerProfile profile, SlimefunGuideMode mode) {
         GuideHistory history = profile.getGuideHistory();
         if (mode == SlimefunGuideMode.SURVIVAL_MODE) {
             history.add(this, page);
         }
+        openPage(p, profile, mode, page);
+    }
 
+    private void openPage(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
+        var group = new RSCItemGroupLegacy(getKey(), getItem(p), getTier(), getProjectAddon(), type, visible, forceHidden, hasParent, page);
+        group.contents = contents;
+        ChestMenu menu = group.setup(p, profile, mode);
+        menu.open(p);
+    }
+    
+    private ChestMenu setup(Player p, PlayerProfile profile, SlimefunGuideMode mode) {
+        GuideHistory history = profile.getGuideHistory();
         ChestMenu menu = new ChestMenu(Slimefun.getLocalization().getMessage(p, "guide.title.main"));
         SurvivalSlimefunGuide guide =
             (SurvivalSlimefunGuide) Slimefun.getRegistry().getSlimefunGuide(mode);
@@ -194,8 +194,7 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
         menu.addMenuClickHandler(46, (pl, slot, item, action) -> {
             int previous = page - 1;
             if (previous > 0) {
-                new RSCItemGroupLegacy(key, item, tier, addon, type, visible, forceHidden, hasParent, previous)
-                    .setup(p, profile, mode);
+                openPage(p, profile, mode, previous);
             }
 
             return false;
@@ -204,17 +203,12 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
         menu.addMenuClickHandler(52, (pl, slot, item, action) -> {
             int next = page + 1;
             if (next <= pages) {
-                new RSCItemGroupLegacy(key, item, tier, addon, type, visible, forceHidden, hasParent, next)
-                    .setup(p, profile, mode);
+                openPage(p, profile, mode, next);
             }
 
             return false;
         });
 
         return menu;
-    }
-
-    public static void addItemToGroup(ItemGroup itemGroup, SlimefunItem sf) {
-        BaseRSCItemGroup.addItemToGroup(itemGroup, sf);
     }
 }

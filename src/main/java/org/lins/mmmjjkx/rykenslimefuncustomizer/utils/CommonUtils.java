@@ -103,6 +103,7 @@ public class CommonUtils {
         Material m = Material.matchMaterial(s);
         if (m == null) {
             var m2 = materialMappings.get(s);
+            if (m2 == null) return Optional.empty();
             return Optional.ofNullable(Material.matchMaterial(m2));
         }
         return Optional.of(m);
@@ -156,7 +157,7 @@ public class CommonUtils {
         if (section == null) return null;
 
         String type = section.getString("material_type", "mc");
-        if (!type.equalsIgnoreCase("none") && !section.contains("material")) {
+        if (!type.equalsIgnoreCase("none") && (!section.contains("material") || section.getString("material") == null)) {
             Debug.error(file, section, "你设置了材料类型，但没有设置对应的材料! (material)");
             return null;
         }
@@ -277,7 +278,7 @@ public class CommonUtils {
             case "mc", "minecraft", "vanilla" -> {
                 Optional<Material> mat = getMaterial(material);
                 if (mat.isEmpty()) {
-                    Debug.warn(file, section, "无法识别粘液物品: " + material);
+                    Debug.warn(file, section, "无法识别原版物品: " + material);
                     return null;
                 }
 
@@ -333,10 +334,16 @@ public class CommonUtils {
         }
 
         String finalType = type;
-        ItemStack itemStack = CommonUtils.readPipe(material, s -> getBaseItemStack(file, section, finalType, material, addon));
-        if (itemStack == null) {
-            Debug.warn("无法识别 " + material + " ，已转为石头.");
+        ItemStack itemStack;
+        try {
+            itemStack = CommonUtils.readPipe(material, s -> getBaseItemStack(file, section, finalType, material, addon));
+            if (itemStack == null) {
+                Debug.warn("无法识别 " + material + " ，已转为石头.");
+                itemStack = createDefaultItem();
+            }
+        } catch (Exception e) {
             itemStack = createDefaultItem();
+            Debug.warn(file, section, "加载物品失败! 已转为石头!", e);
         }
 
         ItemMeta meta = itemStack.getItemMeta();
@@ -570,7 +577,7 @@ public class CommonUtils {
     public static <T> T readPipe(@Nullable String s, Function<String, @Nullable T> parser) {
         if (s == null) return null;
         for (String part : Arrays.stream(s.split("\\|")).map(String::trim).toList()) {
-            T r = parser.apply(part);;
+            T r = parser.apply(part);
             if (r != null) return r;
         }
         return null;

@@ -19,7 +19,6 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.listeners;
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.data.persistent.PersistentDataAPI;
-import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.AContainer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -32,12 +31,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataHolder;
 import org.bukkit.persistence.PersistentDataType;
-import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.Recipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.AdvancedCustomMachine;
 
-@SuppressWarnings("deprecation")
 public class RecipeViewListener implements Listener {
     private static final int GUIDE_ITEM_OUTPUT_INDEX = 16;
 
@@ -62,21 +59,15 @@ public class RecipeViewListener implements Listener {
         if (sfItemObj == null) return;
 
         Player p = (Player) e.getWhoClicked();
-        ChestMenu menu = createGUI(p, sfItemObj, item.getItemMeta());
-        if (menu != null) {
-            menu.open(p);
-        }
+        openGUI(p, sfItemObj, item.getItemMeta());
     }
-    private @Nullable ChestMenu createGUI(Player p, SlimefunItem machine, PersistentDataHolder holder) {
+
+    private void openGUI(Player p, SlimefunItem machine, PersistentDataHolder holder) {
         int idx = PersistentDataAPI.getInt(holder, Recipe.RECIPE_INDEX_KEY, 0);
         if (machine instanceof AdvancedCustomMachine acm) {
             acm.openGUI(p, idx);
-        }
-
-        if (machine instanceof AContainer ac) {
+        } else if (machine instanceof AContainer ac) {
             Recipe.openGUI(p, ac, idx);
         }
-
-        return null;
     }
 }

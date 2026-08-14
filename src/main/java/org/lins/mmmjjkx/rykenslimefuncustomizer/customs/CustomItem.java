@@ -18,7 +18,7 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.customs;
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.RSCItemGroupLegacy;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 
 public class CustomItem extends SlimefunItem {
@@ -32,7 +32,7 @@ public class CustomItem extends SlimefunItem {
     @Override
     public void load() {
         if (!hidden) {
-            RSCItemGroupLegacy.addItemToGroup(getItemGroup(), this);
+            BaseRSCItemGroup.addItemToGroup(getItemGroup(), this);
         }
 
         getRecipeType().register(getRecipe(), getRecipeOutput());

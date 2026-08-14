@@ -46,9 +46,9 @@ public interface BaseRSCItemGroup {
 
     static BaseRSCItemGroup create(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent) {
         if (RykenSlimefunCustomizer.jeg) {
-            return new RSCItemGroupJEG(key, item, tier, addon, type, visible, forceHidden, hasParent);
+            return new RSCItemGroupJEG(key, item, tier, addon, type, visible, forceHidden, hasParent, 1);
         } else {
-            return new RSCItemGroupLegacy(key, item, tier, addon, type, visible, forceHidden, hasParent);
+            return new RSCItemGroupLegacy(key, item, tier, addon, type, visible, forceHidden, hasParent, 1);
         }
     }
 

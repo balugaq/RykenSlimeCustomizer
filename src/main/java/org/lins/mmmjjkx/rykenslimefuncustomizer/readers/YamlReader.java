@@ -132,13 +132,17 @@ public abstract class YamlReader<T> {
                 continue;
             }
 
-            var object = readEach(key);
-            if (object != null) {
-                addon.addLoadedObject();
-                objects.add(object);
-                Debug.debug("&aSUCCESS | 读取项" + key + "成功！");
-            } else {
-                Debug.debug("&cFAILURE | 读取项" + key + "失败！");
+            try {
+                var object = readEach(key);
+                if (object != null) {
+                    addon.addLoadedObject();
+                    objects.add(object);
+                    Debug.debug("&aSUCCESS | 读取项" + key + "成功！");
+                } else {
+                    Debug.debug("&cFAILURE | 读取项" + key + "失败！");
+                }
+            } catch (Exception e) {
+                Debug.warn(file, configuration, "无法读取配置 (" + key + ") ! 已跳过", e);
             }
         }
         Debug.info("附属" + addon.getAddonId() + " 已加载 " + getLoadingProgress(addon));
@@ -157,13 +161,17 @@ public abstract class YamlReader<T> {
         List<T> objects = new ArrayList<>();
         lateInits.forEach(key -> {
             Debug.debug("开始读取配置：" + key);
-            var object = readEach(key);
-            if (object != null) {
-                addon.addLoadedObject();
-                objects.add(object);
-                Debug.debug("&aSUCCESS | 读取项" + key + "成功！");
-            } else {
-                Debug.debug("&cFAILURE | 读取项" + key + "失败！");
+            try {
+                var object = readEach(key);
+                if (object != null) {
+                    addon.addLoadedObject();
+                    objects.add(object);
+                    Debug.debug("&aSUCCESS | 读取项" + key + "成功！");
+                } else {
+                    Debug.debug("&cFAILURE | 读取项" + key + "失败！");
+                }
+            } catch (Exception e) {
+                Debug.warn(file, configuration, "无法读取配置 (" + key + ") ! 已跳过", e);
             }
         });
         Debug.info("附属" + addon.getAddonId() + " 已加载 " + getLoadingProgress(addon));

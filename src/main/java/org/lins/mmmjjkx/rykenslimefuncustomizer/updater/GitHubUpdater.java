@@ -73,6 +73,7 @@ public class GitHubUpdater {
             @NonNull String folderName) {
         try (CloseableHttpClient client = HttpClients.createDefault()) {
             String url = "https://api.github.com/repos/" + author + "/" + repo + "/releases/latest";
+            Debug.info("尝试从 " + url + " 更新附属 " + prjId);
             HttpGet get = new HttpGet(url);
             HttpResponse response = client.execute(get);
             String entity = EntityUtils.toString(response.getEntity());
