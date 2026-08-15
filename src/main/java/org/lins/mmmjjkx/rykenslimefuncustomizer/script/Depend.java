@@ -3,6 +3,7 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.script;
 import org.bukkit.Bukkit;
 import org.jspecify.annotations.NullMarked;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddonLoader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.PluginStateCache;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +23,7 @@ public interface Depend {
         PLUGIN(list -> {
             List<PluginDepend> lst = new ArrayList<>();
             for (String name : list) {
-                lst.add(new PluginDepend(name, Bukkit.getPluginManager().isPluginEnabled(name)));
+                lst.add(new PluginDepend(name, PluginStateCache.isEnabled(name)));
             }
             return lst;
         }),

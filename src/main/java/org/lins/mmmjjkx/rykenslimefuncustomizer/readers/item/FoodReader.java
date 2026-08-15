@@ -22,6 +22,7 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.PluginStateCache;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.CustomFood;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
@@ -51,7 +52,7 @@ public class FoodReader extends YamlReader<CustomFood> {
 
         JavaScriptEval eval = getScriptOrNull(section, section.getString("script"));
 
-        if (CommonUtils.versionToCode(Bukkit.getMinecraftVersion()) >= 1205 && Bukkit.getPluginManager().isPluginEnabled("NBTAPI")) {
+        if (CommonUtils.versionToCode(Bukkit.getMinecraftVersion()) >= 1205 && PluginStateCache.isEnabled("NBTAPI")) {
             nbtApply(id, section, base.sfis());
         }
 

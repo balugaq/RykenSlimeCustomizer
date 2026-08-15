@@ -190,7 +190,7 @@ public class ItemReader extends YamlReader<SlimefunItem> {
         }
 
         if (section.contains("energy_capacity")) {
-            resolveEnergyCapacity(section, instance, eval, base, constructorArgs);
+            instance = resolveEnergyCapacity(section, instance, eval, base, constructorArgs);
         }
 
         if (section.contains("radiation")) {
@@ -214,8 +214,8 @@ public class ItemReader extends YamlReader<SlimefunItem> {
     private CustomItem resolveEnergyCapacity(ConfigurationSection section, CustomItem instance, @Nullable ScriptEval eval, BaseResult base, Object[] constructorArgs) throws InvocationTargetException, InstantiationException, IllegalAccessException {
         double energyCapacity = section.getDouble("energy_capacity");
         if (energyCapacity < 1) {
-            Debug.warn(file, section, "能源容量 (energy_capacity) 超出范围", 1.0d, Float.MAX_VALUE);
-            return null;
+            Debug.warn(file, section, "能源容量 (energy_capacity) 超出范围 已跳过", 1.0d, Float.MAX_VALUE);
+            return instance;
         }
 
         CommonUtils.addLore(base.sfis(), true, CMIChatColor.translate("&8⇨ &e⚡ &70 / " + energyCapacity + " J"));

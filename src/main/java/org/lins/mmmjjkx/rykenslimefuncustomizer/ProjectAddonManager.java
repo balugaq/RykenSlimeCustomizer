@@ -55,6 +55,10 @@ public final class ProjectAddonManager {
     @Setter
     @Nullable private String loadingAddon;
 
+    @Getter
+    @Setter
+    private boolean lockingMainThread;
+
     public ProjectAddonManager() {
         if (!ADDONS_DIRECTORY.exists()) ADDONS_DIRECTORY.mkdirs();
         if (!CONFIGS_DIRECTORY.exists()) CONFIGS_DIRECTORY.mkdirs();
@@ -118,6 +122,7 @@ public final class ProjectAddonManager {
         ProjectAddonLoader loader = new ProjectAddonLoader(prjFolder);
         ProjectAddon addon = loader.load();
         setLoadingAddon(null);
+        setLockingMainThread(false);
         if (addon == null) return false;
         projectAddons.put(addon.getAddonId(), addon);
         Bukkit.getPluginManager().callEvent(new AddonEnableEvent(addon));

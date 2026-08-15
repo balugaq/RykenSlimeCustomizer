@@ -37,6 +37,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.PluginStateCache;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SaveditemsGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.commands.MainCommand;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.CustomSuperMultiBlockMachine;
@@ -131,6 +132,8 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
             Debug.warn("参见 https://docs.papermc.io/paper/reference/system-properties/#netkyoriadventuretextwarnwhenlegacyformattingdetected");
             Debug.warn("=======================================================================");
         }
+
+        PluginStateCache.init();
 
         // Plugin startup logic
         CommonUtils.completeFile("config.yml");

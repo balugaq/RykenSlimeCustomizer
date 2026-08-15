@@ -39,6 +39,7 @@ import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.ProjectAddonManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.PluginStateCache;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SaveditemsGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.super_multiblock.SuperMultiBlock;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.super_multiblock.SuperMultiBlockManager;
@@ -114,7 +115,7 @@ public class MainCommand implements TabExecutor {
                     return false;
                 }
 
-                if (!Bukkit.getPluginManager().isPluginEnabled("JustEnoughGuide")) {
+                if (!PluginStateCache.isEnabled("JustEnoughGuide")) {
                     sendMessage(sender, "&4此命令需要服务器安装JustEnoughGuide才能正常使用");
                     return false;
                 }
@@ -308,7 +309,7 @@ public class MainCommand implements TabExecutor {
                     return false;
                 }
 
-                if (!Bukkit.getPluginManager().isPluginEnabled("JustEnoughGuide")) {
+                if (!PluginStateCache.isEnabled("JustEnoughGuide")) {
                     sendMessage(sender, "&4此命令需要服务器安装JustEnoughGuide才能正常使用");
                     return false;
                 }

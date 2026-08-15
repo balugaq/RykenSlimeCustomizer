@@ -94,7 +94,11 @@ public class MaterialGeneratorReader extends YamlReader<AdvancedCustomMachine> {
                 1,
                 eval);
 
-        menu.addMenuClickHandler(status, ChestMenuUtils.getEmptyClickHandler());
+        // todo : 目前这些 add click handler 还是很迷的东西，到时候再重写
+        // 和 Workbench 是一样的
+        if (menu != null) {
+            menu.addMenuClickHandler(status, ChestMenuUtils.getEmptyClickHandler());
+        }
         var ticker = MachineTicker.create(file, machine, section, menu, addon, MachineTicker.Type.MATERIAL_GENERATOR);
         if (ticker == null) return null;
         machine.setTicker(ticker);

@@ -39,6 +39,7 @@ import org.graalvm.polyglot.Value;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.PluginStateCache;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.super_multiblock.SuperMultiBlockManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.integrations.NBTAPIIntegration;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
@@ -52,7 +53,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.Permission;
 import java.security.Permissions;
+import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -64,6 +67,7 @@ import java.util.stream.IntStream;
 
 @Getter(AccessLevel.PROTECTED)
 public abstract class ScriptEval {
+    private static final Queue<Runnable> initTasks = new ConcurrentLinkedQueue<>();
     protected final HostAccess UNIVERSAL_HOST_ACCESS = createHostAccess();
 
     private static HostAccess createHostAccess() {
@@ -102,7 +106,7 @@ public abstract class ScriptEval {
     }
 
     private static void denyLuckPerms(HostAccess.Builder builder) {
-        if (!Bukkit.getPluginManager().isPluginEnabled("LuckPerms")) {
+        if (!PluginStateCache.isEnabled("LuckPerms")) {
             return;
         }
         String[] classNames = {
@@ -135,7 +139,7 @@ public abstract class ScriptEval {
     }
 
     private static void denyGroupManager(HostAccess.Builder builder) {
-        if (!Bukkit.getPluginManager().isPluginEnabled("GroupManager")) {
+        if (!PluginStateCache.isEnabled("GroupManager")) {
             return;
         }
         String[] classNames = {
@@ -329,7 +333,7 @@ public abstract class ScriptEval {
             return addon.getConfig().config();
         });
 
-        if (Bukkit.getPluginManager().isPluginEnabled("NBTAPI")) {
+        if (PluginStateCache.isEnabled("NBTAPI")) {
             addThing("NBTAPI", NBTAPIIntegration.instance);
         }
     }
@@ -349,11 +353,13 @@ public abstract class ScriptEval {
     public abstract void addThing(String name, Object value);
 
     public final void doInit() {
-        if (fileContext == null || fileContext.isBlank()) {
-            contextInit();
-        }
+        initTasks.add(() -> {
+            if (fileContext == null || fileContext.isBlank()) {
+                contextInit();
+            }
 
-        evalFunction("init");
+            evalFunction("init");
+        });
     }
 
     @CanIgnoreReturnValue

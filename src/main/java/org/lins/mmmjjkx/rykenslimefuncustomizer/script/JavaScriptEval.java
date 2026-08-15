@@ -121,6 +121,13 @@ public class JavaScriptEval extends ScriptEval {
             return null;
         }
 
+        if (RykenSlimefunCustomizer.addonManager.isLockingMainThread()) {
+            Debug.warn("=================================================");
+            Debug.warn("附属正在加载中，由于附属加载机制，此时调用脚本可能会导致死锁!");
+            Debug.warn("若发生死锁，会导致服务器无法继续加载，此时请联系附属作者!");
+            Debug.warn("=================================================");
+        }
+
         Value function = functionCache.get(funName);
 
         if (function == null) {

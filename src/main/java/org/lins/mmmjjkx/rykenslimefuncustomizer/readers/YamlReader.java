@@ -34,6 +34,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.AddonConfig;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddonLoader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.PluginStateCache;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
@@ -205,7 +206,7 @@ public abstract class YamlReader<T> {
                     Debug.error("读取" + key + "的注册条件时发现问题: hasplugin 仅需要一个参数");
                     continue;
                 }
-                boolean b = Bukkit.getPluginManager().isPluginEnabled(splits[1]);
+                boolean b = PluginStateCache.isEnabled(splits[1]);
                 if (!b) {
                     if (warn) {
                         Debug.warn(key + "需要服务端插件" + splits[1] + "才能被注册");
@@ -247,7 +248,7 @@ public abstract class YamlReader<T> {
                     Debug.error("读取" + key + "的注册条件时发现问题: !hasplugin 仅需要一个参数");
                     continue;
                 }
-                boolean b = Bukkit.getPluginManager().isPluginEnabled(splits[1]);
+                boolean b = PluginStateCache.isEnabled(splits[1]);
                 if (b) {
                     if (warn) {
                         Debug.warn(key + "需要卸载服务端插件 " + splits[1] + " 才能被注册");

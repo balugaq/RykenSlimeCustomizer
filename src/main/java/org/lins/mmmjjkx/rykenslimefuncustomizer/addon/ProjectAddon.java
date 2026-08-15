@@ -53,10 +53,12 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.RecipeTypeMap;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @Getter
@@ -73,7 +75,7 @@ public final class ProjectAddon {
     private final List<String> authors;
     private final File folder;
     //
-    private final Map<String, SlimefunItemStack> preloadItems = new HashMap<>();
+    private final Map<String, SlimefunItemStack> preloadItems = new ConcurrentHashMap<>();
     //
     private @Nullable String gitHubRepo;
     private @Nullable String downloadZipName;
@@ -83,7 +85,7 @@ public final class ProjectAddon {
     //
     private @Nullable ScriptableEventListener eventListener;
     //
-    private List<JavaScriptEval> scriptEvals = new ArrayList<>();
+    private List<JavaScriptEval> scriptEvals = new CopyOnWriteArrayList<>();
     // groups.yml
     private List<ItemGroup> itemGroups = new ArrayList<>();
     // menus.yml
@@ -130,15 +132,26 @@ public final class ProjectAddon {
     private List<CustomSuperMultiBlockMachine> superMultiBlockMachines = new ArrayList<>();
     // generations.yml
     private List<GenerationInfo> generationInfos = new ArrayList<>();
-    private int loadedObjects;
-    private int totalObjects;
+
+    @Getter(AccessLevel.NONE)
+    private final AtomicInteger loadedObjects = new AtomicInteger();
+    @Getter(AccessLevel.NONE)
+    private final AtomicInteger totalObjects = new AtomicInteger();
 
     public void addLoadedObject() {
-        loadedObjects++;
+        loadedObjects.incrementAndGet();
     }
 
     public void addTotalObjects(int totalObjects) {
-        this.totalObjects += totalObjects;
+        this.totalObjects.addAndGet(totalObjects);
+    }
+
+    public int getLoadedObjects() {
+        return loadedObjects.get();
+    }
+
+    public int getTotalObjects() {
+        return totalObjects.get();
     }
 
     public File getScriptsFolder() {

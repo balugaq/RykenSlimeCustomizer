@@ -17,6 +17,8 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.addon;
 
+import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
+import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.api.researches.Research;
 import io.github.thebusybiscuit.slimefun4.libraries.commons.lang.Validate;
 import lombok.Data;
@@ -27,6 +29,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.ProjectAddonManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.menu.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.events.AddonLoadEvent;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.ScriptableEventListener;
@@ -69,9 +72,13 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 
 @Data
 public class ProjectAddonLoader {
@@ -82,6 +89,43 @@ public class ProjectAddonLoader {
         Validate.isTrue(projectDir.isDirectory(), "File must be a directory!");
 
         this.projectDir = projectDir;
+    }
+
+    private static final ExecutorService LOAD_EXECUTOR =
+        Executors.newFixedThreadPool(
+            Math.max(4, Runtime.getRuntime().availableProcessors()),
+            r -> {
+                Thread t = new Thread(r, "RSC-Load-Thread");
+                t.setDaemon(true); // 设置为守护线程，防止阻止服务器关闭
+                return t;
+            });
+
+    private static CompletableFuture<Void> runAsync(Runnable task) {
+        return CompletableFuture.runAsync(task, LOAD_EXECUTOR);
+    }
+
+    private static <T> CompletableFuture<T> supplyAsync(Supplier<T> task) {
+        return CompletableFuture.supplyAsync(task, LOAD_EXECUTOR);
+    }
+
+    private static final long TIMEOUT_SECONDS = 180; // 3 分钟
+
+    private static <T> T timedGet(CompletableFuture<T> future) {
+        try {
+            return future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            Debug.error("等待异步加载任务时线程被中断", e);
+        } catch (ExecutionException e) {
+            Debug.error("异步加载任务执行失败", e);
+        } catch (TimeoutException e) {
+            Debug.error("等待异步加载任务超时 (" + TIMEOUT_SECONDS + "s)", e);
+        }
+        return null;
+    }
+
+    private static void awaitAll(CompletableFuture<?>... futures) {
+        timedGet(CompletableFuture.allOf(futures));
     }
 
     private static void tryAutoUpdate(ProjectAddon addon, String desc) {
@@ -121,6 +165,7 @@ public class ProjectAddonLoader {
 
         var folder = RykenSlimefunCustomizer.addonManager.getProjectIds().get(depend);
         if (folder == null) return false;
+        Debug.info("正在尝试 RSC 附属加载依赖 " + depend);
         return RykenSlimefunCustomizer.addonManager.loadAddon(folder);
     }
 
@@ -204,6 +249,7 @@ public class ProjectAddonLoader {
     }
 
     @Nullable public ProjectAddon load() {
+        // T0
         Bukkit.getPluginManager().callEvent(new AddonLoadEvent(this));
         Debug.debug(() -> "Loading addon " + projectDir.getName());
         File infoYml = new File(projectDir, Constants.INFO_FILE);
@@ -283,14 +329,26 @@ public class ProjectAddonLoader {
 
         Debug.info("读取完成，开始加载附属 " + addon.getAddonId() + " 中的内容...");
 
+        // group, recipe type, menu 都会在自定义物品/机器加载的时候实时读取，所以需要提前加载
+        // 而这些耗时都不大，所以不需要放到异步里执行
         ItemGroupReader groupReader = new ItemGroupReader(projectDir, addon);
         addon.addTotalObjects(groupReader.getSize());
-        addon.setItemGroups(groupReader.readAll());
+        List<ItemGroup> groupList = groupReader.readAll();
+        groupList.addAll(groupReader.loadLateInits());
+        addon.setItemGroups(groupList);
 
         RecipeTypeReader recipeTypeReader = new RecipeTypeReader(projectDir, addon);
         addon.addTotalObjects(recipeTypeReader.getSize());
-        addon.setRecipeTypes(recipeTypeReader.readAll());
+        List<RecipeType> recipeTypeList = recipeTypeReader.readAll();
+        recipeTypeList.addAll(recipeTypeReader.loadLateInits());
+        addon.setRecipeTypes(recipeTypeList);
         RecipeTypeMap.pushRecipeType(addon.getRecipeTypes());
+
+        MenuReader menuReader = new MenuReader(projectDir, addon);
+        addon.addTotalObjects(menuReader.getSize());
+        List<CustomMenu> menuList = menuReader.readAll();
+        menuList.addAll(menuReader.loadLateInits());
+        addon.setMenus(menuList);
 
         MobDropsReader mobDropsReader = new MobDropsReader(projectDir, addon);
         GeoResourceReader resourceReader = new GeoResourceReader(projectDir, addon);
@@ -298,7 +356,6 @@ public class ProjectAddonLoader {
         ArmorReader armorReader = new ArmorReader(projectDir, addon);
         CapacitorsReader capacitorsReader = new CapacitorsReader(projectDir, addon);
         FoodReader foodReader = new FoodReader(projectDir, addon);
-        MenuReader menuReader = new MenuReader(projectDir, addon);
         MachineReader machineReader = new MachineReader(projectDir, addon);
         GeneratorReader generatorReader = new GeneratorReader(projectDir, addon);
         SolarGeneratorReader solarGeneratorReader = new SolarGeneratorReader(projectDir, addon);
@@ -335,72 +392,164 @@ public class ProjectAddonLoader {
                 + superMultiBlockMachineReader.getSize()
                 + generationReader.getSize());
 
-        mobDropsReader.preload();
-        resourceReader.preload();
-        itemReader.preload();
-        armorReader.preload();
-        capacitorsReader.preload();
-        foodReader.preload();
-        machineReader.preload();
-        generatorReader.preload();
-        solarGeneratorReader.preload();
-        materialGeneratorReader.preload();
-        recipeMachineReader.preload();
-        simpleMachineReader.preload();
-        multiBlockMachineReader.preload();
-        superReader.preload();
-        templateMachineReader.preload();
-        linkedRecipeMachineReader.preload();
-        workbenchReader.preload();
-        superMultiBlockMachineReader.preload();
-        generationReader.preload();
+        // ===== T1: 预加载 (preload)，互相异步，整体等待 T0 完成 =====
+        RykenSlimefunCustomizer.addonManager.setLockingMainThread(true);
+        Debug.info("开始预加载 " + projectDir.getName() + " 中的物品内容...");
+        awaitAll(
+            runAsync(mobDropsReader::preload),
+            runAsync(resourceReader::preload),
+            runAsync(itemReader::preload),
+            runAsync(armorReader::preload),
+            runAsync(capacitorsReader::preload),
+            runAsync(foodReader::preload),
+            runAsync(machineReader::preload),
+            runAsync(generatorReader::preload),
+            runAsync(solarGeneratorReader::preload),
+            runAsync(materialGeneratorReader::preload),
+            runAsync(recipeMachineReader::preload),
+            runAsync(simpleMachineReader::preload),
+            runAsync(multiBlockMachineReader::preload),
+            runAsync(superReader::preload),
+            runAsync(templateMachineReader::preload),
+            runAsync(linkedRecipeMachineReader::preload),
+            runAsync(workbenchReader::preload),
+            runAsync(superMultiBlockMachineReader::preload),
+            runAsync(generationReader::preload));
+        RykenSlimefunCustomizer.addonManager.setLockingMainThread(false);
 
+        // ===== T2: 注册 (readAll)，互相异步，整体等待 T1 完成 =====
         Debug.info("开始注册 " + projectDir.getName() + " 存放的内容...");
+        var mobDropsFuture = supplyAsync(mobDropsReader::readAll);
+        var resourceFuture = supplyAsync(resourceReader::readAll);
+        var itemFuture = supplyAsync(itemReader::readAll);
+        var armorFuture = supplyAsync(armorReader::readAll);
+        var capacitorsFuture = supplyAsync(capacitorsReader::readAll);
+        var foodFuture = supplyAsync(foodReader::readAll);
+        var machineFuture = supplyAsync(machineReader::readAll);
+        var generatorFuture = supplyAsync(generatorReader::readAll);
+        var solarGeneratorFuture = supplyAsync(solarGeneratorReader::readAll);
+        var materialGeneratorFuture = supplyAsync(materialGeneratorReader::readAll);
+        var recipeMachineFuture = supplyAsync(recipeMachineReader::readAll);
+        var simpleMachineFuture = supplyAsync(simpleMachineReader::readAll);
+        var multiBlockMachineFuture = supplyAsync(multiBlockMachineReader::readAll);
+        var superFuture = supplyAsync(superReader::readAll);
+        var templateMachineFuture = supplyAsync(templateMachineReader::readAll);
+        var linkedRecipeMachineFuture = supplyAsync(linkedRecipeMachineReader::readAll);
+        var workbenchFuture = supplyAsync(workbenchReader::readAll);
+        var superMultiBlockMachineFuture = supplyAsync(superMultiBlockMachineReader::readAll);
+        var generationFuture = supplyAsync(generationReader::readAll);
 
-        addon.setMobDrops(mobDropsReader.readAll());
-        addon.setGeoResources(resourceReader.readAll());
-        addon.setItems(itemReader.readAll());
-        addon.setArmors(armorReader.readAll());
-        addon.setCapacitors(capacitorsReader.readAll());
-        addon.setFoods(foodReader.readAll());
-        addon.setMenus(menuReader.readAll());
-        addon.setMachines(machineReader.readAll());
-        addon.setGenerators(generatorReader.readAll());
-        addon.setSolarGenerators(solarGeneratorReader.readAll());
-        addon.setMaterialGenerators(materialGeneratorReader.readAll());
-        addon.setRecipeMachines(recipeMachineReader.readAll());
-        addon.setSimpleMachines(simpleMachineReader.readAll());
-        addon.setMultiBlockMachines(multiBlockMachineReader.readAll());
-        addon.setSupers(superReader.readAll());
-        addon.setTemplateMachines(templateMachineReader.readAll());
-        addon.setLinkedRecipeMachines(linkedRecipeMachineReader.readAll());
-        addon.setWorkbenches(workbenchReader.readAll());
-        addon.setSuperMultiBlockMachines(superMultiBlockMachineReader.readAll());
-        addon.setGenerationInfos(generationReader.readAll());
+        // 阻塞 T2，加载完成后再进行 T3
+        RykenSlimefunCustomizer.addonManager.setLockingMainThread(true);
+        awaitAll(
+            mobDropsFuture,
+            resourceFuture,
+            itemFuture,
+            armorFuture,
+            capacitorsFuture,
+            foodFuture,
+            machineFuture,
+            generatorFuture,
+            solarGeneratorFuture,
+            materialGeneratorFuture,
+            recipeMachineFuture,
+            simpleMachineFuture,
+            multiBlockMachineFuture,
+            superFuture,
+            templateMachineFuture,
+            linkedRecipeMachineFuture,
+            workbenchFuture,
+            superMultiBlockMachineFuture,
+            generationFuture);
+        RykenSlimefunCustomizer.addonManager.setLockingMainThread(false);
 
+        // 收尾 T2
+        addon.setMobDrops(mobDropsFuture.join());
+        addon.setGeoResources(resourceFuture.join());
+        addon.setItems(itemFuture.join());
+        addon.setArmors(armorFuture.join());
+        addon.setCapacitors(capacitorsFuture.join());
+        addon.setFoods(foodFuture.join());
+        addon.setMachines(machineFuture.join());
+        addon.setGenerators(generatorFuture.join());
+        addon.setSolarGenerators(solarGeneratorFuture.join());
+        addon.setMaterialGenerators(materialGeneratorFuture.join());
+        addon.setRecipeMachines(recipeMachineFuture.join());
+        addon.setSimpleMachines(simpleMachineFuture.join());
+        addon.setMultiBlockMachines(multiBlockMachineFuture.join());
+        addon.setSupers(superFuture.join());
+        addon.setTemplateMachines(templateMachineFuture.join());
+        addon.setLinkedRecipeMachines(linkedRecipeMachineFuture.join());
+        addon.setWorkbenches(workbenchFuture.join());
+        addon.setSuperMultiBlockMachines(superMultiBlockMachineFuture.join());
+        addon.setGenerationInfos(generationFuture.join());
+
+        // ===== T3: 延迟加载 (loadLateInits)，互相异步，整体等待 T2 完成 =====
         Debug.info("开始加载要求延迟加载的内容...");
 
-        // late inits
-        addon.getMobDrops().addAll(mobDropsReader.loadLateInits());
-        addon.getGeoResources().addAll(resourceReader.loadLateInits());
-        addon.getItems().addAll(itemReader.loadLateInits());
-        addon.getArmors().addAll(armorReader.loadLateInits());
-        addon.getCapacitors().addAll(capacitorsReader.loadLateInits());
-        addon.getFoods().addAll(foodReader.loadLateInits());
-        addon.getMenus().addAll(menuReader.loadLateInits());
-        addon.getMachines().addAll(machineReader.loadLateInits());
-        addon.getGenerators().addAll(generatorReader.loadLateInits());
-        addon.getSolarGenerators().addAll(solarGeneratorReader.loadLateInits());
-        addon.getMaterialGenerators().addAll(materialGeneratorReader.loadLateInits());
-        addon.getRecipeMachines().addAll(recipeMachineReader.loadLateInits());
-        addon.getSimpleMachines().addAll(simpleMachineReader.loadLateInits());
-        addon.getMultiBlockMachines().addAll(multiBlockMachineReader.loadLateInits());
-        addon.getSupers().addAll(superReader.loadLateInits());
-        addon.getTemplateMachines().addAll(templateMachineReader.loadLateInits());
-        addon.getLinkedRecipeMachines().addAll(linkedRecipeMachineReader.loadLateInits());
-        addon.getWorkbenches().addAll(workbenchReader.loadLateInits());
-        addon.getSuperMultiBlockMachines().addAll(superMultiBlockMachineReader.loadLateInits());
+        var mobDropsLateFuture = supplyAsync(mobDropsReader::loadLateInits);
+        var resourceLateFuture = supplyAsync(resourceReader::loadLateInits);
+        var itemLateFuture = supplyAsync(itemReader::loadLateInits);
+        var armorLateFuture = supplyAsync(armorReader::loadLateInits);
+        var capacitorsLateFuture = supplyAsync(capacitorsReader::loadLateInits);
+        var foodLateFuture = supplyAsync(foodReader::loadLateInits);
+        var machineLateFuture = supplyAsync(machineReader::loadLateInits);
+        var generatorLateFuture = supplyAsync(generatorReader::loadLateInits);
+        var solarGeneratorLateFuture = supplyAsync(solarGeneratorReader::loadLateInits);
+        var materialGeneratorLateFuture = supplyAsync(materialGeneratorReader::loadLateInits);
+        var recipeMachineLateFuture = supplyAsync(recipeMachineReader::loadLateInits);
+        var simpleMachineLateFuture = supplyAsync(simpleMachineReader::loadLateInits);
+        var multiBlockMachineLateFuture = supplyAsync(multiBlockMachineReader::loadLateInits);
+        var superLateFuture = supplyAsync(superReader::loadLateInits);
+        var templateMachineLateFuture = supplyAsync(templateMachineReader::loadLateInits);
+        var linkedRecipeMachineLateFuture = supplyAsync(linkedRecipeMachineReader::loadLateInits);
+        var workbenchLateFuture = supplyAsync(workbenchReader::loadLateInits);
+        var superMultiBlockMachineLateFuture = supplyAsync(superMultiBlockMachineReader::loadLateInits);
 
+        // 阻塞 T3，加载完成后再进行 T4
+        RykenSlimefunCustomizer.addonManager.setLockingMainThread(true);
+        awaitAll(
+            mobDropsLateFuture,
+            resourceLateFuture,
+            itemLateFuture,
+            armorLateFuture,
+            capacitorsLateFuture,
+            foodLateFuture,
+            machineLateFuture,
+            generatorLateFuture,
+            solarGeneratorLateFuture,
+            materialGeneratorLateFuture,
+            recipeMachineLateFuture,
+            simpleMachineLateFuture,
+            multiBlockMachineLateFuture,
+            superLateFuture,
+            templateMachineLateFuture,
+            linkedRecipeMachineLateFuture,
+            workbenchLateFuture,
+            superMultiBlockMachineLateFuture);
+        RykenSlimefunCustomizer.addonManager.setLockingMainThread(false);
+
+        // 收尾 T3
+        addon.getMobDrops().addAll(mobDropsLateFuture.join());
+        addon.getGeoResources().addAll(resourceLateFuture.join());
+        addon.getItems().addAll(itemLateFuture.join());
+        addon.getArmors().addAll(armorLateFuture.join());
+        addon.getCapacitors().addAll(capacitorsLateFuture.join());
+        addon.getFoods().addAll(foodLateFuture.join());
+        addon.getMachines().addAll(machineLateFuture.join());
+        addon.getGenerators().addAll(generatorLateFuture.join());
+        addon.getSolarGenerators().addAll(solarGeneratorLateFuture.join());
+        addon.getMaterialGenerators().addAll(materialGeneratorLateFuture.join());
+        addon.getRecipeMachines().addAll(recipeMachineLateFuture.join());
+        addon.getSimpleMachines().addAll(simpleMachineLateFuture.join());
+        addon.getMultiBlockMachines().addAll(multiBlockMachineLateFuture.join());
+        addon.getSupers().addAll(superLateFuture.join());
+        addon.getTemplateMachines().addAll(templateMachineLateFuture.join());
+        addon.getLinkedRecipeMachines().addAll(linkedRecipeMachineLateFuture.join());
+        addon.getWorkbenches().addAll(workbenchLateFuture.join());
+        addon.getSuperMultiBlockMachines().addAll(superMultiBlockMachineLateFuture.join());
+
+        // ===== T4: 研究/收尾，整体等待 T3 完成 =====
         ResearchReader researchReader = new ResearchReader(projectDir, addon);
         addon.addTotalObjects(researchReader.getSize());
         List<Research> researchesList = researchReader.readAll();
