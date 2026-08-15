@@ -8,6 +8,7 @@ import io.github.thebusybiscuit.slimefun4.api.player.PlayerProfile;
 import io.github.thebusybiscuit.slimefun4.core.guide.SlimefunGuideImplementation;
 import io.github.thebusybiscuit.slimefun4.core.guide.SlimefunGuideMode;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
+import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ClickAction;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -20,14 +21,20 @@ import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.CommandSafe;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.ObjectType;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 
 import java.io.File;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public interface BaseRSCItemGroup {
+    EnumMap<ObjectType, List<Pair<SlimefunItem, ItemGroup>>> blocked = new EnumMap<>(ObjectType.class);
     default ItemGroup getSelf() {
         return (ItemGroup) this;
     }
@@ -154,6 +161,20 @@ public interface BaseRSCItemGroup {
     ProjectAddon getProjectAddon();
 
     static void addItemToGroup(ItemGroup itemGroup, SlimefunItem sf) {
+        blocked.computeIfAbsent(ObjectType.fromSlimefunItem(sf), k -> new CopyOnWriteArrayList<>());
+        blocked.get(ObjectType.fromSlimefunItem(sf)).add(new Pair<>(sf, itemGroup));
+    }
+
+    static void addItemsToGroups() {
+        blocked.values().forEach(lst -> {
+            for (var pair : lst) {
+                addItemToGroup0(pair.getSecondValue(), pair.getFirstValue());
+            }
+        });
+        blocked.clear();
+    }
+
+    static void addItemToGroup0(ItemGroup itemGroup, SlimefunItem sf) {
         if (itemGroup instanceof BaseRSCItemGroup group) {
             Debug.debug(() -> "添加物品 " + sf + " 到物品组 " + group.getKey());
             group.addContent(sf);

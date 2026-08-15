@@ -545,6 +545,6 @@ public class MainCommand implements TabExecutor {
     }
 
     public static void sendMessage(CommandSender sender, String s) {
-        sender.sendMessage(CMIChatColor.translate(s));
+        sender.sendMessage(CommonUtils.decorate(s));
     }
 }

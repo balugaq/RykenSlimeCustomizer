@@ -29,6 +29,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.ProjectAddonManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.menu.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.events.AddonLoadEvent;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
@@ -115,11 +116,11 @@ public class ProjectAddonLoader {
             return future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            Debug.error("等待异步加载任务时线程被中断", e);
+            Debug.error("等待异步加载任务时线程被中断，附属内容可能缺失！", e);
         } catch (ExecutionException e) {
-            Debug.error("异步加载任务执行失败", e);
+            Debug.error("异步加载任务执行失败，附属内容可能缺失！", e);
         } catch (TimeoutException e) {
-            Debug.error("等待异步加载任务超时 (" + TIMEOUT_SECONDS + "s)", e);
+            Debug.error("等待异步加载任务超时 (" + TIMEOUT_SECONDS + "s) ，附属内容可能缺失！", e);
         }
         return null;
     }
@@ -464,25 +465,25 @@ public class ProjectAddonLoader {
         RykenSlimefunCustomizer.addonManager.setLockingMainThread(false);
 
         // 收尾 T2
-        addon.setMobDrops(mobDropsFuture.join());
-        addon.setGeoResources(resourceFuture.join());
-        addon.setItems(itemFuture.join());
-        addon.setArmors(armorFuture.join());
-        addon.setCapacitors(capacitorsFuture.join());
-        addon.setFoods(foodFuture.join());
-        addon.setMachines(machineFuture.join());
-        addon.setGenerators(generatorFuture.join());
-        addon.setSolarGenerators(solarGeneratorFuture.join());
-        addon.setMaterialGenerators(materialGeneratorFuture.join());
-        addon.setRecipeMachines(recipeMachineFuture.join());
-        addon.setSimpleMachines(simpleMachineFuture.join());
-        addon.setMultiBlockMachines(multiBlockMachineFuture.join());
-        addon.setSupers(superFuture.join());
-        addon.setTemplateMachines(templateMachineFuture.join());
-        addon.setLinkedRecipeMachines(linkedRecipeMachineFuture.join());
-        addon.setWorkbenches(workbenchFuture.join());
-        addon.setSuperMultiBlockMachines(superMultiBlockMachineFuture.join());
-        addon.setGenerationInfos(generationFuture.join());
+        addon.setMobDrops(timedGet(mobDropsFuture));
+        addon.setGeoResources(timedGet(resourceFuture));
+        addon.setItems(timedGet(itemFuture));
+        addon.setArmors(timedGet(armorFuture));
+        addon.setCapacitors(timedGet(capacitorsFuture));
+        addon.setFoods(timedGet(foodFuture));
+        addon.setMachines(timedGet(machineFuture));
+        addon.setGenerators(timedGet(generatorFuture));
+        addon.setSolarGenerators(timedGet(solarGeneratorFuture));
+        addon.setMaterialGenerators(timedGet(materialGeneratorFuture));
+        addon.setRecipeMachines(timedGet(recipeMachineFuture));
+        addon.setSimpleMachines(timedGet(simpleMachineFuture));
+        addon.setMultiBlockMachines(timedGet(multiBlockMachineFuture));
+        addon.setSupers(timedGet(superFuture));
+        addon.setTemplateMachines(timedGet(templateMachineFuture));
+        addon.setLinkedRecipeMachines(timedGet(linkedRecipeMachineFuture));
+        addon.setWorkbenches(timedGet(workbenchFuture));
+        addon.setSuperMultiBlockMachines(timedGet(superMultiBlockMachineFuture));
+        addon.setGenerationInfos(timedGet(generationFuture));
 
         // ===== T3: 延迟加载 (loadLateInits)，互相异步，整体等待 T2 完成 =====
         Debug.info("开始加载要求延迟加载的内容...");
@@ -530,24 +531,24 @@ public class ProjectAddonLoader {
         RykenSlimefunCustomizer.addonManager.setLockingMainThread(false);
 
         // 收尾 T3
-        addon.getMobDrops().addAll(mobDropsLateFuture.join());
-        addon.getGeoResources().addAll(resourceLateFuture.join());
-        addon.getItems().addAll(itemLateFuture.join());
-        addon.getArmors().addAll(armorLateFuture.join());
-        addon.getCapacitors().addAll(capacitorsLateFuture.join());
-        addon.getFoods().addAll(foodLateFuture.join());
-        addon.getMachines().addAll(machineLateFuture.join());
-        addon.getGenerators().addAll(generatorLateFuture.join());
-        addon.getSolarGenerators().addAll(solarGeneratorLateFuture.join());
-        addon.getMaterialGenerators().addAll(materialGeneratorLateFuture.join());
-        addon.getRecipeMachines().addAll(recipeMachineLateFuture.join());
-        addon.getSimpleMachines().addAll(simpleMachineLateFuture.join());
-        addon.getMultiBlockMachines().addAll(multiBlockMachineLateFuture.join());
-        addon.getSupers().addAll(superLateFuture.join());
-        addon.getTemplateMachines().addAll(templateMachineLateFuture.join());
-        addon.getLinkedRecipeMachines().addAll(linkedRecipeMachineLateFuture.join());
-        addon.getWorkbenches().addAll(workbenchLateFuture.join());
-        addon.getSuperMultiBlockMachines().addAll(superMultiBlockMachineLateFuture.join());
+        addon.getMobDrops().addAll(timedGet(mobDropsLateFuture));
+        addon.getGeoResources().addAll(timedGet(resourceLateFuture));
+        addon.getItems().addAll(timedGet(itemLateFuture));
+        addon.getArmors().addAll(timedGet(armorLateFuture));
+        addon.getCapacitors().addAll(timedGet(capacitorsLateFuture));
+        addon.getFoods().addAll(timedGet(foodLateFuture));
+        addon.getMachines().addAll(timedGet(machineLateFuture));
+        addon.getGenerators().addAll(timedGet(generatorLateFuture));
+        addon.getSolarGenerators().addAll(timedGet(solarGeneratorLateFuture));
+        addon.getMaterialGenerators().addAll(timedGet(materialGeneratorLateFuture));
+        addon.getRecipeMachines().addAll(timedGet(recipeMachineLateFuture));
+        addon.getSimpleMachines().addAll(timedGet(simpleMachineLateFuture));
+        addon.getMultiBlockMachines().addAll(timedGet(multiBlockMachineLateFuture));
+        addon.getSupers().addAll(timedGet(superLateFuture));
+        addon.getTemplateMachines().addAll(timedGet(templateMachineLateFuture));
+        addon.getLinkedRecipeMachines().addAll(timedGet(linkedRecipeMachineLateFuture));
+        addon.getWorkbenches().addAll(timedGet(workbenchLateFuture));
+        addon.getSuperMultiBlockMachines().addAll(timedGet(superMultiBlockMachineLateFuture));
 
         // ===== T4: 研究/收尾，整体等待 T3 完成 =====
         ResearchReader researchReader = new ResearchReader(projectDir, addon);
@@ -572,6 +573,12 @@ public class ProjectAddonLoader {
         if (downloadZipName != null && !downloadZipName.isBlank()) {
             addon.setDownloadZipName(downloadZipName);
         }
+
+        for (var task : ScriptEval.getInitTasks()) {
+            task.run();
+        }
+        ScriptEval.getInitTasks().clear();
+        BaseRSCItemGroup.addItemsToGroups();
 
         Debug.info("加载附属 " + addon.getAddonId() + " 成功!");
         Debug.info("共 " + addon.getTotalObjects() + " 个配置项，加载成功 " + addon.getLoadedObjects() + " 个配置项");

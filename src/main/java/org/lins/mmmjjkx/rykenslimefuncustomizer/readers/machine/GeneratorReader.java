@@ -90,7 +90,7 @@ public class GeneratorReader extends YamlReader<CustomGenerator> {
                 Debug.error(file, section1, "缺少 '输入物品' (input)");
                 continue;
             }
-            int seconds = section1.getInt("seconds");
+            int seconds = section1.getInt("seconds", -1);
 
             if (seconds < 0) {
                 Debug.warn(file, section1, "缺少或配置错误 '配方耗时' (seconds) 已跳过");
@@ -107,6 +107,9 @@ public class GeneratorReader extends YamlReader<CustomGenerator> {
                     MachineFuel fuel = new MachineFuel(seconds, stack, output);
                     fuels.add(fuel);
                 }
+            } else {
+                MachineFuel fuel = new MachineFuel(seconds, stack, null);
+                fuels.add(fuel);
             }
         }
         return fuels;

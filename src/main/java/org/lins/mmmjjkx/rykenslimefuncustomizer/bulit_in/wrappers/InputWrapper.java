@@ -33,7 +33,9 @@ public class InputWrapper extends ItemWrapper {
     }
 
     public void merge(InputDesc desc, boolean addAmount) {
-        addAmount(desc.itemStack().getAmount());
+        if (addAmount) {
+            addAmount(desc.itemStack().getAmount());
+        }
         if (desc.noConsume()) {
             if (desc.slot() != -1) {
                 noConsume.addLinkedNoConsume(desc.slot());

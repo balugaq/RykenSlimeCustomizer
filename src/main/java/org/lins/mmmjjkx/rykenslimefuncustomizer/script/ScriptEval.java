@@ -67,6 +67,7 @@ import java.util.stream.IntStream;
 
 @Getter(AccessLevel.PROTECTED)
 public abstract class ScriptEval {
+    @Getter
     private static final Queue<Runnable> initTasks = new ConcurrentLinkedQueue<>();
     protected final HostAccess UNIVERSAL_HOST_ACCESS = createHostAccess();
 

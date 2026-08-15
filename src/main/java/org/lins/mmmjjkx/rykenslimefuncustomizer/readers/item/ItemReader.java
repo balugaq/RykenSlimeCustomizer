@@ -94,9 +94,24 @@ public class ItemReader extends YamlReader<SlimefunItem> {
         var base = getBase(section, s);
         if (base == null) return null;
 
-        JavaScriptEval eval = getScriptOrNull(section, section.getString("script"));
-
         CustomItem instance = new CustomItem(base);
+
+        JavaScriptEval eval = getScriptOrNull(section, section.getString("script"));
+        if (eval != null) {
+            eval.doInit();
+
+            instance.addItemHandler((ItemUseHandler) e -> {
+                eval.evalFunction("onUse", e, this);
+                e.cancel();
+            });
+
+            instance.addItemHandler((WeaponUseHandler) (e, p, it) -> {
+                eval.evalFunction("onWeaponHit", e, p, it);
+            });
+            instance.addItemHandler((ToolUseHandler) (e, it, i, drops) -> eval.evalFunction("onToolUse", e, it, i, drops));
+        } else {
+            instance.addItemHandler((ItemUseHandler) PlayerRightClickEvent::cancel);
+        }
 
         Object[] constructorArgs = instance.constructorArgs();
 
@@ -190,7 +205,7 @@ public class ItemReader extends YamlReader<SlimefunItem> {
         }
 
         if (section.contains("energy_capacity")) {
-            instance = resolveEnergyCapacity(section, instance, eval, base, constructorArgs);
+            instance = resolveEnergyCapacity(section, instance, base, constructorArgs);
         }
 
         if (section.contains("radiation")) {
@@ -211,7 +226,7 @@ public class ItemReader extends YamlReader<SlimefunItem> {
         return instance;
     }
 
-    private CustomItem resolveEnergyCapacity(ConfigurationSection section, CustomItem instance, @Nullable ScriptEval eval, BaseResult base, Object[] constructorArgs) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+    private CustomItem resolveEnergyCapacity(ConfigurationSection section, CustomItem instance, BaseResult base, Object[] constructorArgs) throws InvocationTargetException, InstantiationException, IllegalAccessException {
         double energyCapacity = section.getDouble("energy_capacity");
         if (energyCapacity < 1) {
             Debug.warn(file, section, "能源容量 (energy_capacity) 超出范围 已跳过", 1.0d, Float.MAX_VALUE);
@@ -229,23 +244,6 @@ public class ItemReader extends YamlReader<SlimefunItem> {
                 .intercept(FixedValue.value((float) energyCapacity)));
 
         instance = (CustomItem) clazz.getDeclaredConstructors()[0].newInstance(constructorArgs);
-
-
-        if (eval != null) {
-            eval.doInit();
-
-            instance.addItemHandler((ItemUseHandler) e -> {
-                eval.evalFunction("onUse", e, this);
-                e.cancel();
-            });
-
-            instance.addItemHandler((WeaponUseHandler) (e, p, it) -> {
-                eval.evalFunction("onWeaponHit", e, p, it);
-            });
-            instance.addItemHandler((ToolUseHandler) (e, it, i, drops) -> eval.evalFunction("onToolUse", e, it, i, drops));
-        } else {
-            instance.addItemHandler((ItemUseHandler) PlayerRightClickEvent::cancel);
-        }
         return instance;
     }
 
