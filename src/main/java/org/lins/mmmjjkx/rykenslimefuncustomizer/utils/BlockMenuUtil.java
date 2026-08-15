@@ -194,7 +194,7 @@ public class BlockMenuUtil {
             for (int slot : slots) {
                 ItemStack stack = blockMenu.getItemInSlot(slot);
 
-                if (stack.getMaxStackSize() > stack.getAmount() && StackUtils.itemsMatch(wrapper.getStack(), stack, true, false)) {
+                if (stack != null && stack.getMaxStackSize() > stack.getAmount() && StackUtils.itemsMatch(wrapper.getStack(), stack, true, false)) {
                     incoming -= stack.getMaxStackSize() - stack.getAmount();
                 }
 
@@ -221,9 +221,8 @@ public class BlockMenuUtil {
             int slot = e.getKey();
             var item = e.getValue();
             var exist = blockMenu.getItemInSlot(slot);
-            var ap = exist.getAmount() + item.getAmount();
-            if (!StackUtils.itemsMatch(item, exist, true, false)
-                || ap > item.getMaxStackSize()) {
+            var ap = exist == null ? 0 : exist.getAmount() + item.getAmount();
+            if (ap > item.getMaxStackSize() || (exist != null && !StackUtils.itemsMatch(item, exist, true, false))) {
                 return false;
             }
             linked.put(slot, item.asQuantity(ap));
