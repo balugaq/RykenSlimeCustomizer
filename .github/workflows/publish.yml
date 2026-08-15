@@ -1,0 +1,36 @@
+name: Publish to Maven Central
+
+# 在打 tag 或手动触发时发布到 Maven Central（OSSRH）
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # 出于安全考虑，只从默认分支打出的 tag 触发发布，防止 PR/恶意分支 tag 发布
+    if: github.ref_type == 'tag' && startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Publish to Maven Central
+        run: gradle publish -Pversion=${GITHUB_REF_NAME#v}
+        env:
+          # OSSRH 账号（Sonatype JIRA 凭据）
+          OSSRH_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          # GPG 签名密钥
+          signingKey: ${{ secrets.SIGNING_KEY }}
+          signingPassword: ${{ secrets.SIGNING_PASSWORD }}

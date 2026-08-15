@@ -3,6 +3,9 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.utils;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
+/**
+ * @author balugaq
+ */
 public class HexColorParser {
 
     // 构建一个正则表达式匹配所有格式（使用 | 或）
