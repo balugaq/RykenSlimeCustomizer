@@ -143,7 +143,7 @@ public class CustomMachineRecipe extends AbstractRecipe {
             int allChance = getChances().intStream().sum();
             for (i = 0; i < getOutput().length; i++) {
                 int chance = getChances().getInt(i);
-                weightedChance.add((double) chance / (allChance * getOutput().length));
+                weightedChance.add((double) chance / allChance);
             }
 
             List<ItemStack> cycles = new ArrayList<>();
@@ -153,7 +153,7 @@ public class CustomMachineRecipe extends AbstractRecipe {
 
             AsyncChanceRecipeTask task = new AsyncChanceRecipeTask();
             task.add(outputSlots[0], cycles);
-            task.run();
+            task.start(inv.getInventory());
             return;
         }
 
@@ -197,21 +197,21 @@ public class CustomMachineRecipe extends AbstractRecipe {
             var inv = index.getInv();
             for (var wrapper : inputs) {
                 for (var slotWrapper : index.getInputs()) {
-                    if (StackUtils.itemsMatch(slotWrapper.getStack(), wrapper.getStack())) {
-                        int left = wrapper.getAmount();
-                        for (var entry : slotWrapper.getAmounts().int2IntEntrySet()) {
-                            int slot = entry.getIntKey();
-                            int curr = entry.getIntValue();
-                            if (curr <= left) {
-                                left -= curr;
-                                inv.consumeItem(slot, curr);
-                            } else {
-                                inv.consumeItem(slot, left);
-                                break;
-                            }
+                    if (!StackUtils.itemsMatch(slotWrapper.getStack(), wrapper.getStack())) continue;
+                    int left = wrapper.getConsumeAmount();
+                    if (left <= 0) continue;
+                    for (var entry : slotWrapper.getAmounts().int2IntEntrySet()) {
+                        int slot = entry.getIntKey();
+                        int curr = entry.getIntValue();
+                        if (curr <= left) {
+                            left -= curr;
+                            inv.consumeItem(slot, curr);
+                        } else {
+                            inv.consumeItem(slot, left);
+                            break;
                         }
-                        break;
                     }
+                    break;
                 }
             }
         }

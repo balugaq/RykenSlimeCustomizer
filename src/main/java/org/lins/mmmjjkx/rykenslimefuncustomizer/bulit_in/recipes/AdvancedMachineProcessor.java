@@ -5,7 +5,9 @@ import io.github.thebusybiscuit.slimefun4.core.attributes.MachineProcessHolder;
 import io.github.thebusybiscuit.slimefun4.core.machines.MachineProcessor;
 import io.github.thebusybiscuit.slimefun4.implementation.operations.CraftingOperation;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.blocks.BlockPosition;
+import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
 import lombok.Getter;
+import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -13,13 +15,15 @@ import org.bukkit.event.Event;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @NullMarked
 @Getter
 public class AdvancedMachineProcessor extends MachineProcessor<CraftingOperation> {
-    private final Map<BlockPosition, CraftingRecipeOperation> operations = new HashMap<>();
+    private final Map<BlockPosition, CraftingRecipeOperation> operations = new ConcurrentHashMap<>();
 
     @Override
     public CraftingRecipeOperation getOperation(Location loc) {
@@ -95,6 +99,23 @@ public class AdvancedMachineProcessor extends MachineProcessor<CraftingOperation
             return true;
         } else {
             return false;
+        }
+    }
+
+    @Override
+    public void updateProgressBar(BlockMenu inv, int slot, CraftingOperation operation) {
+        if (getProgressBar() == null) {
+            // No progress bar, no need to update anything.
+            return;
+        }
+
+        // Update the progress bar in our inventory (if anyone is watching)
+        int remainingTicks = operation.getRemainingTicks();
+        int totalTicks = operation.getTotalTicks();
+
+        // Fixes #3538 - If the operation is finished, we don't need to update the progress bar.
+        if (remainingTicks > 0 || totalTicks > 0) {
+            ChestMenuUtils.updateProgressbar(inv, slot, remainingTicks, totalTicks, getProgressBar());
         }
     }
 

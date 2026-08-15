@@ -80,7 +80,7 @@ public interface Recipe {
     }
 
     static String getOutputChanceLore(double chance) {
-        String cs = String.format("%.1f", chance);
+        String cs = String.format("%.1f", chance); // 保留 1 位小数
         return CMIChatColor.translate("&a有&b " + cs + "% &a的概率产出");
     }
 
@@ -89,6 +89,7 @@ public interface Recipe {
     }
 
     static ItemStack tagOutputChance(ItemStack item, double chance) {
+        chance *= 100;
         if (chance == 100) return item;
         item = item.clone();
         CommonUtils.addLore(item, true, getOutputChanceLore(chance));

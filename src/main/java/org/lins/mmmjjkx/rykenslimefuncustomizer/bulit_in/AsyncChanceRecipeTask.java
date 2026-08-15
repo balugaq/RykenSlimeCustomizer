@@ -52,6 +52,10 @@ public class AsyncChanceRecipeTask implements Runnable {
         return this.iterators.isEmpty();
     }
 
+    /**
+     * Call #start(Inventory) to start, don't call this
+     */
+    @Override
     public synchronized void run() {
         if (this.inventory.getViewers().isEmpty()) {
             Bukkit.getScheduler().cancelTask(this.id);

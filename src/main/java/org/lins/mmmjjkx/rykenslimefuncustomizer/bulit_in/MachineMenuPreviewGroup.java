@@ -127,6 +127,15 @@ public class MachineMenuPreviewGroup extends FlexItemGroup {
                 return;
             }
         }
+
+        // find a empty slot and replace it
+        for (int i = 0; i < 54; i++) {
+            ItemStack stack = inv.getItemInSlot(i);
+            if (stack == null || stack.getType().isAir()) {
+                addBackButton(inv, i, profile, mode);
+                return;
+            }
+        }
     }
 
     private void addMachineButton(ChestMenu inv, int slot, PlayerProfile profile, SlimefunGuideMode mode) {

@@ -95,7 +95,7 @@ public class InvIndex {
     }
 
     public boolean matches(InputWrapper wrapper) {
-        return getConsumableAmount(wrapper) >= wrapper.getAmount();
+        return getConsumableAmount(wrapper) >= wrapper.getConsumeAmount();
     }
 
     public int getConsumableAmount(InputWrapper wrapper) {

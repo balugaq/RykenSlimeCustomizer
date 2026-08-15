@@ -86,17 +86,17 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
             int allChance = allChances.intStream().sum();
             for (int i = 0; i < allStacks.size(); i++) {
                 int chance = allChances.getInt(i);
-                weightedChance.add((double) chance / (allChance * allStacks.size()));
+                weightedChance.add((double) chance / allChance);
             }
 
             List<ItemStack> cycles = new ArrayList<>();
             for (int i = 0; i < allStacks.size(); i++) {
-                cycles.add(Recipe.tagOutputChance(allStacks.get(i), weightedChance.getDouble(i))); // 保留 1 位小数
+                cycles.add(Recipe.tagOutputChance(allStacks.get(i), weightedChance.getDouble(i)));
             }
 
             AsyncChanceRecipeTask task = new AsyncChanceRecipeTask();
             task.add(outputSlots[0], cycles);
-            task.run();
+            task.start(inv.getInventory());
             return;
         }
 

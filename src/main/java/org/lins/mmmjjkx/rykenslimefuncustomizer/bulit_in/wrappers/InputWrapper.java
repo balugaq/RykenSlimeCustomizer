@@ -49,4 +49,8 @@ public class InputWrapper extends ItemWrapper {
         int amt = getAmount() - noConsume.getNoConsumeAmountExcludeLinked();
         return toStacks(amt).stream();
     }
+
+    public int getConsumeAmount() {
+        return getAmount() - noConsume.getNoConsumeAmountExcludeLinked();
+    }
 }

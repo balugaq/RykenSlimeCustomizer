@@ -10,10 +10,11 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @NullMarked
 public interface ProcessorHolder extends MachineProcessHolder<CraftingOperation> {
-    Map<ProcessorHolder, AdvancedMachineProcessor> processors = new HashMap<>();
+    Map<ProcessorHolder, AdvancedMachineProcessor> processors = new ConcurrentHashMap<>();
 
     // see AContainer
     @Override
