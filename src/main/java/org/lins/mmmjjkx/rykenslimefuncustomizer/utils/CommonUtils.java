@@ -123,7 +123,7 @@ public class CommonUtils {
         return itemStacks;
     }
 
-    public static List<InputWrapper> readInputs(File file, @Nullable ConfigurationSection section, ProjectAddon addon) {
+    public static List<InputWrapper> readInputs(File file, @Nullable ConfigurationSection section, ProjectAddon addon, boolean allNoConsume) {
         if (section == null) return Collections.emptyList();
         List<InputDesc> descs = new ArrayList<>();
         for (String k : section.getKeys(false)) {
@@ -131,7 +131,7 @@ public class CommonUtils {
             if (item == null) continue;
             var stack = readItem(file, item, addon);
             if (stack == null) continue;
-            descs.add(new InputDesc(stack, item.getInt("slot", -1), item.getBoolean("noConsume", false)));
+            descs.add(new InputDesc(stack, item.getInt("slot", -1), allNoConsume || item.getBoolean("noConsume", false)));
         }
 
         List<InputWrapper> wrappers = new ArrayList<>();

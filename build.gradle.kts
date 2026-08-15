@@ -10,7 +10,7 @@ plugins {
 
 group = "org.lins.mmmjjkx"
 val archiveName = "RykenSlimeCustomizer"
-version = "30.1-Modified"
+version = "30.2-Modified"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(25))

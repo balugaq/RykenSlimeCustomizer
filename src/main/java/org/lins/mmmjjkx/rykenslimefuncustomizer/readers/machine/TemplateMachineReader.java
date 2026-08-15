@@ -80,9 +80,9 @@ public class TemplateMachineReader extends YamlReader<AdvancedCustomMachine> {
             return null;
         }
 
-        int energy = section.getInt("energyPerCraft", -1);
+        int energy = section.getInt("consumption", -1);
         if (energy <= 0) {
-            Debug.error(file, section, "缺少或配置错误 '能量消耗' (energyPerCraft)", 1, Integer.MAX_VALUE);
+            Debug.error(file, section, "缺少或配置错误 '能量消耗' (consumption)", 1, Integer.MAX_VALUE);
             return null;
         }
 
