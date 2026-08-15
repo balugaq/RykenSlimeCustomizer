@@ -108,8 +108,6 @@ public final class ProjectAddonManager {
         return true;
     }
 
-
-
     public boolean reloadAddon(ProjectAddon addon) {
         unloadAddon(addon);
         return loadAddon(addon.getFolder());
@@ -131,8 +129,13 @@ public final class ProjectAddonManager {
         File[] files = ADDONS_DIRECTORY.listFiles();
         if (files == null) return;
 
+        List<File> folders = new ArrayList<>();
         for (File file : files) {
             if (file.isFile()) continue;
+            if (preloadAddon(file)) folders.add(file);
+        }
+
+        for (File file : folders) {
             loadAddon(file);
         }
 

@@ -140,7 +140,7 @@ public class CommonUtils {
             for (var wrapper : wrappers) {
                 // pre-merge all items
                 if (StackUtils.itemsMatch(wrapper.getStack(), desc.itemStack())) {
-                    wrapper.merge(desc);
+                    wrapper.merge(desc, true);
                     matched = true;
                     break;
                 }

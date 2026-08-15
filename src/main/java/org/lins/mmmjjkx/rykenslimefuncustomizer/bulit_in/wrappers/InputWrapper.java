@@ -24,7 +24,7 @@ public class InputWrapper extends ItemWrapper {
 
     public static InputWrapper create(InputDesc desc) {
         var wrapper = new InputWrapper(desc.itemStack());
-        wrapper.merge(desc);
+        wrapper.merge(desc, false);
         return wrapper;
     }
 
@@ -32,7 +32,7 @@ public class InputWrapper extends ItemWrapper {
         slots.add(slot);
     }
 
-    public void merge(InputDesc desc) {
+    public void merge(InputDesc desc, boolean addAmount) {
         addAmount(desc.itemStack().getAmount());
         if (desc.noConsume()) {
             if (desc.slot() != -1) {

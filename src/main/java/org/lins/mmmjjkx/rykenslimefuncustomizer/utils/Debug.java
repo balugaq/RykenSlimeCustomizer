@@ -93,7 +93,7 @@ public class Debug {
         }
     }
 
-    public static void handleDanger(String message) {
+    public static void danger(String message) {
         getLogger().error(CommonUtils.decorate("&4DANGER | " + message));
     }
 

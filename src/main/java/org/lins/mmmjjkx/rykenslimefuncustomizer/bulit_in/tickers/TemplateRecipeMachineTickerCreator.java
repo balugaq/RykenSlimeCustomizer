@@ -38,7 +38,7 @@ public class TemplateRecipeMachineTickerCreator extends RecipeMachineTickerCreat
             var innerRecipes = recipes.getConfigurationSection(key);
             if (innerRecipes == null) return Collections.emptyList();
 
-            var r = readRecipes(file, innerRecipes, addon);
+            var r = readRecipes(file, innerRecipes, addon, true);
             if (r != null) {
                 for (var recipe : r) {
                     result.add(new CustomTemplateMachineRecipe(templateSlot, item, recipe, moreOutputIfMoreTemplates));

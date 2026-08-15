@@ -25,10 +25,10 @@ import java.util.List;
 public class RecipeMachineTickerCreator implements TickerCreator {
     @Override
     public @Nullable List<? extends AbstractRecipe> read(File file, int inputSize, int outputSize, ConfigurationSection section, ProjectAddon addon) {
-        return readRecipes(file, section.getConfigurationSection("recipes"), addon);
+        return readRecipes(file, section.getConfigurationSection("recipes"), addon, false);
     }
 
-    public @Nullable List<CustomMachineRecipe> readRecipes(File file, @Nullable ConfigurationSection recipes, ProjectAddon addon) {
+    public @Nullable List<CustomMachineRecipe> readRecipes(File file, @Nullable ConfigurationSection recipes, ProjectAddon addon, boolean canInputEmpty) {
         if (recipes == null) return Collections.emptyList();
         List<CustomMachineRecipe> list = new ArrayList<>();
         for (String key : recipes.getKeys(false)) {
@@ -40,7 +40,7 @@ public class RecipeMachineTickerCreator implements TickerCreator {
                 continue;
             }
             List<InputWrapper> input = CommonUtils.readInputs(file, recipe.getConfigurationSection("input"), addon, recipe.getBoolean("noConsume", false));
-            if (input.isEmpty()) {
+            if (!canInputEmpty && input.isEmpty()) {
                 Debug.error(file, recipe, "缺少 '输入物品' (input)");
                 continue;
             }

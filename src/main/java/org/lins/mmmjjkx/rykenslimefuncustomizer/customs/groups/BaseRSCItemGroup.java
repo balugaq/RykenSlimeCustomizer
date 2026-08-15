@@ -78,7 +78,7 @@ public interface BaseRSCItemGroup {
             }
             case "console" -> {
                 if (CommandSafe.isBadCommand(content)) {
-                    Debug.handleDanger("在" + getKey().getKey() + "物品组按钮中发现执行服务器高危操作,请联系附属对应作者进行处理!!!");
+                    Debug.danger("在" + getKey().getKey() + "物品组按钮中发现执行服务器高危操作,请联系附属对应作者进行处理!!!");
                     return;
                 }
                 content = action.replace(type + " ", "");

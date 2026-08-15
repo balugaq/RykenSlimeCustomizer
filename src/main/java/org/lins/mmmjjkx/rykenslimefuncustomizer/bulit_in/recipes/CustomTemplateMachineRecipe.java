@@ -49,7 +49,7 @@ public class CustomTemplateMachineRecipe extends CustomMachineRecipe {
         CustomMachineRecipe recipe,
         boolean moreOutputIfMoreTemplates
     ) {
-        this(recipe.getTicks() * 2, recipe.getInputs(), recipe.getOutput(), recipe.getChances(), recipe.isChooseOne(), recipe.isForDisplayOnly(), recipe.isHide(), templateSlot, templateStack, moreOutputIfMoreTemplates);
+        this(recipe.getTicks() / 2, recipe.getInputs(), recipe.getOutput(), recipe.getChances(), recipe.isChooseOne(), recipe.isForDisplayOnly(), recipe.isHide(), templateSlot, templateStack, moreOutputIfMoreTemplates);
     }
     public CustomTemplateMachineRecipe(
             int seconds,
