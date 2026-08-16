@@ -12,7 +12,7 @@ plugins {
 
 group = "io.github.balugaq"
 val archiveName = "RykenSlimeCustomizer"
-version = "v3.0.8"
+version = "v3.0.9"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))

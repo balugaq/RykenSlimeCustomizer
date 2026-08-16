@@ -17,29 +17,29 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.customs;
 
-import io.github.thebusybiscuit.slimefun4.core.attributes.NotPlaceable;
-import io.github.thebusybiscuit.slimefun4.core.handlers.ItemUseHandler;
-import io.github.thebusybiscuit.slimefun4.core.handlers.ToolUseHandler;
-import io.github.thebusybiscuit.slimefun4.core.handlers.WeaponUseHandler;
+import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
+import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
+import org.bukkit.block.Block;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 
-public class CustomUnplaceableItem extends CustomItem implements NotPlaceable {
-    public CustomUnplaceableItem(YamlReader.BaseResult base, @Nullable ScriptEval eval) {
-        super(base);
+@NullMarked
+public class CustomMaterialGenerator extends AdvancedCustomMachine {
+    private final int status;
+    public CustomMaterialGenerator(YamlReader.BaseResult base, int[] input, int[] output, int energyPerCraft, int capacity, @Nullable ScriptEval eval, int status) {
+        super(base, input, output, energyPerCraft, capacity, 1, eval);
+        this.status = status;
+    }
 
-        if (eval == null) return;
-        eval.doInit();
+    @Override
+    public void onNewInstance(BlockMenu menu, Block b) {
+        menu.addMenuClickHandler(status, ChestMenuUtils.getEmptyClickHandler());
+    }
 
-        this.addItemHandler((ItemUseHandler) e -> {
-            eval.evalFunction("onUse", e);
-            e.cancel();
-        });
-
-        this.addItemHandler((WeaponUseHandler) (e, p, it) -> {
-            eval.evalFunction("onWeaponHit", e, p, it);
-        });
-        this.addItemHandler((ToolUseHandler) (e, it, i, drops) -> eval.evalFunction("onToolUse", e, it, i, drops));
+    @Override
+    public boolean tick() {
+        return false;
     }
 }

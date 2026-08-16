@@ -69,6 +69,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -100,7 +101,7 @@ public class CommonUtils {
     }
 
     public static Optional<Material> getMaterial(String s) {
-        Material m = Material.matchMaterial(s);
+        Material m = Material.matchMaterial(s.toUpperCase(Locale.ROOT));
         if (m == null) {
             var m2 = materialMappings.get(s);
             if (m2 == null) return Optional.empty();

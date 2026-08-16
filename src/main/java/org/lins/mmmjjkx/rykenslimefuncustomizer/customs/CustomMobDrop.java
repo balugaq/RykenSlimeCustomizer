@@ -17,6 +17,7 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.customs;
 
+import io.github.thebusybiscuit.slimefun4.core.attributes.NotPlaceable;
 import io.github.thebusybiscuit.slimefun4.core.attributes.RandomMobDrop;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import lombok.Getter;
@@ -29,14 +30,14 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import java.util.HashSet;
 import java.util.Set;
 
-public class CustomMobDrop extends CustomUnplaceableItem implements RandomMobDrop {
+public class CustomMobDrop extends CustomItem implements RandomMobDrop, NotPlaceable {
     private final int chance;
 
     @Getter
     private final EntityType entityType;
 
     public CustomMobDrop(YamlReader.BaseResult base, int chance, EntityType type) {
-        super(base, null);
+        super(base);
         this.chance = chance;
         this.entityType = type;
 

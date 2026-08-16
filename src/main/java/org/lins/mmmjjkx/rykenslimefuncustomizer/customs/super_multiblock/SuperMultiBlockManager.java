@@ -19,8 +19,6 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.customs.super_multiblock;
 
 import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
 import lombok.Getter;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import net.kyori.adventure.text.Component;
@@ -111,7 +109,7 @@ public class SuperMultiBlockManager {
     }
 
     @Getter
-    private static final ObjectSet<Location> menuModified = new ObjectOpenHashSet<>();
+    private static final Set<Location> menuModified = ConcurrentHashMap.newKeySet();
 
     public SuperMultiBlockManager() {}
 

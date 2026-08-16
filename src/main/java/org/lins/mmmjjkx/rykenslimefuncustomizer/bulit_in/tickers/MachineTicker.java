@@ -3,7 +3,9 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.tickers;
 import io.github.thebusybiscuit.slimefun4.core.attributes.EnergyNetComponent;
 import io.github.thebusybiscuit.slimefun4.core.networks.energy.EnergyNetComponentType;
 import lombok.Getter;
+import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
@@ -45,16 +47,23 @@ public interface MachineTicker extends DataCache, RecipesHolder, CustomMenuHolde
         var menu = getCustomMenu();
         if (menu == null) {
             Debug.warn("未找到菜单 " + this.getMachine().getId() + " 使用默认菜单");
-            this.createPreset(this.getMachine(), this.getMachine().getItemName(), preset -> {
-                CustomMenuHolder.constructMenu(preset, getProgressSlot(), getProgressBar());
-            });
+            this.createPreset(
+                this.getMachine(),
+                this.getMachine().getItemName(),
+                preset -> CustomMenuHolder.constructMenu(preset, getProgressSlot(), getProgressBar()),
+                this::onNewInstance
+            );
             return;
         }
-        createPreset(this.getMachine(), menu::apply);
+        createPreset(this.getMachine(), menu.getTitle(), menu::apply, this::onNewInstance);
         if (menu.getProgressBar() != null) {
             getAdvancedMachineProcessor().setProgressBar(menu.getProgressBar());
         }
         this.getMachine().registerDefaultRecipes();
+    }
+
+    default void onNewInstance(BlockMenu menu, Block b) {
+        getMachine().onNewInstance(menu, b);
     }
 
     int getEnergyConsumption();

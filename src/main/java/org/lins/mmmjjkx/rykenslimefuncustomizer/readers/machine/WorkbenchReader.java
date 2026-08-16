@@ -142,7 +142,6 @@ public class WorkbenchReader extends YamlReader<CustomWorkbench> {
                 energy,
                 capacity,
                 click,
-                menu,
                 eval);
         var ticker = MachineTicker.create(file, machine, section, menu, addon, MachineTicker.Type.WORKBENCH);
         if (ticker == null) return null;

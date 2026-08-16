@@ -46,6 +46,9 @@ public class AdvancedCustomMachine extends AContainer implements RecipeDisplayIt
         getRecipeType().register(getRecipe(), getRecipeOutput());
     }
 
+    public void onNewInstance(BlockMenu menu, Block b) {
+    }
+
     private @UnknownNullability MachineTicker ticker;
     private final @Nullable ScriptEval eval;
     private final int[] input;

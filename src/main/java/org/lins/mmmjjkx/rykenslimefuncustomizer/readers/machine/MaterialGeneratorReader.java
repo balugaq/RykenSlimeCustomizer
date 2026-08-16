@@ -18,12 +18,12 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.readers.machine;
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
-import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.configuration.ConfigurationSection;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.tickers.MachineTicker;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.AdvancedCustomMachine;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.CustomMaterialGenerator;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.menu.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
@@ -85,20 +85,16 @@ public class MaterialGeneratorReader extends YamlReader<AdvancedCustomMachine> {
 
         ScriptEval eval = getScriptOrNull(section, section.getString("script"));
 
-        AdvancedCustomMachine machine = new AdvancedCustomMachine(
-                base,
-                new int[0],
-                output.stream().mapToInt(i -> i).toArray(),
-                energy,
-                capacity,
-                1,
-                eval);
+        AdvancedCustomMachine machine = new CustomMaterialGenerator(
+            base,
+            new int[0],
+            output.stream().mapToInt(i -> i).toArray(),
+            energy,
+            capacity,
+            eval,
+            status
+        );
 
-        // todo : 目前这些 add click handler 还是很迷的东西，到时候再重写
-        // 和 Workbench 是一样的
-        if (menu != null) {
-            menu.addMenuClickHandler(status, ChestMenuUtils.getEmptyClickHandler());
-        }
         var ticker = MachineTicker.create(file, machine, section, menu, addon, MachineTicker.Type.MATERIAL_GENERATOR);
         if (ticker == null) return null;
         machine.setTicker(ticker);

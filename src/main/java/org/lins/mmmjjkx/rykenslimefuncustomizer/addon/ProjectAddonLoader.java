@@ -29,14 +29,33 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.ProjectAddonManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.menu.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.events.AddonLoadEvent;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.ScriptableEventListener;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.*;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.item.*;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.machine.*;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.GenerationReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.ItemGroupReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.MenuReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.RecipeTypeReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.ResearchReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.item.ArmorReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.item.CapacitorsReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.item.FoodReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.item.GeoResourceReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.item.ItemReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.item.MobDropsReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.machine.GeneratorReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.machine.LinkedRecipeMachineReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.machine.MachineReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.machine.MaterialGeneratorReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.machine.MultiBlockMachineReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.machine.RecipeMachineReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.machine.SimpleMachineReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.machine.SolarGeneratorReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.machine.SuperMultiBlockMachineReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.machine.SuperReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.machine.TemplateMachineReader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.machine.WorkbenchReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.Depend;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
@@ -146,7 +165,7 @@ public class ProjectAddonLoader {
 
         var folder = RykenSlimefunCustomizer.addonManager.getProjectIds().get(depend);
         if (folder == null) return false;
-        Debug.info("正在尝试 RSC 附属加载依赖 " + depend);
+        Debug.info("正在尝试加载 RSC 附属依赖 " + depend);
         return RykenSlimefunCustomizer.addonManager.loadAddon(folder);
     }
 

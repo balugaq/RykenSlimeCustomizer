@@ -37,9 +37,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 
 @NullMarked
@@ -51,6 +53,7 @@ public final class ProjectAddonManager {
     private final Map<String, File> projectIds = new HashMap<>(); // 查找所有文件夹
     private final Map<String, ProjectAddon> projectAddons = new HashMap<>(); // 查找已加载附属
     private final Map<String, Map<ItemStack[], ItemStack>> preaddRecipes = new HashMap<>();
+    private final Set<File> scannedFiles = new HashSet<>();
 
     @Getter
     @Setter
@@ -66,9 +69,10 @@ public final class ProjectAddonManager {
     }
 
     public void unloadAddon(ProjectAddon addon) {
-        addon.unregister();
+        scannedFiles.remove(addon.getFolder());
         projectIds.remove(addon.getAddonId());
         projectAddons.remove(addon.getAddonId());
+        addon.unregister();
         Bukkit.getPluginManager().callEvent(new AddonDisableEvent(addon));
     }
 
@@ -121,7 +125,9 @@ public final class ProjectAddonManager {
     }
 
     public boolean loadAddon(File prjFolder) {
+        if (scannedFiles.contains(prjFolder)) return true; // has been loaded
         debug(() -> "Loading addon folder: " + prjFolder.getName());
+        scannedFiles.add(prjFolder);
         ProjectAddonLoader loader = new ProjectAddonLoader(prjFolder);
         ProjectAddon addon = loader.load();
         setLoadingAddon(null);
