@@ -64,6 +64,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+/**
+ * 　 　 　 　 　 　 　 　 ／＞　　フ
+ * 　 　 　 　 　 　 　 　| 　_　 _|
+ * 　 　 　 　 　 　 　 ／` ミ＿xノ
+ * 　 　 　 　 　 　 /　　　 　 |
+ * 　 　 　 　 　  /　 ヽ　　 ﾉ
+ * 　 　 　 　 　 │　　|　|　|
+ * 　／￣|　　 |　|　|　|　|
+ *  | (￣ヽ＿_ヽ_)__)
+ *  ＼二つ
+ * 佛祖云：锁得住的是synchronized，锁不住的是我佛慈悲。
+ * RSC 已然是庞然大物，任何功能都需要小心谨慎地添加
+ * 一定要测试，一定要测试，一定要测试
+ */
 public final class RykenSlimefunCustomizer extends JavaPlugin implements SlimefunAddon {
     private static boolean runtime = false;
 

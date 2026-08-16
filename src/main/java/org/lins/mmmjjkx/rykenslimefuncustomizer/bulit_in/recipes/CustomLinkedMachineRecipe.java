@@ -35,7 +35,6 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.AsyncChanceRecipeTask;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.InvIndex;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.LinkedOutput;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.BlockMenuUtil;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.StackUtils;
 
 import java.util.ArrayList;
@@ -54,6 +53,7 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
     private final boolean forDisplayOnly;
     private final boolean hide;
     private final int saveAmount;
+    private final boolean noConsumeAll;
 
     @Override
     public void formatGUI(ChestMenu inv, int[] inputSlots, int[] outputSlots) {
@@ -62,7 +62,7 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
             var slot = e.getKey();
             var stack = e.getValue();
             if (noConsume.contains(slot)) {
-                stack = tagNoConsume(stack);
+                stack = Recipe.tagNoConsume(stack);
             }
             inv.addItem(slot, stack, ChestMenuUtils.getEmptyClickHandler());
         }
@@ -131,12 +131,6 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
         }
     }
 
-    public static ItemStack tagNoConsume(ItemStack item) {
-        item = item.clone();
-        CommonUtils.addLore(item, true, "&d该物品不消耗");
-        return item;
-    }
-
     @Override
     public boolean matches(InvIndex index) {
         return super.matches(index);
@@ -172,7 +166,9 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
         if (!BlockMenuUtil.fits(index.getInv(), linkedOutput)) return false;
 
         if (consumeItems) {
+            if (noConsumeAll) return true;
             for (var e : linkedInput.entrySet()) {
+                if (noConsume.contains(e.getKey())) continue;
                 ItemStack stack = index.getItemInSlot(e.getKey());
                 if (stack != null) {
                     stack.setAmount(stack.getAmount() - e.getValue().getAmount());
@@ -190,7 +186,8 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
             boolean chooseOne,
             boolean forDisplayOnly,
             boolean hide,
-            int saveAmount) {
+            int saveAmount,
+            boolean noConsumeAll) {
         super(seconds, input.values().toArray(new ItemStack[0]), linkedOutput.toArray());
         this.linkedInput = input;
         this.linkedOutput = linkedOutput;
@@ -199,5 +196,6 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
         this.forDisplayOnly = forDisplayOnly;
         this.hide = hide;
         this.saveAmount = saveAmount;
+        this.noConsumeAll = noConsumeAll;
     }
 }

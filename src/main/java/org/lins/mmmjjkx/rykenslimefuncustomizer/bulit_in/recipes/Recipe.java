@@ -103,6 +103,12 @@ public interface Recipe {
         return item;
     }
 
+    static ItemStack tagNoConsume(ItemStack item) {
+        item = item.clone();
+        CommonUtils.addLore(item, true, "&d该物品不消耗");
+        return item;
+    }
+
     void formatGUI(ChestMenu inv, int[] inputSlots, int[] outputSlots);
 
     default boolean matches(InvIndex index) {

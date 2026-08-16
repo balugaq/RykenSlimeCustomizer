@@ -52,6 +52,7 @@ public class CustomMachineRecipe extends AbstractRecipe {
     private final boolean chooseOne;
     private final boolean forDisplayOnly;
     private final boolean hide;
+    private final boolean noConsumeAll;
 
     @Deprecated
     public boolean isChooseOneIfHas() {
@@ -70,8 +71,9 @@ public class CustomMachineRecipe extends AbstractRecipe {
             IntList chances,
             boolean chooseOne,
             boolean forDisplayOnly,
-            boolean hide) {
-        this(input, output, seconds * 2, chances, chooseOne, forDisplayOnly, hide);
+            boolean hide,
+            boolean noConsumeAll) {
+        this(input, output, seconds * 2, chances, chooseOne, forDisplayOnly, hide, noConsumeAll);
     }
 
     public CustomMachineRecipe(
@@ -81,7 +83,8 @@ public class CustomMachineRecipe extends AbstractRecipe {
         IntList chances,
         boolean chooseOne,
         boolean forDisplayOnly,
-        boolean hide) {
+        boolean hide,
+        boolean noConsumeAll) {
         super(input.stream().flatMap(InputWrapper::asArrayStream).toList().toArray(new ItemStack[0]), output, ticks);
 
         this.inputs = input;
@@ -90,6 +93,7 @@ public class CustomMachineRecipe extends AbstractRecipe {
         this.chooseOne = chooseOne;
         this.forDisplayOnly = forDisplayOnly;
         this.hide = hide;
+        this.noConsumeAll = noConsumeAll;
     }
 
     public List<ItemStack> getMatchChanceResult(boolean chooseOne) {
@@ -194,6 +198,7 @@ public class CustomMachineRecipe extends AbstractRecipe {
         }
 
         if (consumeItems) {
+            if (noConsumeAll) return true;
             var inv = index.getInv();
             for (var wrapper : inputs) {
                 for (var slotWrapper : index.getInputs()) {
@@ -202,6 +207,7 @@ public class CustomMachineRecipe extends AbstractRecipe {
                     if (left <= 0) continue;
                     for (var entry : slotWrapper.getAmounts().int2IntEntrySet()) {
                         int slot = entry.getIntKey();
+                        if (wrapper.getNoConsume().getLinkedNoConsume().contains(slot)) continue; // skip no consume slot
                         int curr = entry.getIntValue();
                         if (curr <= left) {
                             left -= curr;

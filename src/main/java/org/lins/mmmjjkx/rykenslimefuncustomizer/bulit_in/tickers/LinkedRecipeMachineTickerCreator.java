@@ -87,6 +87,7 @@ public class LinkedRecipeMachineTickerCreator extends RecipeMachineTickerCreator
             boolean chooseOne = recipe.getBoolean("chooseOne", false);
             boolean forDisplay = recipe.getBoolean("forDisplay", false);
             boolean hide = recipe.getBoolean("hide", false);
+            boolean noConsumeAll = recipe.getBoolean("noConsume", false);
 
             IntSet noConsume = new IntOpenHashSet();
             Map<Integer, ItemStack> stackMap = new HashMap<>();
@@ -118,6 +119,9 @@ public class LinkedRecipeMachineTickerCreator extends RecipeMachineTickerCreator
                     noConsume.add(slot);
                 }
             }
+            if (noConsumeAll) {
+                noConsume.addAll(stackMap.keySet());
+            }
 
             list.add(new CustomLinkedMachineRecipe(
                 seconds,
@@ -133,7 +137,8 @@ public class LinkedRecipeMachineTickerCreator extends RecipeMachineTickerCreator
                 chooseOne,
                 forDisplay,
                 hide,
-                saveAmount));
+                saveAmount,
+                noConsumeAll));
         }
         return list;
     }

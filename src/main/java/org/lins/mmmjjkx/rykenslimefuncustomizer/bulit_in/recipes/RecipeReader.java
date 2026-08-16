@@ -17,19 +17,20 @@ import java.util.List;
 public interface RecipeReader {
     static void addToList(
         List<CustomMachineRecipe> list,
-        ConfigurationSection recipes,
+        ConfigurationSection recipe,
         int seconds,
         List<InputWrapper> input,
         IntList chances,
         ItemStack[] output) {
 
-        boolean chooseOne = recipes.getBoolean("chooseOne", false);
-        boolean forDisplay = recipes.getBoolean("forDisplay", false);
-        boolean hide = recipes.getBoolean("hide", false);
+        boolean chooseOne = recipe.getBoolean("chooseOne", false);
+        boolean forDisplay = recipe.getBoolean("forDisplay", false);
+        boolean hide = recipe.getBoolean("hide", false);
+        boolean noConsumeAll = recipe.getBoolean("noConsume", false);
 
         output = CommonUtils.removeNulls(output);
 
-        list.add(new CustomMachineRecipe(seconds, input, output, chances, chooseOne, forDisplay, hide));
+        list.add(new CustomMachineRecipe(seconds, input, output, chances, chooseOne, forDisplay, hide, noConsumeAll));
     }
 
     @Nullable

@@ -74,7 +74,8 @@ public class MaterialGeneratorMachineTickerCreator implements TickerCreator {
             chances,
             chooseOne,
             false,
-            false
+            false,
+            true
         ));
     }
 

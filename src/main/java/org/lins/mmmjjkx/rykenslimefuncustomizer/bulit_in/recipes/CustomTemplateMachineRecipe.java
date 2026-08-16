@@ -49,7 +49,7 @@ public class CustomTemplateMachineRecipe extends CustomMachineRecipe {
         CustomMachineRecipe recipe,
         boolean moreOutputIfMoreTemplates
     ) {
-        this(recipe.getTicks() / 2, recipe.getInputs(), recipe.getOutput(), recipe.getChances(), recipe.isChooseOne(), recipe.isForDisplayOnly(), recipe.isHide(), templateSlot, templateStack, moreOutputIfMoreTemplates);
+        this(recipe.getTicks() / 2, recipe.getInputs(), recipe.getOutput(), recipe.getChances(), recipe.isChooseOne(), recipe.isForDisplayOnly(), recipe.isHide(), recipe.isNoConsumeAll(), templateSlot, templateStack, moreOutputIfMoreTemplates);
     }
     public CustomTemplateMachineRecipe(
             int seconds,
@@ -59,10 +59,11 @@ public class CustomTemplateMachineRecipe extends CustomMachineRecipe {
             boolean chooseOne,
             boolean forDisplayOnly,
             boolean hide,
+            boolean noConsumeAll,
             int templateSlot,
             ItemStack templateStack,
             boolean moreOutputIfMoreTemplates) {
-        super(seconds, input, output, chances, chooseOne, forDisplayOnly, hide);
+        super(seconds, input, output, chances, chooseOne, forDisplayOnly, hide, noConsumeAll);
         this.templateSlot = templateSlot;
         this.templateStack = templateStack;
         this.moreOutputIfMoreTemplates = moreOutputIfMoreTemplates;

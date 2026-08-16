@@ -37,7 +37,8 @@ import java.util.Map;
 public class BlockMenuUtil {
     @Nullable public static ItemStack pushItem(@Nonnull BlockMenu blockMenu, @Nonnull ItemStack item, int... slots) {
         if (item == null || item.getType().isAir()) {
-            throw new IllegalArgumentException("Cannot push null or AIR");
+            return null;
+//            throw new IllegalArgumentException("Cannot push null or AIR");
         }
 
         int leftAmount = item.getAmount();
@@ -125,7 +126,8 @@ public class BlockMenuUtil {
     public static Map<ItemStack, Integer> pushItem(
             @Nonnull BlockMenu blockMenu, @Nonnull ItemStack[] items, int... slots) {
         if (items == null || items.length == 0) {
-            throw new IllegalArgumentException("Cannot push null or empty array");
+//            throw new IllegalArgumentException("Cannot push null or empty array");
+            return Map.of();
         }
 
         List<ItemStack> listItems = new ArrayList<>();
@@ -142,7 +144,8 @@ public class BlockMenuUtil {
     public static Map<ItemStack, Integer> pushItem(
             @Nonnull BlockMenu blockMenu, @Nonnull List<ItemStack> items, int... slots) {
         if (items == null || items.isEmpty()) {
-            throw new IllegalArgumentException("Cannot push null or empty list");
+            return Map.of();
+//            throw new IllegalArgumentException("Cannot push null or empty list");
         }
 
         Map<ItemStack, Integer> itemMap = new HashMap<>();

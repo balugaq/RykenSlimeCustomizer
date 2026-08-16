@@ -104,7 +104,7 @@ public class InvIndex {
                 return wp.getConsumableAmount(wrapper.getNoConsume());
             }
         }
-        return 0;
+        return -100;
     }
 
     @Nullable
