@@ -276,6 +276,7 @@ public class CommonUtils {
                 }
             }
             case "mc", "minecraft", "vanilla" -> {
+                if (material.startsWith("minecraft:")) material = material.substring(10);
                 Optional<Material> mat = getMaterial(material);
                 if (mat.isEmpty()) {
                     Debug.warn(file, section, "无法识别原版物品: " + material);

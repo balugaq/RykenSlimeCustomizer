@@ -358,7 +358,6 @@ public class ProjectAddonLoader {
                 + armorReader.getSize()
                 + capacitorsReader.getSize()
                 + foodReader.getSize()
-                + menuReader.getSize()
                 + machineReader.getSize()
                 + generatorReader.getSize()
                 + solarGeneratorReader.getSize()
@@ -558,7 +557,6 @@ public class ProjectAddonLoader {
             task.run();
         }
         ScriptEval.getInitTasks().clear();
-        BaseRSCItemGroup.addItemsToGroups();
 
         Debug.info("加载附属 " + addon.getAddonId() + " 成功!");
         Debug.info("共 " + addon.getTotalObjects() + " 个配置项，加载成功 " + addon.getLoadedObjects() + " 个配置项");

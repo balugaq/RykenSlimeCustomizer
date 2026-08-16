@@ -9,6 +9,7 @@ import lombok.Getter;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.AContainer;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
+import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -25,8 +26,12 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.InvIndex;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 @NullMarked
@@ -173,6 +178,17 @@ public class AdvancedCustomMachine extends AContainer implements RecipeDisplayIt
 
     public @Nullable Value evalFunction(String methodName, @Nullable Object... args) {
         if (eval == null) return null;
-        return eval.evalFunction(methodName, args);
+        try {
+            return Bukkit.getScheduler().callSyncMethod(RykenSlimefunCustomizer.INSTANCE, () -> {
+                return eval.evalFunction(methodName, args);
+            }).get(10, TimeUnit.SECONDS);
+        } catch (ExecutionException e) {
+            Debug.error("脚本 " + eval.getFile().getName() + "#" + methodName + " 运行错误!", e);
+        } catch (InterruptedException e) {
+            Debug.error("脚本 " + eval.getFile().getName() + "#" + methodName + " 运行终止!", e);
+        } catch (TimeoutException e) {
+            Debug.error("脚本 " + eval.getFile().getName() + "#" + methodName + " 运行超时! (10s)", e);
+        }
+        return null;
     }
 }

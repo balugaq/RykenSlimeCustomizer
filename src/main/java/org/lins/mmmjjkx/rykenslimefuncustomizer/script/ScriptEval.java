@@ -158,6 +158,7 @@ public abstract class ScriptEval {
         }
     }
 
+    @Getter
     protected final File file;
     protected final ProjectAddon addon;
     protected String fileContext;

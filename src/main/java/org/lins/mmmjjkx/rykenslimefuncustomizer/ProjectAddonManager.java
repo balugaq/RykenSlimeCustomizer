@@ -26,6 +26,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddonLoader;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.events.AddonDisableEvent;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.events.AddonEnableEvent;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
@@ -143,6 +144,8 @@ public final class ProjectAddonManager {
         for (File file : folders) {
             loadAddon(file);
         }
+
+        Bukkit.getScheduler().runTaskLater(RykenSlimefunCustomizer.INSTANCE, BaseRSCItemGroup::addItemsToGroups, 1L);
 
         Debug.info("已加载的附属列表：");
         for (ProjectAddon addon : projectAddons.values()) {
