@@ -115,7 +115,9 @@ public final class ProjectAddonManager {
 
     public boolean reloadAddon(ProjectAddon addon) {
         unloadAddon(addon);
-        return loadAddon(addon.getFolder());
+        var success = loadAddon(addon.getFolder());
+        BaseRSCItemGroup.addItemsToGroups();
+        return success;
     }
 
     public boolean loadAddon(File prjFolder) {
