@@ -12,7 +12,7 @@ plugins {
 
 group = "io.github.balugaq"
 val archiveName = "RykenSlimeCustomizer"
-version = "3.0.7"
+version = "v3.0.8"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
@@ -207,8 +207,15 @@ publishing {
 signing {
     // 从环境变量或 gradle.properties 读取敏感信息；
     // 仅在提供了签名密钥时才启用签名，避免本地 build/无密钥时配置失败
-    val signingKey = providers.gradleProperty("signingKey").orNull
-    val signingPassword = providers.gradleProperty("signingPassword").orNull
+    val signingKey = providers.gradleProperty("signingKey")
+        .orElse(providers.systemProperty("signingKey"))
+        .orElse(providers.environmentVariable("SIGNING_KEY"))
+        .orNull
+
+    val signingPassword = providers.gradleProperty("signingPassword")
+        .orElse(providers.systemProperty("signingPassword"))
+        .orElse(providers.environmentVariable("SIGNING_PASSWORD"))
+        .orNull
     if (signingKey != null && signingPassword != null) {
         useInMemoryPgpKeys(signingKey, signingPassword)
         sign(publishing.publications["mavenJava"])

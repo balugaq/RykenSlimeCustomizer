@@ -107,11 +107,11 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
         }
 
         for (var e : linkedOutput.linkedOutput().entrySet()) {
-            var slot = e.getKey();
+            Integer slot = e.getKey();
             var stack = e.getValue();
             int chance = linkedOutput.linkedChances().get(slot);
             inv.addItem(slot, Recipe.tagOutputChance(stack, chance), ChestMenuUtils.getEmptyClickHandler());
-            emptyOutputSlots.removeInt(slot);
+            emptyOutputSlots.remove(slot); // remove value
         }
 
         boolean overflowed = false;

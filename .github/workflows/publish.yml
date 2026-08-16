@@ -26,7 +26,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Publish to Maven Central
-        run: gradle publish -Pversion=${GITHUB_REF_NAME#v}
+        run: gradle publishToMavenCentral -Pversion=${GITHUB_REF_NAME#v}
         env:
           # OSSRH 账号（Sonatype JIRA 凭据）
           OSSRH_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
