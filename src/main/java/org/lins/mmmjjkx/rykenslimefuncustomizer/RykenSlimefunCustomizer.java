@@ -17,8 +17,12 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer;
 
+import com.balugaq.jeg.core.integrations.logitech.LogiTechIntegrationMain;
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
+import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
+import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import net.byteflux.libby.BukkitLibraryManager;
@@ -50,16 +54,17 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ReflectionUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -216,40 +221,45 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
             String prjId = addon.getAddonId();
 
-            var stream = Files.walk(savedItemsFolder.toPath());
-            stream
-                .filter(path -> path.toFile().isFile() && (path.toString().endsWith(".yml") || path.toString().endsWith(".yaml")))
-                .forEach(path -> {
-                    File file = path.toFile();
-                    debug(() -> "Loading saveditem: " + file.toPath().toAbsolutePath());
-                    YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                    ItemStack item = config.getItemStack("item");
-                    if (item == null) {
-                        return;
-                    }
+            try (var stream = Files.walk(savedItemsFolder.toPath());) {
+                stream
+                    .filter(path -> path.toFile().isFile() && (path.toString().endsWith(".yml") || path.toString().endsWith(".yaml")))
+                    .forEach(path -> {
+                        File file = path.toFile();
+                        debug(() -> "Loading saveditem: " + file.toPath().toAbsolutePath());
+                        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+                        ItemStack item = config.getItemStack("item");
+                        if (item == null) {
+                            return;
+                        }
 
-                    // 计算相对于saveditems文件夹的路径
-                    String relativePath = savedItemsFolder.toPath().relativize(path).toString();
-                    // 移除文件扩展名
-                    String pathWithoutExt =
-                        relativePath.substring(0, relativePath.lastIndexOf("."));
-                    // 格式: prjId;相对路径
-                    String source = prjId + ";" + pathWithoutExt;
+                        // 计算相对于saveditems文件夹的路径
+                        String relativePath = savedItemsFolder.toPath().relativize(path).toString();
+                        // 移除文件扩展名
+                        String pathWithoutExt =
+                            relativePath.substring(0, relativePath.lastIndexOf("."));
+                        // 格式: prjId;相对路径
+                        String source = prjId + ";" + pathWithoutExt;
 
-                    item.editMeta(meta -> {
-                        meta.getPersistentDataContainer()
-                            .set(SaveditemsGroup.SOURCE_KEY, PersistentDataType.STRING, source);
+                        item.editMeta(meta -> {
+                            meta.getPersistentDataContainer()
+                                .set(SaveditemsGroup.SOURCE_KEY, PersistentDataType.STRING, source);
+                        });
+                        itemGroup.addItem(item);
                     });
-                    itemGroup.addItem(item);
-                });
+            }
         }
 
         itemGroup.register(this);
 
     }
 
+    private boolean isSMBStackable() {
+        return getConfig().getBoolean("super-multi-block-stackable", false);
+    }
+
     private boolean isNotStackable(SlimefunItem sf) {
-        return (getConfig().getBoolean("super-multi-block-stackable", false) && sf instanceof CustomSuperMultiBlockMachine)
+        return (!isSMBStackable() && sf instanceof CustomSuperMultiBlockMachine)
             || (logitechNotStackableIds != null && logitechNotStackableIds.contains(sf.getId()));
     }
 
@@ -258,45 +268,73 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
         Bukkit.getScheduler().runTaskLaterAsynchronously(RykenSlimefunCustomizer.INSTANCE, () -> {
             // Don't allow CustomSuperMultiBlockMachine to be stackable
-            Field machineListField;
-            Field materialGeneratorListField;
+            Class<?> c;
             try {
-                machineListField = Class.forName("me.matl114.logitech.core.Registries.RecipeSupporter").getDeclaredField("STACKMACHINE_LIST");
-                materialGeneratorListField = Class.forName("me.matl114.logitech.core.Registries.RecipeSupporter").getDeclaredField("STACKMGENERATOR_LIST");
-            } catch (ClassNotFoundException | NoSuchFieldException ignored) {
+                c = Class.forName("me.matl114.logitech.core.Registries.RecipeSupporter");
+            } catch (ClassNotFoundException ignored) {
                 try {
-                    machineListField = Class.forName("me.matl114.logitech.Utils.RecipeSupporter").getDeclaredField("STACKMACHINE_LIST");
-                    materialGeneratorListField = Class.forName("me.matl114.logitech.Utils.RecipeSupporter").getDeclaredField("STACKMGENERATOR_LIST");
-                } catch (ClassNotFoundException | NoSuchFieldException ignored2) {
+                    c = Class.forName("me.matl114.logitech.Utils.RecipeSupporter");
+                } catch (ClassNotFoundException ignored2) {
                     Debug.debug(() -> "无法自动禁用机器在逻辑工艺中的可堆叠属性!");
-                    machineListField = null;
-                    materialGeneratorListField = null;
+                    return;
                 }
-            }
-            if (machineListField == null) return;
-            machineListField.setAccessible(true);
-            materialGeneratorListField.setAccessible(true);
-            Map<SlimefunItem, Integer> STACKMACHINE_LIST;
-            Map<SlimefunItem, Integer> STACKMGENERATOR_LIST;
-            try {
-                STACKMACHINE_LIST = (Map<SlimefunItem, Integer>) machineListField.get(null);
-                STACKMGENERATOR_LIST = (Map<SlimefunItem, Integer>) materialGeneratorListField.get(null);
-            } catch (IllegalAccessException e) {
-                Debug.debug(() -> "无法自动禁用机器在逻辑工艺中的可堆叠属性!");
-                return;
             }
 
-            for (var sf : new ArrayList<>(Slimefun.getRegistry().getAllSlimefunItems())) {
-                if (!isNotStackable(sf)) continue;
-                if (STACKMACHINE_LIST.remove(sf) != null) {
-                    Debug.debug(() -> "已删除STACKMACHINE_LIST中的" + sf);
-                }
-                if (STACKMGENERATOR_LIST.remove(sf) != null) {
-                    Debug.debug(() -> "已删除STACKMGENERATOR_LIST中的" + sf);
+            if (isSMBStackable()) {
+                var blacklist = ReflectionUtil.getStaticValue(c, "BLACKLIST_MACHINECLASS");
+                if (blacklist instanceof HashSet<?> set) ((Set<Class<?>>) set).add(CustomSuperMultiBlockMachine.class);
+            }
+
+            Map<SlimefunItem, Integer> STACKMACHINE_LIST = (Map<SlimefunItem, Integer>) ReflectionUtil.getStaticValue(c, "STACKMACHINE_LIST");
+            Map<SlimefunItem, Integer> STACKMGENERATOR_LIST = (Map<SlimefunItem, Integer>) ReflectionUtil.getStaticValue(c, "STACKMGENERATOR_LIST");
+            var placeholder = new SlimefunItem(new ItemGroup(Keys.newKey("placeholder"), CommonUtils.createDefaultItem()), new SlimefunItemStack("RSC_PLACEHOLDER_ITEM", CommonUtils.createDefaultItem()), RecipeType.NULL, new ItemStack[0]);
+            ReflectionUtil.getStaticValue(c, "MACHINE_RECIPELIST", Map.class).put(placeholder, new ArrayList<>());
+
+            Class<?> csm, csmg;
+            try {
+                csm = Class.forName("me.matl114.logitech.core.Machines.AutoMachines.StackMachine");
+                csmg = Class.forName("me.matl114.logitech.core.Machines.AutoMachines.StackMGenerator");
+            } catch (ClassNotFoundException ignored) {
+                try {
+                    csm = Class.forName("me.matl114.logitech.SlimefunItem.Machines.AutoMachines.StackMachine");
+                    csmg = Class.forName("me.matl114.logitech.SlimefunItem.Machines.AutoMachines.StackMGenerator");
+                } catch (ClassNotFoundException ignored2) {
+                    Debug.debug(() -> "无法自动禁用机器在逻辑工艺中的可堆叠属性!");
+                    return;
                 }
             }
+            List<SlimefunItem> bwm_instance = (List<SlimefunItem>) ReflectionUtil.getStaticValue(csm, "BW_LIST", List.class);
+            List<SlimefunItem> bwg_instance = (List<SlimefunItem>) ReflectionUtil.getStaticValue(csmg, "BW_LIST", List.class);
+
+            int i = 0;
+            for (var sf : new ArrayList<>(Slimefun.getRegistry().getAllSlimefunItems())) {
+                if (sf.getAddon() != RykenSlimefunCustomizer.INSTANCE || !isNotStackable(sf)) continue;
+                if (STACKMACHINE_LIST.remove(sf) != null) {
+                    Debug.debug(() -> "已删除 STACKMACHINE_LIST 中的" + sf);
+                    var idx = bwm_instance.indexOf(sf);
+                    synchronized (bwm_instance) {
+                        if (idx != -1) bwm_instance.set(idx, placeholder);
+                    }
+                    if (jeg) {
+                        LogiTechIntegrationMain.stackableMachines.remove(sf);
+                    }
+                    i++;
+                }
+                if (STACKMGENERATOR_LIST.remove(sf) != null) {
+                    Debug.debug(() -> "已删除 STACKMGENERATOR_LIST 中的" + sf);
+                    var idx = bwg_instance.indexOf(sf);
+                    synchronized (bwg_instance) {
+                        if (idx != -1) bwg_instance.set(idx, placeholder);
+                    }
+                    if (jeg) {
+                        LogiTechIntegrationMain.stackableMaterialGenerators.remove(sf);
+                    }
+                    i++;
+                }
+            }
+
             logitechNotStackableIds = null; // gc
-            Debug.info("已自动禁用机器在逻辑工艺中的可堆叠属性!");
+            Debug.info("已自动禁用机器在逻辑工艺中的可堆叠属性! 共 " + i + " 个机器");
         }, 300L); // wait recipe supporter
     }
 

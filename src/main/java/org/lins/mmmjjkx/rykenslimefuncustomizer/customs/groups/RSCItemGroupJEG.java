@@ -177,4 +177,14 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
         ChestMenu menu = group.setup(p, profile, mode);
         menu.open(p);
     }
+
+    @Override
+    public ItemStack getItem(Player p) {
+        if (!item.hasItemMeta()) return super.getItem(p);
+        var meta = item.getItemMeta();
+        if (meta == null) return super.getItem(p);
+        var lore = meta.getLore();
+        if (lore == null || lore.isEmpty()) return super.getItem(p);
+        return item;
+    }
 }

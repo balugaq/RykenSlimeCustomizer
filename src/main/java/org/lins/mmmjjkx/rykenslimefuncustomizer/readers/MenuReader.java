@@ -63,7 +63,7 @@ public class MenuReader extends YamlReader<CustomMenu> {
 
         if (!CommonUtils.passMenuIdConflictCheck(s, addon)) return null;
 
-        String title = section.getString("title", "");
+        String title = section.getString("title"); // nullable
         boolean playerInvClickable = section.getBoolean("playerInvClickable", true);
         int size = section.getInt("size", NOT_SET);
 

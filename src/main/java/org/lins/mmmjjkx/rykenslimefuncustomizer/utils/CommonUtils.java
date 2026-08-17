@@ -103,7 +103,7 @@ public class CommonUtils {
     public static Optional<Material> getMaterial(String s) {
         Material m = Material.matchMaterial(s.toUpperCase(Locale.ROOT));
         if (m == null) {
-            var m2 = materialMappings.get(s);
+            var m2 = materialMappings.get(s.toUpperCase(Locale.ROOT));
             if (m2 == null) return Optional.empty();
             return Optional.ofNullable(Material.matchMaterial(m2));
         }

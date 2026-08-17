@@ -211,4 +211,14 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
 
         return menu;
     }
+
+    @Override
+    public ItemStack getItem(Player p) {
+        if (!item.hasItemMeta()) return super.getItem(p);
+        var meta = item.getItemMeta();
+        if (meta == null) return super.getItem(p);
+        var lore = meta.getLore();
+        if (lore == null || lore.isEmpty()) return super.getItem(p);
+        return item;
+    }
 }

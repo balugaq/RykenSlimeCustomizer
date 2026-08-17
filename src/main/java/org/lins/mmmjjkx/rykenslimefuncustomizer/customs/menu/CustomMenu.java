@@ -47,7 +47,7 @@ public class CustomMenu {
     private final ScriptEval eval;
 
     @Getter
-    private final String title;
+    private final @Nullable String title;
 
     @Getter
     private final String id;
@@ -75,9 +75,9 @@ public class CustomMenu {
 
     private final Map<Integer, ChestMenu.MenuClickHandler> clickHandlers;
 
-    public CustomMenu(String id, String title, CustomMenu menu) {
+    public CustomMenu(String id, @Nullable String title, CustomMenu menu) {
         this.eval = menu.eval;
-        this.title = CMIChatColor.translate(title);
+        this.title = title != null ? CMIChatColor.translate(title) : null;
         this.id = id;
         this.items = menu.items;
         this.progressSlot = menu.progressSlot;
@@ -123,7 +123,7 @@ public class CustomMenu {
             @Nullable ScriptEval eval) {
 
         this.id = id;
-        this.title = CMIChatColor.translate(title);
+        this.title = title != null ? CMIChatColor.translate(title) : null;
         this.eval = eval;
         this.progressBar = progressBar != null ? progressBar.clone() : mi.get(progressSlot);
         this.progressSlot = progressSlot;

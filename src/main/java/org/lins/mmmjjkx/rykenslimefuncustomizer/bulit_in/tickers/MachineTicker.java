@@ -55,7 +55,7 @@ public interface MachineTicker extends DataCache, RecipesHolder, CustomMenuHolde
             );
             return;
         }
-        createPreset(this.getMachine(), menu.getTitle(), menu::apply, this::onNewInstance);
+        createPreset(this.getMachine(), menu.getTitle() == null || menu.getTitle().isBlank() ? getMachine().getItemName() : menu.getTitle(), menu::apply, this::onNewInstance);
         if (menu.getProgressBar() != null) {
             getAdvancedMachineProcessor().setProgressBar(menu.getProgressBar());
         }

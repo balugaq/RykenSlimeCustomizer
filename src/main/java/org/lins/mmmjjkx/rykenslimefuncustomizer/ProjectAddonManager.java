@@ -166,7 +166,7 @@ public final class ProjectAddonManager {
         File folder = RykenSlimefunCustomizer.INSTANCE.getDataFolder();
         if (folder.listFiles() != null) {
             boolean b = Arrays.stream(Objects.requireNonNull(folder.listFiles()))
-                    .anyMatch(f -> f.isFile() && !f.getName().equalsIgnoreCase("config.yml"));
+                    .anyMatch(f -> f.isFile() && f.getName().equals("info.yml"));
             if (b) {
                 Debug.warn("你应当在 \"plugin/RykenSlimefunCustomizer/addons/附属文件夹\" 中存入配置文件，而不是在 \"plugin/RykenSlimefunCustomizer\" 中");
             }
@@ -175,11 +175,8 @@ public final class ProjectAddonManager {
 
     public void reload() {
         for (ProjectAddon addon : projectAddons.values()) {
-            addon.unregister();
+            unloadAddon(addon);
         }
-
-        projectAddons.clear();
-        projectIds.clear();
 
         RecipeTypeMap.clearRecipeTypes();
 
