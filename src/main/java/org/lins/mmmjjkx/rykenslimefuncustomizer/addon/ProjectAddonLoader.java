@@ -283,26 +283,41 @@ public class ProjectAddonLoader {
         String repo = infoCfg.getString("repo");
         String downloadZipName = infoCfg.getString("downloadZipName");
 
+        List<Depend> failedDepends = new ArrayList<>();
         List<String> depends = new ArrayList<>();
         if (infoCfg.contains("depends")) {
             depends = infoCfg.getStringList("depends");
             for (Depend depend : Depend.load(Depend.Type.ADDON, depends)) {
                 if (!depend.enabled()) {
-                    Debug.error(desc + "需要 RSC 附属依赖项 " + depend + " 但指定的依赖未加载成功!");
-                    return null;
+                    failedDepends.add(depend);
                 }
             }
+        }
+
+        if (!failedDepends.isEmpty()) {
+            Debug.error(desc + "需要以下 RSC 附属依赖项，而指定的依赖未加载成功!");
+            for (var depend : failedDepends) {
+                Debug.error(" - " + depend);
+            }
+            return null;
         }
 
         List<String> pluginDepends = new ArrayList<>();
         if (infoCfg.contains("pluginDepends")) {
             pluginDepends = infoCfg.getStringList("pluginDepends");
-            for (Depend depend : Depend.load(Depend.Type.PLUGIN, depends)) {
+            for (Depend depend : Depend.load(Depend.Type.PLUGIN, pluginDepends)) {
                 if (!depend.enabled()) {
-                    Debug.error(desc + "需要插件依赖项 " + depend + " 但指定的插件未加载成功!");
-                    return null;
+                    failedDepends.add(depend);
                 }
             }
+        }
+
+        if (!failedDepends.isEmpty()) {
+            Debug.error(desc + "需要以下插件依赖项，而指定的插件尚未加载或未加载成功!");
+            for (var depend : failedDepends) {
+                Debug.error(" - " + depend);
+            }
+            return null;
         }
 
         ProjectAddon addon = new ProjectAddon(id, name, version, pluginDepends, depends, description, authors, projectDir);

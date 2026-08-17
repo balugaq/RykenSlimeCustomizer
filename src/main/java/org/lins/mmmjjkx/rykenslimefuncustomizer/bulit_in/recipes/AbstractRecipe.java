@@ -12,7 +12,7 @@ public abstract class AbstractRecipe extends MachineRecipe implements Recipe {
     }
 
     public AbstractRecipe(ItemStack[] input, ItemStack[] output, int ticks) {
-        super(0, input, output);
+        super(ticks / 2, input, output);
         this.ticks = ticks;
     }
 

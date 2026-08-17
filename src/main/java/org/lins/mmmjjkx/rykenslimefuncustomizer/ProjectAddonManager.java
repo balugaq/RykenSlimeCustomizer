@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 @NullMarked
@@ -50,10 +51,10 @@ public final class ProjectAddonManager {
     public static File CONFIGS_DIRECTORY = new File(RykenSlimefunCustomizer.INSTANCE.getDataFolder(), "addon_configs");
 
     @Getter
-    private final Map<String, File> projectIds = new HashMap<>(); // 查找所有文件夹
-    private final Map<String, ProjectAddon> projectAddons = new HashMap<>(); // 查找已加载附属
-    private final Map<String, Map<ItemStack[], ItemStack>> preaddRecipes = new HashMap<>();
-    private final Set<File> scannedFiles = new HashSet<>();
+    private final Map<String, File> projectIds = new ConcurrentHashMap<>(); // 查找所有文件夹
+    private final Map<String, ProjectAddon> projectAddons = new ConcurrentHashMap<>(); // 查找已加载附属
+    private final Map<String, Map<ItemStack[], ItemStack>> preaddRecipes = new ConcurrentHashMap<>();
+    private final Set<File> scannedFiles = ConcurrentHashMap.newKeySet();
 
     @Getter
     @Setter

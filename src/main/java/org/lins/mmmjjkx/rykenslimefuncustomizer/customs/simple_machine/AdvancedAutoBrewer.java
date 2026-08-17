@@ -37,8 +37,6 @@ import java.util.EnumMap;
 import java.util.Map;
 
 public class AdvancedAutoBrewer extends AutoBrewer {
-    private static final Map<Material, PotionType> potionRecipes = new EnumMap<>(Material.class);
-    private static final Map<PotionType, PotionType> fermentations = new EnumMap<>(PotionType.class);
     private final int speed;
 
     public AdvancedAutoBrewer(
