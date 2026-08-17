@@ -49,19 +49,36 @@ public class CustomMachineRecipe extends AbstractRecipe {
     private final List<InputWrapper> inputs;
     private final List<ItemWrapper> outputs;
     private final IntList chances;
-    private final boolean chooseOne;
-    private final boolean forDisplayOnly;
+    private final boolean chooseOneIfHas; // keep field name for LogiTech reflection
+    private final boolean forDisplay; // keep field name for LogiTech reflection
     private final boolean hide;
-    private final boolean noConsumeAll;
+    private final boolean noConsume; // keep field name for LogiTech reflection
+
+    public boolean isChooseOne() {
+        return chooseOneIfHas;
+    }
+
+    public boolean isForDisplayOnly() {
+        return forDisplay;
+    }
+
+    public boolean isNoConsumeAll() {
+        return noConsume;
+    }
 
     @Deprecated
     public boolean isChooseOneIfHas() {
-        return chooseOne;
+        return chooseOneIfHas;
     }
 
     @Deprecated
     public boolean isForDisplay() {
-        return forDisplayOnly;
+        return forDisplay;
+    }
+
+    @Deprecated
+    public boolean isNoConsume() {
+        return noConsume;
     }
 
     public CustomMachineRecipe(
@@ -90,10 +107,10 @@ public class CustomMachineRecipe extends AbstractRecipe {
         this.inputs = input;
         this.outputs = InvIndex.mergeItems(output);
         this.chances = chances;
-        this.chooseOne = chooseOne;
-        this.forDisplayOnly = forDisplayOnly;
+        this.chooseOneIfHas = chooseOne;
+        this.forDisplay = forDisplayOnly;
         this.hide = hide;
-        this.noConsumeAll = noConsumeAll;
+        this.noConsume = noConsumeAll;
     }
 
     public List<ItemStack> getMatchChanceResult(boolean chooseOne) {
@@ -198,7 +215,7 @@ public class CustomMachineRecipe extends AbstractRecipe {
         }
 
         if (consumeItems) {
-            if (noConsumeAll) return true;
+            if (isNoConsumeAll()) return true;
             var inv = index.getInv();
             for (var wrapper : inputs) {
                 for (var slotWrapper : index.getInputs()) {

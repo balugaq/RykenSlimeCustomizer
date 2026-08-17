@@ -48,12 +48,39 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
     ItemStack LINKED_RECIPE_OUTPUT = new CustomItemStack(Material.GREEN_STAINED_GLASS_PANE, "&a强配方物品输出", "", "&2> &a点击查看");
     private final Map<Integer, ItemStack> linkedInput;
     private final LinkedOutput linkedOutput;
-    private final IntSet noConsume;
-    private final boolean chooseOne;
-    private final boolean forDisplayOnly;
+    private final IntSet noConsumeIndexes;
+    private final boolean chooseOneIfHas; // keep field name for LogiTech reflection
+    private final boolean forDisplay; // keep field name for LogiTech reflection
     private final boolean hide;
     private final int saveAmount;
-    private final boolean noConsumeAll;
+    private final boolean noConsume; // keep field name for LogiTech reflection
+
+    public boolean isChooseOne() {
+        return chooseOneIfHas;
+    }
+
+    public boolean isForDisplayOnly() {
+        return forDisplay;
+    }
+
+    public boolean isNoConsumeAll() {
+        return noConsume;
+    }
+
+    @Deprecated
+    public boolean isChooseOneIfHas() {
+        return chooseOneIfHas;
+    }
+
+    @Deprecated
+    public boolean isForDisplay() {
+        return forDisplay;
+    }
+
+    @Deprecated
+    public boolean isNoConsume() {
+        return noConsume;
+    }
 
     @Override
     public void formatGUI(ChestMenu inv, int[] inputSlots, int[] outputSlots) {
@@ -61,14 +88,14 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
         for (var e : linkedInput.entrySet()) {
             var slot = e.getKey();
             var stack = e.getValue();
-            if (noConsume.contains(slot)) {
+            if (getNoConsumeIndexes().contains(slot)) {
                 stack = Recipe.tagNoConsume(stack);
             }
             inv.addItem(slot, stack, ChestMenuUtils.getEmptyClickHandler());
         }
 
         // output - choose one
-        if (chooseOne) {
+        if (isChooseOne()) {
             List<ItemStack> allStacks = new ArrayList<>();
             IntList allChances = new IntArrayList();
             for (var e : linkedOutput.linkedOutput().entrySet()) {
@@ -166,9 +193,9 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
         if (!BlockMenuUtil.fits(index.getInv(), linkedOutput)) return false;
 
         if (consumeItems) {
-            if (noConsumeAll) return true;
+            if (isNoConsumeAll()) return true;
             for (var e : linkedInput.entrySet()) {
-                if (noConsume.contains(e.getKey())) continue;
+                if (getNoConsumeIndexes().contains(e.getKey())) continue;
                 ItemStack stack = index.getItemInSlot(e.getKey());
                 if (stack != null) {
                     stack.setAmount(stack.getAmount() - e.getValue().getAmount());
@@ -191,11 +218,11 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
         super(seconds, input.values().toArray(new ItemStack[0]), linkedOutput.toArray());
         this.linkedInput = input;
         this.linkedOutput = linkedOutput;
-        this.noConsume = noConsume;
-        this.chooseOne = chooseOne;
-        this.forDisplayOnly = forDisplayOnly;
+        this.noConsumeIndexes = noConsume;
+        this.chooseOneIfHas = chooseOne;
+        this.forDisplay = forDisplayOnly;
         this.hide = hide;
         this.saveAmount = saveAmount;
-        this.noConsumeAll = noConsumeAll;
+        this.noConsume = noConsumeAll;
     }
 }

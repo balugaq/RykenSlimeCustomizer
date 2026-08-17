@@ -182,9 +182,16 @@ public class AdvancedCustomMachine extends AContainer implements RecipeDisplayIt
     public @Nullable Value evalFunction(String methodName, @Nullable Object... args) {
         if (eval == null) return null;
         try {
-            return Bukkit.getScheduler().callSyncMethod(RykenSlimefunCustomizer.INSTANCE, () -> {
+            if (Bukkit.isPrimaryThread()) {
+                // 已经在主线程，直接执行
                 return eval.evalFunction(methodName, args);
-            }).get(10, TimeUnit.SECONDS);
+            } else {
+                // 非主线程，调度到主线程执行并等待
+                return Bukkit.getScheduler().callSyncMethod(
+                    RykenSlimefunCustomizer.INSTANCE,
+                    () -> eval.evalFunction(methodName, args)
+                ).get(10, TimeUnit.SECONDS);
+            }
         } catch (ExecutionException e) {
             Debug.error("脚本 " + eval.getFile().getName() + "#" + methodName + " 运行错误!", e);
         } catch (InterruptedException e) {

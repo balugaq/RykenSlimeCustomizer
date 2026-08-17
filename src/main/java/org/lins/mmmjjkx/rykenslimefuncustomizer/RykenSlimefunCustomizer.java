@@ -207,7 +207,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
     }
 
     private void handleJEG() throws ClassNotFoundException, IOException {
-        Debug.info("已检测到JustEnoughGuide，正在适配...");
+        Debug.info("已检测到 JustEnoughGuide，正在适配...");
 
         SaveditemsGroup itemGroup = new SaveditemsGroup(
             Keys.newKey("saveditems"),
@@ -280,7 +280,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
                 }
             }
 
-            if (isSMBStackable()) {
+            if (!isSMBStackable()) {
                 var blacklist = ReflectionUtil.getStaticValue(c, "BLACKLIST_MACHINECLASS");
                 if (blacklist instanceof HashSet<?> set) ((Set<Class<?>>) set).add(CustomSuperMultiBlockMachine.class);
             }
@@ -309,6 +309,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
             int i = 0;
             for (var sf : new ArrayList<>(Slimefun.getRegistry().getAllSlimefunItems())) {
                 if (sf.getAddon() != RykenSlimefunCustomizer.INSTANCE || !isNotStackable(sf)) continue;
+                // only handle not stackable items
                 if (STACKMACHINE_LIST.remove(sf) != null) {
                     Debug.debug(() -> "已删除 STACKMACHINE_LIST 中的" + sf);
                     var idx = bwm_instance.indexOf(sf);
