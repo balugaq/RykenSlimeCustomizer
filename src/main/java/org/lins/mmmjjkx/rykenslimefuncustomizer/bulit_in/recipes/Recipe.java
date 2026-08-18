@@ -128,6 +128,11 @@ public interface Recipe {
     boolean matches(InvIndex index, boolean consumeItems);
     int getTicks();
     boolean pushOutputs(BlockMenu inv);
+    <T extends MachineRecipe & Recipe> T asMachineRecipe();
+
+    static void openGUI(Player p, @Nullable CustomMenu menu, int[] inputSlots, int[] outputSlots, Recipe recipe, SlimefunItem sf) {
+        openGUI(p, menu, inputSlots, outputSlots, (MachineRecipe) recipe.asMachineRecipe(), sf);
+    }
 
     static void openGUI(Player p, @Nullable CustomMenu menu, int[] inputSlots, int[] outputSlots, MachineRecipe mr, SlimefunItem sf) {
         var group = new MachineMenuPreviewGroup(p, menu, inputSlots, outputSlots, mr, sf);

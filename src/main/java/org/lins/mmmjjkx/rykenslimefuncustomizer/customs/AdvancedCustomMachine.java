@@ -7,6 +7,7 @@ import io.github.thebusybiscuit.slimefun4.core.handlers.BlockBreakHandler;
 import io.github.thebusybiscuit.slimefun4.implementation.handlers.SimpleBlockBreakHandler;
 import lombok.Getter;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.AContainer;
+import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
 import org.bukkit.Bukkit;
@@ -109,7 +110,7 @@ public class AdvancedCustomMachine extends AContainer implements RecipeDisplayIt
     @Override
     public void registerDefaultRecipes() {
         if (getTicker() == null) return;
-        getTicker().getRecipes().forEach(super::registerRecipe);
+        getTicker().getRecipes().forEach(r -> registerRecipe(r.asMachineRecipe()));
     }
 
     @Override
@@ -162,13 +163,13 @@ public class AdvancedCustomMachine extends AContainer implements RecipeDisplayIt
 
     @Override
     @Nullable
-    public AbstractRecipe findNextRecipe(BlockMenu inv) {
+    public MachineRecipe findNextRecipe(BlockMenu inv) {
         InvIndex index = InvIndex.create(inv);
         var recipe = ticker.getCache(inv.getLocation(), MachineTicker.lastRecipeAccessor);
         if (recipe == null || !recipe.matches(index)) {
             recipe = ticker.findNextRecipe(index, recipe);
         }
-        return recipe;
+        return recipe == null ? null : recipe.asMachineRecipe();
     }
 
     public boolean tick() {

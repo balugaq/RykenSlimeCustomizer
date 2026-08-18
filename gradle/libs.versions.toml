@@ -33,6 +33,7 @@ item-nbt-api-plugin = { module = "de.tr7zw:item-nbt-api-plugin", version = "2.15
 justenoughguide = { module = "com.github.balugaq:JustEnoughGuide", version = "4d4e3e607b" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+logitech = { module = "com.github.balugaq:logitech", version = "0648f9f439" }
 
 [plugins]
 #spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

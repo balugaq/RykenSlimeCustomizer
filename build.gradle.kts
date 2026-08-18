@@ -12,7 +12,7 @@ plugins {
 
 group = "io.github.balugaq"
 val archiveName = "RykenSlimeCustomizer"
-version = "v3.1.1"
+version = "v3.1.2"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
@@ -85,6 +85,7 @@ dependencies {
     annotationProcessor(libs.lombok)
     compileOnly(libs.item.nbt.api.plugin)
     compileOnly(libs.justenoughguide)
+    compileOnly(libs.logitech)
 
     // System-scoped local JARs
     // compileOnly(fileTree(mapOf("dir" to "lib", "include" to listOf("*.jar"))))

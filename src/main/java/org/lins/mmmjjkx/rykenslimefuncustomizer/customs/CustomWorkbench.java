@@ -21,6 +21,7 @@ import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.block.Block;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.Recipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 
@@ -46,7 +47,7 @@ public class CustomWorkbench extends AdvancedCustomMachine {
 
             var recipe = findNextRecipe(menu);
             if (recipe != null) {
-                recipe.pushOutputs(menu);
+                ((Recipe) recipe).pushOutputs(menu);
             }
             return false;
         });

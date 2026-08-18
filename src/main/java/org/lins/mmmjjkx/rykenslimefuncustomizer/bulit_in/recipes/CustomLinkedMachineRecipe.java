@@ -26,6 +26,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import lombok.Getter;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
+import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.Material;
@@ -224,5 +225,10 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
         this.hide = hide;
         this.saveAmount = saveAmount;
         this.noConsume = noConsumeAll;
+    }
+
+    @Override
+    public MachineRecipe asMachineRecipe() {
+        return this;
     }
 }

@@ -37,9 +37,4 @@ public class CustomMaterialGenerator extends AdvancedCustomMachine {
     public void onNewInstance(BlockMenu menu, Block b) {
         menu.addMenuClickHandler(status, ChestMenuUtils.getEmptyClickHandler());
     }
-
-    @Override
-    public boolean tick() {
-        return false;
-    }
 }

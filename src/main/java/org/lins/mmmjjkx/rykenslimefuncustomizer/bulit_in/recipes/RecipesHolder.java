@@ -19,13 +19,13 @@ public interface RecipesHolder extends ProcessorHolder, RecipeDisplayItem {
     ItemStack RECIPE_INPUT = new CustomItemStack(Material.GREEN_STAINED_GLASS_PANE, "&a多物品输入", "", "&2> &a点击查看");
     ItemStack RECIPE_OUTPUT = new CustomItemStack(Material.GREEN_STAINED_GLASS_PANE, "&a多物品输出", "", "&2> &a点击查看");
 
-    List<? extends AbstractRecipe> getRecipes();
+    List<? extends Recipe> getRecipes();
 
     default boolean isHideAllRecipes() {
         return false;
     }
 
-    default @Nullable AbstractRecipe findNextRecipe(InvIndex index, @Nullable Recipe lastRecipe) {
+    default @Nullable Recipe findNextRecipe(InvIndex index, @Nullable Recipe lastRecipe) {
         for (var recipe : getRecipes()) {
             if (recipe != lastRecipe && recipe.matches(index)) {
                 return recipe;

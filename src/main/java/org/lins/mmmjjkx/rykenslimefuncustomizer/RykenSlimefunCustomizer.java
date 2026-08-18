@@ -25,6 +25,9 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
+import me.matl114.logitech.core.Machines.AutoMachines.StackMGenerator;
+import me.matl114.logitech.core.Machines.AutoMachines.StackMachine;
+import me.matl114.logitech.core.Registries.RecipeSupporter;
 import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.Library;
 import net.guizhanss.guizhanlib.updater.GuizhanBuildsUpdater;
@@ -90,6 +93,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
     public static ProjectAddonManager addonManager;
     public SuperMultiBlockManager smbm;
     public static boolean jeg = false;
+    public static boolean logitech = false;
     public static @Nullable Set<String> logitechNotStackableIds = new HashSet<>();
 
     @Override
@@ -158,6 +162,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         CommonUtils.completeFile("config.yml");
 
         jeg = Bukkit.getPluginManager().isPluginEnabled("JustEnoughGuide");
+        logitech = Bukkit.getPluginManager().isPluginEnabled("LogiTech");
         addonManager = new ProjectAddonManager();
         smbm = new SuperMultiBlockManager();
 
@@ -264,47 +269,22 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
     }
 
     private void handleLogitech() {
-        if (!Bukkit.getPluginManager().isPluginEnabled("LogiTech")) return;
+        if (!logitech) return;
 
         Bukkit.getScheduler().runTaskLaterAsynchronously(RykenSlimefunCustomizer.INSTANCE, () -> {
+            // throws NoClassDefError
             // Don't allow CustomSuperMultiBlockMachine to be stackable
-            Class<?> c;
-            try {
-                c = Class.forName("me.matl114.logitech.core.Registries.RecipeSupporter");
-            } catch (ClassNotFoundException ignored) {
-                try {
-                    c = Class.forName("me.matl114.logitech.Utils.RecipeSupporter");
-                } catch (ClassNotFoundException ignored2) {
-                    Debug.debug(() -> "无法自动禁用机器在逻辑工艺中的可堆叠属性!");
-                    return;
-                }
-            }
-
             if (!isSMBStackable()) {
-                var blacklist = ReflectionUtil.getStaticValue(c, "BLACKLIST_MACHINECLASS");
-                if (blacklist instanceof HashSet<?> set) ((Set<Class<?>>) set).add(CustomSuperMultiBlockMachine.class);
+                RecipeSupporter.BLACKLIST_MACHINECLASS.add(CustomSuperMultiBlockMachine.class);
             }
 
-            Map<SlimefunItem, Integer> STACKMACHINE_LIST = (Map<SlimefunItem, Integer>) ReflectionUtil.getStaticValue(c, "STACKMACHINE_LIST");
-            Map<SlimefunItem, Integer> STACKMGENERATOR_LIST = (Map<SlimefunItem, Integer>) ReflectionUtil.getStaticValue(c, "STACKMGENERATOR_LIST");
+            Map<SlimefunItem, Integer> STACKMACHINE_LIST = RecipeSupporter.STACKMACHINE_LIST;
+            Map<SlimefunItem, Integer> STACKMGENERATOR_LIST = RecipeSupporter.STACKMGENERATOR_LIST;
             var placeholder = new SlimefunItem(new ItemGroup(Keys.newKey("placeholder"), CommonUtils.createDefaultItem()), new SlimefunItemStack("RSC_PLACEHOLDER_ITEM", CommonUtils.createDefaultItem()), RecipeType.NULL, new ItemStack[0]);
-            ReflectionUtil.getStaticValue(c, "MACHINE_RECIPELIST", Map.class).put(placeholder, new ArrayList<>());
+            RecipeSupporter.MACHINE_RECIPELIST.put(placeholder, new ArrayList<>());
 
-            Class<?> csm, csmg;
-            try {
-                csm = Class.forName("me.matl114.logitech.core.Machines.AutoMachines.StackMachine");
-                csmg = Class.forName("me.matl114.logitech.core.Machines.AutoMachines.StackMGenerator");
-            } catch (ClassNotFoundException ignored) {
-                try {
-                    csm = Class.forName("me.matl114.logitech.SlimefunItem.Machines.AutoMachines.StackMachine");
-                    csmg = Class.forName("me.matl114.logitech.SlimefunItem.Machines.AutoMachines.StackMGenerator");
-                } catch (ClassNotFoundException ignored2) {
-                    Debug.debug(() -> "无法自动禁用机器在逻辑工艺中的可堆叠属性!");
-                    return;
-                }
-            }
-            List<SlimefunItem> bwm_instance = (List<SlimefunItem>) ReflectionUtil.getStaticValue(csm, "BW_LIST", List.class);
-            List<SlimefunItem> bwg_instance = (List<SlimefunItem>) ReflectionUtil.getStaticValue(csmg, "BW_LIST", List.class);
+            List<SlimefunItem> bwm_instance = (List<SlimefunItem>) ReflectionUtil.getStaticValue(StackMachine.class, "BW_LIST", List.class);
+            List<SlimefunItem> bwg_instance = (List<SlimefunItem>) ReflectionUtil.getStaticValue(StackMGenerator.class, "BW_LIST", List.class);
 
             int i = 0;
             for (var sf : new ArrayList<>(Slimefun.getRegistry().getAllSlimefunItems())) {

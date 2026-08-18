@@ -27,7 +27,7 @@ import java.io.File;
 
 @NullMarked
 public interface MachineTicker extends DataCache, RecipesHolder, CustomMenuHolder, EnergyNetComponent {
-    CacheAccess<AbstractRecipe> lastRecipeAccessor = () -> AbstractRecipe.class;
+    CacheAccess<Recipe> lastRecipeAccessor = () -> Recipe.class;
 
     Type getType();
 
@@ -105,7 +105,7 @@ public interface MachineTicker extends DataCache, RecipesHolder, CustomMenuHolde
 
     default void createGUI(Player p, int index) {
         if (index >= getRecipes().size()) return;
-        AbstractRecipe recipe = getRecipes().get(index);
+        var recipe = getRecipes().get(index);
         Recipe.openGUI(p, getCustomMenu(), getInputSlots(), getOutputSlots(), recipe, this.getMachine());
     }
 

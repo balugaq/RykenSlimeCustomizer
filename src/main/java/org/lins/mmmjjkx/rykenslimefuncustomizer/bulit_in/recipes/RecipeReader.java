@@ -34,5 +34,5 @@ public interface RecipeReader {
     }
 
     @Nullable
-    List<? extends AbstractRecipe> read(File file, int inputSize, int outputSize, ConfigurationSection section, ProjectAddon addon);
+    List<? extends Recipe> read(File file, int inputSize, int outputSize, ConfigurationSection section, ProjectAddon addon);
 }

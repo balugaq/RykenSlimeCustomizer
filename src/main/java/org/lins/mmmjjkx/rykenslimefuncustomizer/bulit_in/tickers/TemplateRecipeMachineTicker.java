@@ -40,11 +40,18 @@ public interface TemplateRecipeMachineTicker extends MachineTicker {
             if (recipe == null || !recipe.matches(index)) {
                 recipe = findNextRecipe(index, recipe);
                 if (recipe == null) return;
+                setCache(location, lastRecipeAccessor, recipe);
             }
 
             currentOperation = new CraftingRecipeOperation(recipe);
             getAdvancedMachineProcessor().startOperation(location, currentOperation);
-            getAdvancedMachineProcessor().updateProgressBar(inv, getProgressSlot(), currentOperation);
+            if (currentOperation.isFinished()) {
+                finishOperation(currentOperation, inv, location);
+            } else {
+                if (inv.hasViewer()) {
+                    getAdvancedMachineProcessor().updateProgressBar(inv, getProgressSlot(), currentOperation);
+                }
+            }
             return;
         }
 
@@ -64,16 +71,22 @@ public interface TemplateRecipeMachineTicker extends MachineTicker {
             return;
         }
 
+        finishOperation(currentOperation, inv, location);
+    }
+
+    default void finishOperation(CraftingRecipeOperation currentOperation, BlockMenu inv, Location location) {
         // finish recipe
         currentOperation.getRecipe().pushOutputs(inv);
 
-        ItemStack progress;
-        if (getCustomMenu() == null) {
-            progress = ChestMenuUtils.getBackground();
-        } else {
-            progress = getCustomMenu().getItems().getOrDefault(getProgressSlot(), ChestMenuUtils.getBackground());
+        if (inv.hasViewer()) {
+            ItemStack progress;
+            if (getCustomMenu() == null) {
+                progress = ChestMenuUtils.getBackground();
+            } else {
+                progress = getCustomMenu().getItems().getOrDefault(getProgressSlot(), ChestMenuUtils.getBackground());
+            }
+            inv.replaceExistingItem(getProgressSlot(), progress);
         }
-        inv.replaceExistingItem(getProgressSlot(), progress);
 
         getAdvancedMachineProcessor().endOperation(location);
     }

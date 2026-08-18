@@ -3,14 +3,19 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.tickers;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import me.matl114.logitech.utils.UtilClass.RecipeClass.MGeneratorRecipe;
+import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Range;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.AbstractRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.CustomMachineRecipe;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.MGeneratorRecipeRSC;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.Recipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.AdvancedCustomMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.menu.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
@@ -23,7 +28,7 @@ import java.util.List;
 @NullMarked
 public class MaterialGeneratorMachineTickerCreator implements TickerCreator {
     @Override
-    public @Nullable List<? extends AbstractRecipe> read(File file, int inputSize, int outputSize, ConfigurationSection section, ProjectAddon addon) {
+    public @Nullable List<? extends Recipe> read(File file, int inputSize, int outputSize, ConfigurationSection section, ProjectAddon addon) {
         ConfigurationSection outputItems = section.getConfigurationSection("outputs");
         List<ItemStack> outputs = new ArrayList<>();
         IntList chances = new IntArrayList();
@@ -67,16 +72,19 @@ public class MaterialGeneratorMachineTickerCreator implements TickerCreator {
             Debug.error(file, section, "配置错误 '配方耗时' (tickRate)", 1, Integer.MAX_VALUE);
             return null;
         }
-        return List.of(new CustomMachineRecipe(
-            List.of(),
+        return List.of(createMaterialGeneratorRecipe(
             outputs.stream().toList().toArray(new ItemStack[0]),
             tickRate,
             chances,
-            chooseOne,
-            false,
-            false,
-            true
+            chooseOne
         ));
+    }
+
+    public static <T extends MachineRecipe & Recipe> T createMaterialGeneratorRecipe(ItemStack[] outputs, int tickRate, IntList chances, boolean chooseOne) {
+        if (RykenSlimefunCustomizer.logitech) {
+            return new MGeneratorRecipeRSC(tickRate, outputs, chances, chooseOne).asMachineRecipe();
+        }
+        return new CustomMachineRecipe(List.of(), outputs, tickRate, chances, chooseOne, false, false, false).asMachineRecipe();
     }
 
     @Override
@@ -121,7 +129,7 @@ public class MaterialGeneratorMachineTickerCreator implements TickerCreator {
             }
 
             @Override
-            public List<? extends AbstractRecipe> getRecipes() {
+            public List<? extends Recipe> getRecipes() {
                 return recipes;
             }
         };

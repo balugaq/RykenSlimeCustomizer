@@ -2,6 +2,7 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.tickers;
 
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
+import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -10,6 +11,7 @@ import org.jetbrains.annotations.Range;
 import org.jspecify.annotations.NullMarked;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.AbstractRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.CraftingRecipeOperation;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.Recipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.InvIndex;
 
 import java.util.ArrayList;
@@ -55,6 +57,9 @@ public interface MaterialGeneartorMachineTicker extends MachineTicker {
             if (getOnlyRecipe().matches(index)) {
                 currentOperation = new CraftingRecipeOperation(getOnlyRecipe());
                 getAdvancedMachineProcessor().startOperation(location, currentOperation);
+                if (currentOperation.isFinished()) {
+                    finishOperation(currentOperation, inv, location);
+                }
             }
             return;
         }
@@ -68,6 +73,10 @@ public interface MaterialGeneartorMachineTicker extends MachineTicker {
         }
 
         // finish recipe
+        finishOperation(currentOperation, inv, location);
+    }
+
+    default void finishOperation(CraftingRecipeOperation currentOperation, BlockMenu inv, Location location) {
         if (!currentOperation.getRecipe().pushOutputs(inv)) {
             if (getStatusSlot() != -1 && inv.hasViewer()) {
                 inv.replaceExistingItem(getStatusSlot(), NO_SPACE);
@@ -77,8 +86,8 @@ public interface MaterialGeneartorMachineTicker extends MachineTicker {
         getAdvancedMachineProcessor().endOperation(location);
     }
 
-    default AbstractRecipe getOnlyRecipe() {
-        return getRecipes().getFirst();
+    default <T extends MachineRecipe & Recipe> T getOnlyRecipe() {
+        return getRecipes().getFirst().asMachineRecipe();
     }
 
     @Override

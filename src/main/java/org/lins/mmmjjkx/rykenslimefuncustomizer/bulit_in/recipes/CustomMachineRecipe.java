@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.Getter;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
+import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.inventory.ItemStack;
@@ -253,6 +254,11 @@ public class CustomMachineRecipe extends AbstractRecipe {
     public boolean pushOutputs(BlockMenu inv) {
         BlockMenuUtil.pushItem(inv, getMatchChanceResult(isChooseOne()), inv.getPreset().getSlotsAccessedByItemTransport(ItemTransportFlow.WITHDRAW));
         return true;
+    }
+
+    @Override
+    public <T extends MachineRecipe & Recipe> T asMachineRecipe() {
+        return (T) this;
     }
 
     @Override
