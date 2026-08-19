@@ -56,7 +56,7 @@ public class ItemWrapper implements Cloneable {
         for (int i = 0; i < countStack(amt) - 1; i++) {
             list.add(stack.asQuantity(stack.getMaxStackSize()));
         }
-        int left = amt - (stack.getMaxStackSize() * (countStack(amt) - 1));
+        int left = amt - (stack.getMaxStackSize() * Math.max(0, countStack(amt) - 1));
         if (left > 0) {
             list.add(stack.asQuantity(left));
         }
