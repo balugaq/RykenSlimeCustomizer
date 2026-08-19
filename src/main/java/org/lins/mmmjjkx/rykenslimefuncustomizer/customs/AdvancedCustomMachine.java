@@ -82,6 +82,7 @@ public class AdvancedCustomMachine extends AContainer implements RecipeDisplayIt
     public void setTicker(MachineTicker ticker) {
         this.ticker = ticker;
         ticker.init();
+        // register will trigger `registerDefaultRecipes`
         register(RykenSlimefunCustomizer.INSTANCE);
     }
 
