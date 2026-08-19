@@ -132,6 +132,7 @@ softdepend:
   - LogicTECH
   - LogiTECH
   - SlimeAE
+  - SlimeAEPlugin
   - SlimeChem
   - WilderNether
   - MapJammers

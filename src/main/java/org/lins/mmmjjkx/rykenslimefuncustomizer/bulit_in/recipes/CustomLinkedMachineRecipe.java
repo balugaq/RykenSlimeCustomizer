@@ -30,6 +30,7 @@ import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecip
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.AsyncChanceRecipeTask;
@@ -84,7 +85,7 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
     }
 
     @Override
-    public void formatGUI(ChestMenu inv, int[] inputSlots, int[] outputSlots) {
+    public void formatGUI(Player p, ChestMenu inv, int[] inputSlots, int[] outputSlots) {
         // input
         for (var e : linkedInput.entrySet()) {
             var slot = e.getKey();
@@ -92,7 +93,7 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
             if (getNoConsumeIndexes().contains(slot)) {
                 stack = Recipe.tagNoConsume(stack);
             }
-            inv.addItem(slot, stack, ChestMenuUtils.getEmptyClickHandler());
+            ClickableDisplay.display(p, inv, slot, stack);
         }
 
         // output - choose one
@@ -124,7 +125,7 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
 
             AsyncChanceRecipeTask task = new AsyncChanceRecipeTask();
             task.add(outputSlots[0], cycles);
-            task.start(inv.getInventory());
+            task.start(inv);
             return;
         }
 
@@ -138,7 +139,7 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
             Integer slot = e.getKey();
             var stack = e.getValue();
             int chance = linkedOutput.linkedChances().get(slot);
-            inv.addItem(slot, Recipe.tagOutputChance(stack, chance), ChestMenuUtils.getEmptyClickHandler());
+            ClickableDisplay.display(p, inv, slot, Recipe.tagOutputChance(stack, chance));
             emptyOutputSlots.remove(slot); // remove value
         }
 
@@ -151,7 +152,7 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
 
             var stack = linkedOutput.freeOutput()[i];
             var chance = linkedOutput.freeChance().getInt(i);
-            inv.addItem(emptyOutputSlots.getInt(i), Recipe.tagOutputChance(stack, chance), ChestMenuUtils.getEmptyClickHandler());
+            ClickableDisplay.display(p, inv, emptyOutputSlots.getInt(i), Recipe.tagOutputChance(stack, chance));
         }
         if (overflowed) {
             // generate info stack at the last slot
@@ -228,7 +229,7 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
     }
 
     @Override
-    public MachineRecipe asMachineRecipe() {
-        return this;
+    public <T extends MachineRecipe & Recipe> T asMachineRecipe() {
+        return (T) this;
     }
 }

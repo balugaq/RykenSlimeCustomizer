@@ -10,6 +10,7 @@ import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.AsyncChanceRecipeTask;
@@ -31,7 +32,7 @@ public class MGeneratorRecipeRSC extends MGeneratorRecipe implements Recipe {
     }
 
     @Override
-    public void formatGUI(ChestMenu inv, int[] inputSlots, int[] outputSlots) {
+    public void formatGUI(Player p, ChestMenu inv, int[] inputSlots, int[] outputSlots) {
         // output - choose one
         if (isChooseOne()) {
             DoubleList weightedChance = new DoubleArrayList();
@@ -48,7 +49,7 @@ public class MGeneratorRecipeRSC extends MGeneratorRecipe implements Recipe {
 
             AsyncChanceRecipeTask task = new AsyncChanceRecipeTask();
             task.add(outputSlots[0], cycles);
-            task.start(inv.getInventory());
+            task.start(inv);
             return;
         }
 

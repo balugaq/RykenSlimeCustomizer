@@ -23,6 +23,7 @@ import lombok.Getter;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.InputWrapper;
@@ -70,9 +71,9 @@ public class CustomTemplateMachineRecipe extends CustomMachineRecipe {
     }
 
     @Override
-    public void formatGUI(ChestMenu inv, int[] inputSlots, int[] outputSlots) {
-        super.formatGUI(inv, inputSlots, outputSlots);
-        inv.addItem(templateSlot, templateStack, ChestMenuUtils.getEmptyClickHandler());
+    public void formatGUI(Player p, ChestMenu inv, int[] inputSlots, int[] outputSlots) {
+        super.formatGUI(p, inv, inputSlots, outputSlots);
+        ClickableDisplay.display(p, inv, templateSlot, templateStack);
     }
 
     @Override

@@ -17,6 +17,8 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes;
 
+import com.balugaq.jeg.utils.GuideUtil;
+import com.balugaq.jeg.utils.clickhandler.OnDisplay;
 import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
@@ -26,8 +28,10 @@ import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
 import me.mrCookieSlime.Slimefun.Objects.SlimefunItem.abstractItems.MachineRecipe;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.AsyncChanceRecipeTask;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.InputWrapper;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.InvIndex;
@@ -140,7 +144,7 @@ public class CustomMachineRecipe extends AbstractRecipe {
     }
 
     @Override
-    public void formatGUI(ChestMenu inv, int[] inputSlots, int[] outputSlots) {
+    public void formatGUI(Player p, ChestMenu inv, int[] inputSlots, int[] outputSlots) {
         boolean overflowed = false;
         int i = 0;
         // input
@@ -150,7 +154,7 @@ public class CustomMachineRecipe extends AbstractRecipe {
                     overflowed = true;
                 }
                 if (overflowed) break;
-                inv.addItem(inputSlots[i++], Recipe.fakeItem(itemStack), ChestMenuUtils.getEmptyClickHandler());
+                ClickableDisplay.display(p, inv, inputSlots[i++], Recipe.fakeItem(itemStack));
             }
             if (overflowed) break;
         }
@@ -175,7 +179,7 @@ public class CustomMachineRecipe extends AbstractRecipe {
 
             AsyncChanceRecipeTask task = new AsyncChanceRecipeTask();
             task.add(outputSlots[0], cycles);
-            task.start(inv.getInventory());
+            task.start(inv);
             return;
         }
 
@@ -189,7 +193,7 @@ public class CustomMachineRecipe extends AbstractRecipe {
 
             ItemStack output = getOutput()[i];
             int chance = getChances().getInt(i);
-            inv.addItem(outputSlots[i], Recipe.tagOutputChance(output, chance), ChestMenuUtils.getEmptyClickHandler());
+            ClickableDisplay.display(p, inv, outputSlots[i], Recipe.tagOutputChance(output, chance));
         }
         if (overflowed) {
             // generate info stack at the last slot

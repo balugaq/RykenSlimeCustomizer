@@ -66,7 +66,7 @@ public class MachineMenuPreviewGroup extends FlexItemGroup {
         // add inputs;
         // add outputs;
         if (recipe instanceof Recipe rp) {
-            rp.formatGUI(inv, inputSlots, outputSlots);
+            rp.formatGUI(p, inv, inputSlots, outputSlots);
         }
 
         // add progress bar;

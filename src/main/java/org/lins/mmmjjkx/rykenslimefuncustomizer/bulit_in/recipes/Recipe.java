@@ -109,7 +109,7 @@ public interface Recipe {
         return item;
     }
 
-    void formatGUI(ChestMenu inv, int[] inputSlots, int[] outputSlots);
+    void formatGUI(Player p, ChestMenu inv, int[] inputSlots, int[] outputSlots);
 
     default boolean matches(InvIndex index) {
         return matches(index, true);

@@ -126,7 +126,6 @@ public final class ProjectAddonManager {
     }
 
     public boolean loadAddon(File prjFolder) {
-        if (scannedFiles.contains(prjFolder)) return true; // has been loaded
         debug(() -> "Loading addon folder: " + prjFolder.getName());
         scannedFiles.add(prjFolder);
         ProjectAddonLoader loader = new ProjectAddonLoader(prjFolder);
@@ -151,6 +150,7 @@ public final class ProjectAddonManager {
         }
 
         for (File file : folders) {
+            if (scannedFiles.contains(file)) continue; // has been scanned
             loadAddon(file);
         }
 

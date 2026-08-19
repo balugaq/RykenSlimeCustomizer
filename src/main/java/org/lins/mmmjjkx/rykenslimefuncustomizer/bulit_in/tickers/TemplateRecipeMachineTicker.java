@@ -63,10 +63,8 @@ public interface TemplateRecipeMachineTicker extends MachineTicker {
                 getAdvancedMachineProcessor().endOperation(location); // cancel operation
                 return;
             }
-            if (isFasterIfMoreTemplates()) {
-                // no negative amount
-                currentOperation.addProgress(Math.min(currentOperation.getRemainingTicks(), template.getAmount()));
-            }
+            // no negative amount
+            currentOperation.addProgress(isFasterIfMoreTemplates() ? Math.min(currentOperation.getRemainingTicks(), template.getAmount()) : 1);
             getAdvancedMachineProcessor().updateProgressBar(inv, getProgressSlot(), currentOperation);
             return;
         }

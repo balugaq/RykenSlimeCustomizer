@@ -17,12 +17,19 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in;
 
+import com.balugaq.jeg.utils.GuideUtil;
+import com.balugaq.jeg.utils.clickhandler.OnDisplay;
 import io.github.thebusybiscuit.slimefun4.libraries.commons.lang.Validate;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.LoopIterator;
+import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
+import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.ClickableDisplay;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.Recipe;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
@@ -32,12 +39,11 @@ import java.util.Map;
 public class AsyncChanceRecipeTask implements Runnable {
     private static final long UPDATE_INTERVAL = 14L;
     private final Map<Integer, LoopIterator<ItemStack>> iterators = new HashMap<>();
-    private Inventory inventory;
+    private ChestMenu inventory;
     private int id;
 
-    public void start(@Nonnull Inventory inv) {
+    public void start(@Nonnull ChestMenu inv) {
         Validate.notNull(inv, "Inventory must not be null");
-        this.inventory = inv;
         this.id = Bukkit.getScheduler()
             .runTaskTimerAsynchronously(RykenSlimefunCustomizer.INSTANCE, this, 0L, UPDATE_INTERVAL)
             .getTaskId();
@@ -57,13 +63,15 @@ public class AsyncChanceRecipeTask implements Runnable {
      */
     @Override
     public synchronized void run() {
-        if (this.inventory.getViewers().isEmpty()) {
+        if (this.inventory.getInventory().getViewers().isEmpty()) {
             Bukkit.getScheduler().cancelTask(this.id);
             return;
         }
 
+        Player p = (Player) inventory.getInventory().getViewers().getFirst();
+
         for (Map.Entry<Integer, LoopIterator<ItemStack>> entry : this.iterators.entrySet()) {
-            this.inventory.setItem(entry.getKey(), entry.getValue().next());
+            ClickableDisplay.display(p, inventory, entry.getKey(), entry.getValue().next());
         }
     }
 }
