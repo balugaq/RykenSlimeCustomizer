@@ -24,6 +24,7 @@ public interface RecipeMachineTicker extends MachineTicker {
     @Override
     default void tick(Location location) {
         if (!canTick(location) || !preTick(location)) return;
+        if (getMachine().evalFunction("onTick", location, this) != null) return;
 
         BlockMenu inv = StorageCacheUtils.getMenu(location);
         if (inv == null) return;
