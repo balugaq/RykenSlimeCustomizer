@@ -338,7 +338,7 @@ public class CommonUtils {
         String finalType = type;
         ItemStack itemStack;
         try {
-            itemStack = CommonUtils.readPipe(material, s -> getBaseItemStack(file, section, finalType, material, addon));
+            itemStack = CommonUtils.readPipe(material, s -> getBaseItemStack(file, section, finalType, s, addon));
             if (itemStack == null) {
                 Debug.warn("无法识别 " + material + " ，已转为石头.");
                 itemStack = createDefaultItem();

@@ -1,6 +1,7 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.customs;
 
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
+import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.core.attributes.RecipeDisplayItem;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockBreakHandler;
@@ -29,10 +30,14 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 @NullMarked
@@ -57,6 +62,7 @@ public class AdvancedCustomMachine extends AContainer implements RecipeDisplayIt
     private final int energyPerCraft;
     private final int capacity;
     private final int speed;
+    private boolean registering;
     public AdvancedCustomMachine(
         YamlReader.BaseResult base,
         int[] input,
@@ -73,17 +79,16 @@ public class AdvancedCustomMachine extends AContainer implements RecipeDisplayIt
         this.capacity = capacity;
         this.speed = speed;
         this.eval = eval;
-
-        setCapacity(capacity);
-        setEnergyConsumption(energyPerCraft);
-        setProcessingSpeed(speed);
     }
 
     public void setTicker(MachineTicker ticker) {
         this.ticker = ticker;
         ticker.init();
-        // register will trigger `registerDefaultRecipes`
+        // to take advantage of AContainer#register, so no warn and successfully register for off-electric machines
+        this.registering = true;
+        // register will trigger `registerDefaultRecipes`, see postRegister
         register(RykenSlimefunCustomizer.INSTANCE);
+        this.registering = false;
     }
 
     @Override
@@ -115,11 +120,6 @@ public class AdvancedCustomMachine extends AContainer implements RecipeDisplayIt
     }
 
     @Override
-    public int getEnergyConsumption() {
-        return energyPerCraft;
-    }
-
-    @Override
     public String getMachineIdentifier() {
         return ticker.getMachineIdentifier();
     }
@@ -146,8 +146,20 @@ public class AdvancedCustomMachine extends AContainer implements RecipeDisplayIt
     }
 
     @Override
+    public int getEnergyConsumption() {
+        if (registering) return 1;
+        return energyPerCraft;
+    }
+
+    @Override
     public int getCapacity() {
+        if (registering) return 1;
         return capacity;
+    }
+
+    @Override
+    public int getSpeed() {
+        return speed;
     }
 
     @Override
@@ -159,7 +171,6 @@ public class AdvancedCustomMachine extends AContainer implements RecipeDisplayIt
 
     @Override
     public void createPreset(SlimefunItem item, String title, Consumer<BlockMenuPreset> setup) {
-
     }
 
     @Override

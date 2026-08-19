@@ -91,7 +91,9 @@ public class RecipeTypeMap {
                         field.setAccessible(true);
                         RecipeTypeMap.pushRecipeType((RecipeType) field.get(null));
                     }
-                } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+                } catch (ClassNotFoundException e) {
+                    Debug.warn("Class not found: " + className);
+                } catch (NoSuchFieldException | IllegalAccessException e) {
                     Debug.warn("Failed to get external recipe type from " + className + "#" + fieldName + ": " + e.getMessage());
                 }
             }

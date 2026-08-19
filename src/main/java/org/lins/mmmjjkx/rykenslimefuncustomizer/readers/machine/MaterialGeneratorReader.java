@@ -69,15 +69,15 @@ public class MaterialGeneratorReader extends YamlReader<AdvancedCustomMachine> {
             return null;
         }
 
-        int capacity = section.getInt("capacity", -1);
-        if (capacity <= 0) {
-            Debug.error(file, section, "缺少或配置错误 '能源容量' (capacity)", 1, Integer.MAX_VALUE);
+        int capacity = section.getInt("capacity", 0);
+        if (capacity < 0) {
+            Debug.error(file, section, "配置错误 '能源容量' (capacity)", 0, Integer.MAX_VALUE);
             return null;
         }
 
-        int energy = section.getInt("per", -1);
-        if (energy <= 0) {
-            Debug.error(file, section, "缺少或配置错误 '能量消耗' (per)", 1, Integer.MAX_VALUE);
+        int energy = section.getInt("per", 0);
+        if (energy < 0) {
+            Debug.error(file, section, "配置错误 '能量消耗' (per)", 0, Integer.MAX_VALUE);
             return null;
         }
 

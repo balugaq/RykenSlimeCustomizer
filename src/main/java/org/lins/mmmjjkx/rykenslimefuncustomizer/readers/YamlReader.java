@@ -44,6 +44,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.MinecraftVersion;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -96,7 +97,7 @@ public abstract class YamlReader<T> {
         if (section.getBoolean("piglin_trade_chance")) {
             rt = RecipeType.BARTER_DROP;
         } else {
-            rt = CommonUtils.getRecipeType(recipeTypeStr);
+            rt = CommonUtils.getRecipeType(recipeTypeStr.toUpperCase(Locale.ROOT));
             if (rt == null) {
                 Debug.error("错误的配方类型 (recipe_type): " + recipeTypeStr);
                 return new Pair<>(RecipeType.NULL, new ItemStack[0]);

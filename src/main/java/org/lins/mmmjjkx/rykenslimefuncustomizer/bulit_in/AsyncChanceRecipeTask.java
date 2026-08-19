@@ -44,6 +44,7 @@ public class AsyncChanceRecipeTask implements Runnable {
 
     public void start(@Nonnull ChestMenu inv) {
         Validate.notNull(inv, "Inventory must not be null");
+        this.inventory = inv;
         this.id = Bukkit.getScheduler()
             .runTaskTimerAsynchronously(RykenSlimefunCustomizer.INSTANCE, this, 0L, UPDATE_INTERVAL)
             .getTaskId();
