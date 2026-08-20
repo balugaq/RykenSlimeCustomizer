@@ -1,13 +1,6 @@
 name: Publish to Maven Central
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'gradle.properties'
-      - 'build.gradle'
-      - 'build.gradle.kts'
   workflow_dispatch:
     inputs:
       force_publish:
