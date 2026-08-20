@@ -12,6 +12,7 @@ import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.AbstractRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.CustomLinkedMachineRecipe;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.Recipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.InvIndex;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.LinkedOutput;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.AdvancedCustomMachine;
@@ -29,7 +30,25 @@ import java.util.Map;
 @NullMarked
 public class LinkedRecipeMachineTickerCreator extends RecipeMachineTickerCreator {
     @Override
-    public @Nullable List<? extends AbstractRecipe> read(File file, int inputSize, int outputSize, ConfigurationSection section, ProjectAddon addon) {
+    public @Nullable List<? extends Recipe> read(File file, ConfigurationSection section, ProjectAddon addon) {
+        List<Recipe> result = new ArrayList<>();
+        var importFrom = section.getString("recipes_import_from");
+        if (importFrom != null) {
+            var sf = SlimefunItem.getById(importFrom);
+            if (sf == null) {
+                Debug.warn(file, section, "无效的配方复制源 (recipes_import_from): " + importFrom);
+            } else {
+                result.addAll(readRecipes(sf));
+            }
+        }
+        var rps = readRecipes(file, section, addon);
+        if (rps != null) {
+            result.addAll(rps);
+        }
+        return result;
+    }
+
+    public @Nullable List<? extends AbstractRecipe> readRecipes(File file, ConfigurationSection section, ProjectAddon addon) {
         var recipes = section.getConfigurationSection("recipes");
         if (recipes == null) return Collections.emptyList();
 
@@ -66,8 +85,9 @@ public class LinkedRecipeMachineTickerCreator extends RecipeMachineTickerCreator
             Map<Integer, ItemStack> linkedOutput = new HashMap<>();
             Map<Integer, Integer> linkedChances = new HashMap<>();
 
-            for (int i = 0; i < outputSize; i++) {
-                ConfigurationSection section1 = outputs.getConfigurationSection(String.valueOf(i + 1));
+            for (String k : outputs.getKeys(false)) {
+                ConfigurationSection section1 = outputs.getConfigurationSection(k);
+                if (section1 == null) break;
                 var item = CommonUtils.readItem(file, section1, addon);
                 if (item != null) {
                     int chance = CommonUtils.clamp(section1.getInt("chance", 100), 1, 100,
@@ -91,11 +111,9 @@ public class LinkedRecipeMachineTickerCreator extends RecipeMachineTickerCreator
 
             IntSet noConsume = new IntOpenHashSet();
             Map<Integer, ItemStack> stackMap = new HashMap<>();
-            for (int i = 0; i < inputSize; i++) {
-                ConfigurationSection section1 = inputs.getConfigurationSection(String.valueOf(i + 1));
-                if (section1 == null) {
-                    continue;
-                }
+            for (String k : section.getKeys(false)) {
+                ConfigurationSection section1 = section.getConfigurationSection(k);
+                if (section1 == null) continue;
 
                 ItemStack itemStack = CommonUtils.readItem(file, section1, addon);
                 if (itemStack == null) {
@@ -145,7 +163,7 @@ public class LinkedRecipeMachineTickerCreator extends RecipeMachineTickerCreator
 
     @Override
     public @Nullable MachineTicker create(File file, AdvancedCustomMachine sf, ConfigurationSection section, @Nullable CustomMenu menu, ProjectAddon addon) {
-        var recipes = read(file, sf.getInputSlots().length, sf.getOutputSlots().length, section, addon);
+        var recipes = read(file, section, addon);
         if (recipes == null) return null;
         return new LinkedRecipeMachineTicker() {
             @Override
@@ -179,7 +197,7 @@ public class LinkedRecipeMachineTickerCreator extends RecipeMachineTickerCreator
             }
 
             @Override
-            public List<? extends AbstractRecipe> getRecipes() {
+            public List<? extends Recipe> getRecipes() {
                 return recipes;
             }
         };

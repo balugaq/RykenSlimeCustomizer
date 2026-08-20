@@ -1,5 +1,6 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.tickers;
 
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import org.bukkit.configuration.ConfigurationSection;
@@ -9,6 +10,7 @@ import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.AbstractRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.CustomMachineRecipe;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.Recipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.RecipeReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.InputWrapper;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.AdvancedCustomMachine;
@@ -24,8 +26,22 @@ import java.util.List;
 @NullMarked
 public class RecipeMachineTickerCreator implements TickerCreator {
     @Override
-    public @Nullable List<? extends AbstractRecipe> read(File file, int inputSize, int outputSize, ConfigurationSection section, ProjectAddon addon) {
-        return readRecipes(file, section.getConfigurationSection("recipes"), addon, false);
+    public @Nullable List<? extends Recipe> read(File file, ConfigurationSection section, ProjectAddon addon) {
+        List<Recipe> result = new ArrayList<>();
+        var importFrom = section.getString("recipes_import_from");
+        if (importFrom != null) {
+            var sf = SlimefunItem.getById(importFrom);
+            if (sf == null) {
+                Debug.warn(file, section, "无效的配方复制源 (recipes_import_from): " + importFrom);
+            } else {
+                result.addAll(readRecipes(sf));
+            }
+        }
+        var rps = readRecipes(file, section.getConfigurationSection("recipes"), addon, false);
+        if (rps != null) {
+            result.addAll(rps);
+        }
+        return result;
     }
 
     public @Nullable List<CustomMachineRecipe> readRecipes(File file, @Nullable ConfigurationSection recipes, ProjectAddon addon, boolean canInputEmpty) {
@@ -75,7 +91,7 @@ public class RecipeMachineTickerCreator implements TickerCreator {
 
     @Override
     public @Nullable MachineTicker create(File file, AdvancedCustomMachine sf, ConfigurationSection section, @Nullable CustomMenu menu, ProjectAddon addon) {
-        var recipes = read(file, sf.getInputSlots().length, sf.getOutputSlots().length, section, addon);
+        var recipes = read(file, section, addon);
         if (recipes == null) return null;
         if (recipes.isEmpty()) {
             Debug.warn("机器 " + sf.getId() + " 不含任何工作配方!");
@@ -112,7 +128,7 @@ public class RecipeMachineTickerCreator implements TickerCreator {
             }
 
             @Override
-            public List<? extends AbstractRecipe> getRecipes() {
+            public List<? extends Recipe> getRecipes() {
                 return recipes;
             }
         };

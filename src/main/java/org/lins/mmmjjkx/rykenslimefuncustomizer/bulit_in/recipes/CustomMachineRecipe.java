@@ -22,6 +22,7 @@ import com.balugaq.jeg.utils.clickhandler.OnDisplay;
 import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.Getter;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
@@ -43,6 +44,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.StackUtils;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 import static org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.RecipesHolder.RECIPE_INPUT;
@@ -116,6 +118,32 @@ public class CustomMachineRecipe extends AbstractRecipe {
         this.forDisplay = forDisplayOnly;
         this.hide = hide;
         this.noConsume = noConsumeAll;
+    }
+
+    public static CustomMachineRecipe from(MachineRecipe mr) {
+        if (mr instanceof CustomMachineRecipe cmr) return cmr;
+        return new CustomMachineRecipe(
+            CommonUtils.readInputs(mr.getInput(), false),
+            mr.getOutput(),
+            mr.getTicks(),
+            CustomMachineRecipe.fullChance(mr.getOutput().length),
+            false,
+            false,
+            false,
+            false
+        );
+    }
+
+    public static IntList fullChance(int size) {
+        IntList list = new IntArrayList(size);
+        for (int i = 0; i < size; i++) {
+            list.add(100);
+        }
+        return list;
+    }
+
+    public static List<CustomMachineRecipe> from(List<MachineRecipe> mrs) {
+        return mrs.stream().map(CustomMachineRecipe::from).toList();
     }
 
     public List<ItemStack> getMatchChanceResult(boolean chooseOne) {

@@ -28,7 +28,7 @@ import java.util.List;
 @NullMarked
 public class MaterialGeneratorMachineTickerCreator implements TickerCreator {
     @Override
-    public @Nullable List<? extends Recipe> read(File file, int inputSize, int outputSize, ConfigurationSection section, ProjectAddon addon) {
+    public @Nullable List<? extends Recipe> read(File file, ConfigurationSection section, ProjectAddon addon) {
         ConfigurationSection outputItems = section.getConfigurationSection("outputs");
         List<ItemStack> outputs = new ArrayList<>();
         IntList chances = new IntArrayList();
@@ -89,7 +89,7 @@ public class MaterialGeneratorMachineTickerCreator implements TickerCreator {
 
     @Override
     public @Nullable MachineTicker create(File file, AdvancedCustomMachine sf, ConfigurationSection section, @Nullable CustomMenu menu, ProjectAddon addon) {
-        var recipes = read(file, sf.getInputSlots().length, sf.getOutputSlots().length, section, addon);
+        var recipes = read(file, section, addon);
         if (recipes == null) return null;
         int status = section.getInt("status", -1);
         if (status < -1) {

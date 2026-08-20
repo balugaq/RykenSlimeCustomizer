@@ -6,6 +6,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.AbstractRecipe;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.Recipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.AdvancedCustomMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.menu.CustomMenu;
 
@@ -16,7 +17,7 @@ import java.util.List;
 public class WorkbenchMachineTickerCreator extends LinkedRecipeMachineTickerCreator {
     @Override
     public @Nullable MachineTicker create(File file, AdvancedCustomMachine sf, ConfigurationSection section, @Nullable CustomMenu menu, ProjectAddon addon) {
-        var recipes = read(file, sf.getInputSlots().length, sf.getOutputSlots().length, section, addon);
+        var recipes = read(file, section, addon);
         if (recipes == null) return null;
         return new WorkBenchMachineTicker() {
             @Override
@@ -50,7 +51,7 @@ public class WorkbenchMachineTickerCreator extends LinkedRecipeMachineTickerCrea
             }
 
             @Override
-            public List<? extends AbstractRecipe> getRecipes() {
+            public List<? extends Recipe> getRecipes() {
                 return recipes;
             }
         };

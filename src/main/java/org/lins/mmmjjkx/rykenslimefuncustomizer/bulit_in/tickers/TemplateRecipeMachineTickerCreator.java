@@ -7,6 +7,7 @@ import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.AbstractRecipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.CustomTemplateMachineRecipe;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.Recipe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.AdvancedCustomMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.menu.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
@@ -19,7 +20,25 @@ import java.util.List;
 @NullMarked
 public class TemplateRecipeMachineTickerCreator extends RecipeMachineTickerCreator {
     @Override
-    public @Nullable List<? extends AbstractRecipe> read(File file, int inputSize, int outputSize, ConfigurationSection section, ProjectAddon addon) {
+    public @Nullable List<? extends Recipe> read(File file, ConfigurationSection section, ProjectAddon addon) {
+        List<Recipe> result = new ArrayList<>();
+        var importFrom = section.getString("recipes_import_from");
+        if (importFrom != null) {
+            var sf = SlimefunItem.getById(importFrom);
+            if (sf == null) {
+                Debug.warn(file, section, "无效的配方复制源 (recipes_import_from): " + importFrom);
+            } else {
+                result.addAll(readRecipes(sf));
+            }
+        }
+        var rps = readRecipes(file, section, addon);
+        if (rps != null) {
+            result.addAll(rps);
+        }
+        return result;
+    }
+
+    public @Nullable List<? extends Recipe> readRecipes(File file,  ConfigurationSection section, ProjectAddon addon) {
         int templateSlot = section.getInt("templateSlot"); // checked
         boolean moreOutputIfMoreTemplates = section.getBoolean("moreOutputIfMoreTemplates", false);
 
@@ -56,7 +75,7 @@ public class TemplateRecipeMachineTickerCreator extends RecipeMachineTickerCreat
             return null;
         }
 
-        var recipes = read(file, sf.getInputSlots().length, sf.getOutputSlots().length, section, addon);
+        var recipes = read(file, section, addon);
         if (recipes == null) return null;
         boolean fasterIfMoreTemplates = section.getBoolean("fasterIfMoreTemplates", false);
         return new TemplateRecipeMachineTicker() {
@@ -96,7 +115,7 @@ public class TemplateRecipeMachineTickerCreator extends RecipeMachineTickerCreat
             }
 
             @Override
-            public List<? extends AbstractRecipe> getRecipes() {
+            public List<? extends Recipe> getRecipes() {
                 return recipes;
             }
 

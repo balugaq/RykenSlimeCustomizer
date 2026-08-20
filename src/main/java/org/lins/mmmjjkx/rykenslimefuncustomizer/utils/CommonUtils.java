@@ -116,7 +116,7 @@ public class CommonUtils {
 
     public static @Nullable ItemStack[] readRecipe(File file, @Nullable ConfigurationSection section, ProjectAddon addon, int size) {
         if (section == null) return new ItemStack[size];
-        ItemStack[] itemStacks = new ItemStack[size];
+        @Nullable ItemStack[] itemStacks = new ItemStack[size];
         for (int i = 0; i < size; i++) {
             ConfigurationSection section1 = section.getConfigurationSection(String.valueOf(i + 1));
             itemStacks[i] = readItem(file, section1, addon);
@@ -133,6 +133,30 @@ public class CommonUtils {
             var stack = readItem(file, item, addon);
             if (stack == null) continue;
             descs.add(new InputDesc(stack, item.getInt("slot", -1), allNoConsume || item.getBoolean("noConsume", false)));
+        }
+
+        List<InputWrapper> wrappers = new ArrayList<>();
+        for (var desc : descs) {
+            boolean matched = false;
+            for (var wrapper : wrappers) {
+                // pre-merge all items
+                if (StackUtils.itemsMatch(wrapper.getStack(), desc.itemStack())) {
+                    wrapper.merge(desc, true);
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                wrappers.add(InputWrapper.create(desc));
+            }
+        }
+        return wrappers;
+    }
+
+    public static List<InputWrapper> readInputs(ItemStack[] stacks, boolean allNoConsume) {
+        List<InputDesc> descs = new ArrayList<>();
+        for (var stack : stacks) {
+            descs.add(new InputDesc(stack, -1, allNoConsume));
         }
 
         List<InputWrapper> wrappers = new ArrayList<>();
