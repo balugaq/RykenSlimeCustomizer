@@ -7,6 +7,7 @@ on:
       - 'gradle.properties'
       - 'build.gradle'
       - 'build.gradle.kts'
+  workflow_dispatch:
 
 jobs:
   release:
