@@ -2,7 +2,8 @@ name: Auto Release on Version Change
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
     paths:
       - 'gradle.properties'
       - 'build.gradle'
