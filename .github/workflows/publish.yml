@@ -101,6 +101,7 @@ jobs:
         run: |
           VERSION="${{ steps.current_version.outputs.version }}"
           echo "Publishing version: $VERSION"
+          chmod +x ./gradlew
           ./gradlew publishToMavenCentral -Pversion=$VERSION
         env:
           # OSSRH 账号（Sonatype JIRA 凭据）
