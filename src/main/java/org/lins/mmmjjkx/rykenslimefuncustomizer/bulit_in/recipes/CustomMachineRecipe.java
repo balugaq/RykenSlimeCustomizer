@@ -155,6 +155,8 @@ public class CustomMachineRecipe extends AbstractRecipe {
             }
         }
 
+        if (stacks.isEmpty()) return stacks;
+
         if (chooseOne) {
             int index = new Random().nextInt(stacks.size());
             return List.of(stacks.get(index));

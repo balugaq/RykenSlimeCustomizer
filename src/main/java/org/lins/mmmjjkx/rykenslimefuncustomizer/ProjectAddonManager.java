@@ -120,9 +120,7 @@ public final class ProjectAddonManager {
 
     public boolean reloadAddon(ProjectAddon addon) {
         unloadAddon(addon);
-        var success = loadAddon(addon.getFolder());
-        BaseRSCItemGroup.addItemsToGroups();
-        return success;
+        return loadAddon(addon.getFolder());
     }
 
     public boolean loadAddon(File prjFolder) {
@@ -134,6 +132,7 @@ public final class ProjectAddonManager {
         setLockingMainThread(false);
         if (addon == null) return false;
         projectAddons.put(addon.getAddonId(), addon);
+        BaseRSCItemGroup.addItemsToGroups();
         Bukkit.getPluginManager().callEvent(new AddonEnableEvent(addon));
         return true;
     }
