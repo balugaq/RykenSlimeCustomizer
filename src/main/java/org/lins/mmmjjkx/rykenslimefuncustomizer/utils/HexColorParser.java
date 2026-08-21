@@ -1,5 +1,6 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.utils;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -56,48 +57,48 @@ public class HexColorParser {
         if (matched.startsWith("&x") || matched.startsWith("§x")) {
             // Remove "&x" and all "&" characters
             String hex = matched.substring(2).replaceAll("[&§]", "");
-            return hex.toLowerCase();
+            return hex.toLowerCase(Locale.ROOT);
         }
 
         // Handle &#RRGGBB& format (trailing &)
         if ((matched.startsWith("&#") && matched.endsWith("&") || matched.startsWith("§#") && matched.endsWith("§")) && matched.length() == 8) {
-            return matched.substring(2, 8).toLowerCase();
+            return matched.substring(2, 8).toLowerCase(Locale.ROOT);
         }
 
         // Handle &#RRGGBB format
         if ((matched.startsWith("&#") || matched.startsWith("§#")) && matched.length() == 8) {
-            return matched.substring(2, 8).toLowerCase();
+            return matched.substring(2, 8).toLowerCase(Locale.ROOT);
         }
 
         // Handle &{#RRGGBB} format
         if (matched.startsWith("&{#") || matched.startsWith("§{#")) {
-            return matched.substring(3, 9).toLowerCase();
+            return matched.substring(3, 9).toLowerCase(Locale.ROOT);
         }
 
         // Handle {#RRGGBB} format
         if (matched.startsWith("{#")) {
-            return matched.substring(2, 8).toLowerCase();
+            return matched.substring(2, 8).toLowerCase(Locale.ROOT);
         }
 
         // Handle <#RRGGBB> format
         if (matched.startsWith("<#")) {
-            return matched.substring(2, 8).toLowerCase();
+            return matched.substring(2, 8).toLowerCase(Locale.ROOT);
         }
 
         // Handle #RRGGBB format
         if (matched.startsWith("#")) {
-            return matched.substring(1, 7).toLowerCase();
+            return matched.substring(1, 7).toLowerCase(Locale.ROOT);
         }
 
         // Handle [RRGGBB] format
         if (matched.startsWith("[")) {
-            return matched.substring(1, 7).toLowerCase();
+            return matched.substring(1, 7).toLowerCase(Locale.ROOT);
         }
 
         // Fallback: try to extract any 6-digit hex
         java.util.regex.Matcher hexMatcher = Pattern.compile("[0-9a-fA-F]{6}").matcher(matched);
         if (hexMatcher.find()) {
-            return hexMatcher.group().toLowerCase();
+            return hexMatcher.group().toLowerCase(Locale.ROOT);
         }
 
         return "ffffff";

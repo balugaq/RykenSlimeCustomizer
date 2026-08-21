@@ -19,6 +19,8 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors;
 
 import lombok.Getter;
 
+import java.util.Locale;
+
 @Getter
 public enum CMICustomColors {
     Black("000000"),
@@ -1602,7 +1604,7 @@ public enum CMICustomColors {
     private long rgb;
 
     CMICustomColors(String hex) {
-        this.hex = hex.toLowerCase();
+        this.hex = hex.toLowerCase(Locale.ROOT);
         //	this.extra = extra;
         rgb = Long.parseLong(hex, 16);
     }

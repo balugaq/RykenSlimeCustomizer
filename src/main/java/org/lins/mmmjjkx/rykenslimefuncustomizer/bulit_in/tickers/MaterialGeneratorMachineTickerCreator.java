@@ -58,7 +58,6 @@ public class MaterialGeneratorMachineTickerCreator implements TickerCreator {
             if (item == null) {
                 Debug.error(file, outputItem, "物品配置错误 (outputItem)");
             } else {
-
                 int chance = CommonUtils.clamp(outputItem.getInt("chance", 100), 1, 100,
                     file, outputItem, "'概率 (chance) 非法'");
 

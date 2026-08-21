@@ -29,6 +29,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
 
 import java.io.File;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class ResearchReader extends YamlReader<Research> {
@@ -91,7 +92,7 @@ public class ResearchReader extends YamlReader<Research> {
         }
 
         for (String item : items) {
-            SlimefunItem sfItem = SlimefunItem.getById(item.toUpperCase());
+            SlimefunItem sfItem = SlimefunItem.getById(item.toUpperCase(Locale.ROOT));
             if (sfItem == null) {
                 Debug.warn(file, section, "不是粘液物品 (item): " + item);
                 continue;

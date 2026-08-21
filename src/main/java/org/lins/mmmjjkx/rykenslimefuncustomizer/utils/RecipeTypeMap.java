@@ -23,6 +23,7 @@ import org.jspecify.annotations.Nullable;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class RecipeTypeMap {
@@ -41,7 +42,7 @@ public class RecipeTypeMap {
     }
 
     public static void pushRecipeType(RecipeType type) {
-        recipeTypes.put(type.getKey().getKey().toUpperCase(), type);
+        recipeTypes.put(type.getKey().getKey().toUpperCase(Locale.ROOT), type);
     }
 
     public static void pushRecipeType(List<RecipeType> types) {

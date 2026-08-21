@@ -118,8 +118,8 @@ public class CommonUtils {
         if (section == null) return new ItemStack[size];
         @Nullable ItemStack[] itemStacks = new ItemStack[size];
         for (int i = 0; i < size; i++) {
-            ConfigurationSection section1 = section.getConfigurationSection(String.valueOf(i + 1));
-            itemStacks[i] = readItem(file, section1, addon);
+            ConfigurationSection item = section.getConfigurationSection(String.valueOf(i + 1));
+            itemStacks[i] = readItem(file, item, addon);
         }
         return itemStacks;
     }
@@ -237,7 +237,7 @@ public class CommonUtils {
 
     @Nullable
     private static ItemStack getBaseItemStack(File file, ConfigurationSection section, String type, String material, ProjectAddon addon) {
-        switch (type.toLowerCase()) {
+        switch (type.toLowerCase(Locale.ROOT)) {
             case "none" -> {
                 return new ItemStack(Material.AIR);
             }
@@ -396,7 +396,7 @@ public class CommonUtils {
 
                 String enchantName = s2[0];
 
-                Enchantment enchantment = Enchantment.getByKey(NamespacedKey.minecraft(enchantName.toLowerCase()));
+                Enchantment enchantment = Enchantment.getByKey(NamespacedKey.minecraft(enchantName.toLowerCase(Locale.ROOT)));
                 if (enchantment == null) {
                     Debug.warn(file, section, "未知的附魔 (enchantments): " + enchantName + " 已跳过");
                     continue;

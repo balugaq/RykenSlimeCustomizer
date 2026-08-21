@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -46,8 +47,8 @@ public class CMIChatColor {
     static {
         for (CMICustomColors one : CMICustomColors.values()) {
             CUSTOM_BY_NAME.put(
-                    one.name().toLowerCase().replace("_", ""), new CMIChatColor(one.toString(), one.getHex()));
-            CUSTOM_BY_HEX.put(one.getHex().toLowerCase(), new CMIChatColor(one.toString(), one.getHex()));
+                    one.name().toLowerCase(Locale.ROOT).replace("_", ""), new CMIChatColor(one.toString(), one.getHex()));
+            CUSTOM_BY_HEX.put(one.getHex().toLowerCase(Locale.ROOT), new CMIChatColor(one.toString(), one.getHex()));
         }
         for (float x = 0.0F; x <= 1; x += 0.1F) {
             for (float z = 0.1F; z <= 1; z += 0.1F) {
@@ -112,7 +113,7 @@ public class CMIChatColor {
                         String ss = Integer.toHexString(ch);
                         sb.append("\\u");
                         sb.append("0".repeat(4 - ss.length()));
-                        sb.append(ss.toUpperCase());
+                        sb.append(ss.toUpperCase(Locale.ROOT));
                     } else {
                         sb.append(ch);
                     }
@@ -249,7 +250,7 @@ public class CMIChatColor {
         this.blueChannel = blue;
 
         BY_CHAR.put(c, this);
-        BY_NAME.put(this.getName().toLowerCase().replace("_", ""), this);
+        BY_NAME.put(this.getName().toLowerCase(Locale.ROOT).replace("_", ""), this);
     }
 
     public boolean isValid() {
@@ -350,7 +351,7 @@ public class CMIChatColor {
             Matcher nameMatch = hexColorNamePattern.matcher(text);
             while (nameMatch.find()) {
                 String string = nameMatch.group(2);
-                CMIChatColor cn = getByCustomName(string.toLowerCase().replace("_", ""));
+                CMIChatColor cn = getByCustomName(string.toLowerCase(Locale.ROOT).replace("_", ""));
                 if (cn == null) continue;
                 String gex = cn.getHex();
                 StringBuilder magic = new StringBuilder("§x");
@@ -404,7 +405,7 @@ public class CMIChatColor {
             Matcher nameMatch = hexColorNamePattern.matcher(text);
             while (nameMatch.find()) {
                 String string = nameMatch.group(2);
-                CMIChatColor cn = getByCustomName(string.toLowerCase().replace("_", ""));
+                CMIChatColor cn = getByCustomName(string.toLowerCase(Locale.ROOT).replace("_", ""));
                 if (cn == null) continue;
                 String gex = cn.getHex();
                 StringBuilder magic = new StringBuilder(colorCodePrefix);
@@ -474,11 +475,11 @@ public class CMIChatColor {
             Matcher match = hexDeColorNamePattern.matcher(text);
             while (match.find()) {
                 String reg = match.group(3).replace("&", "");
-                CMIChatColor custom = CUSTOM_BY_HEX.get(reg.toLowerCase());
+                CMIChatColor custom = CUSTOM_BY_HEX.get(reg.toLowerCase(Locale.ROOT));
                 if (custom != null) {
                     text = text.replace(
                             match.group(),
-                            colorCodePrefix + custom.getName().toLowerCase().replace("_", "") + colorCodeSuffix);
+                            colorCodePrefix + custom.getName().toLowerCase(Locale.ROOT).replace("_", "") + colorCodeSuffix);
                 } else {
                     text = text.replace(match.group(), colorCodePrefix + reg + colorCodeSuffix);
                 }
@@ -605,7 +606,7 @@ public class CMIChatColor {
         text = text.replace("§", "&");
 
         if (text.length() > 1) {
-            String formated = text.toLowerCase().replace("_", "");
+            String formated = text.toLowerCase(Locale.ROOT).replace("_", "");
             CMIChatColor got = BY_NAME.get(formated);
             if (got != null) return got;
             got = CUSTOM_BY_NAME.get(formated);
@@ -645,7 +646,7 @@ public class CMIChatColor {
         text = deColorize(text).replace("&", "");
 
         if (text.length() > 1) {
-            String formated = text.toLowerCase().replace("_", "");
+            String formated = text.toLowerCase(Locale.ROOT).replace("_", "");
             CMIChatColor got = BY_NAME.get(formated);
             if (got != null) return got;
 
@@ -716,13 +717,13 @@ public class CMIChatColor {
             return valuesList.get(randomIndex);
         }
 
-        return CUSTOM_BY_NAME.get(name.toLowerCase().replace("_", ""));
+        return CUSTOM_BY_NAME.get(name.toLowerCase(Locale.ROOT).replace("_", ""));
     }
 
     public static CMIChatColor getByHex(String hex) {
         if (hex.startsWith(colorCodePrefix)) hex = hex.substring(colorCodePrefix.length());
         if (hex.endsWith(colorCodeSuffix)) hex = hex.substring(0, hex.length() - colorCodeSuffix.length());
-        return CUSTOM_BY_HEX.get(hex.toLowerCase().replace("_", ""));
+        return CUSTOM_BY_HEX.get(hex.toLowerCase(Locale.ROOT).replace("_", ""));
     }
 
     public static Map<String, CMIChatColor> getByName() {

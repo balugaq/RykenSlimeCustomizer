@@ -76,32 +76,32 @@ public class GeneratorReader extends YamlReader<CustomGenerator> {
         return blockPreloadItems(s);
     }
 
-    private List<MachineFuel> readFuels(String s, ConfigurationSection section, ProjectAddon addon) {
+    private List<MachineFuel> readFuels(String s, ConfigurationSection fuelsCfg, ProjectAddon addon) {
         List<MachineFuel> fuels = new ArrayList<>();
 
-        if (section == null) return fuels;
+        if (fuelsCfg == null) return fuels;
 
-        for (String key : section.getKeys(false)) {
-            ConfigurationSection section1 = section.getConfigurationSection(key);
-            if (section1 == null) continue;
-            ConfigurationSection item = section1.getConfigurationSection("item");
+        for (String key : fuelsCfg.getKeys(false)) {
+            ConfigurationSection fuelCfg = fuelsCfg.getConfigurationSection(key);
+            if (fuelCfg == null) continue;
+            ConfigurationSection item = fuelCfg.getConfigurationSection("item");
             ItemStack stack = CommonUtils.readItem(file, item, addon);
             if (stack == null) {
-                Debug.error(file, section1, "缺少 '输入物品' (input)");
+                Debug.error(file, fuelCfg, "缺少 '输入物品' (input)");
                 continue;
             }
-            int seconds = section1.getInt("seconds", -1);
+            int seconds = fuelCfg.getInt("seconds", -1);
 
             if (seconds < 0) {
-                Debug.warn(file, section1, "缺少或配置错误 '配方耗时' (seconds) 已跳过");
+                Debug.warn(file, fuelCfg, "缺少或配置错误 '配方耗时' (seconds) 已跳过");
                 continue;
             }
 
-            if (section1.contains("output")) {
-                ConfigurationSection outputSet = section1.getConfigurationSection("output");
+            if (fuelCfg.contains("output")) {
+                ConfigurationSection outputSet = fuelCfg.getConfigurationSection("output");
                 ItemStack output = CommonUtils.readItem(file, outputSet, addon);
                 if (output == null) {
-                    Debug.error(file, section1, "缺少 '输出物品' (output)");
+                    Debug.error(file, fuelCfg, "缺少 '输出物品' (output)");
                     continue;
                 } else {
                     MachineFuel fuel = new MachineFuel(seconds, stack, output);

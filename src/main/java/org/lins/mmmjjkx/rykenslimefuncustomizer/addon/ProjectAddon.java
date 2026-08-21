@@ -272,7 +272,7 @@ public final class ProjectAddon {
             }
         }
 
-        return id.toUpperCase();
+        return id.toUpperCase(Locale.ROOT);
     }
 
     @Nullable

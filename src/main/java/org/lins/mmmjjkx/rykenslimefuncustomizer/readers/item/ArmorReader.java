@@ -37,6 +37,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
@@ -78,7 +79,7 @@ public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
             ConfigurationSection pieceSection = section.getConfigurationSection(check);
             if (pieceSection == null) continue;
 
-            String pieceId = addon.getId(s + "_" + check.toUpperCase(), section.getString("id_alias", pieceSection.getString("id", "")));
+            String pieceId = addon.getId(s + "_" + check.toUpperCase(Locale.ROOT), section.getString("id_alias", pieceSection.getString("id", "")));
             if (!CommonUtils.passItemIdConflictCheck(pieceId)) return null;
 
             Pair<RecipeType, ItemStack[]> recipePair = getRecipe(pieceSection, addon);
@@ -161,7 +162,7 @@ public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
 
             SlimefunItemStack sfis = new SlimefunItemStack(
                 addon.getId(
-                    s + "_" + check.toUpperCase(),
+                    s + "_" + check.toUpperCase(Locale.ROOT),
                     section.getString("id_alias", piece.getString("id", ""))),
                 stack);
             items.add(sfis);

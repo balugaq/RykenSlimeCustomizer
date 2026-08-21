@@ -37,6 +37,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 
 import java.io.File;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.BiFunction;
 
 public class GeoResourceReader extends YamlReader<CustomGeoResource> {
@@ -79,8 +80,8 @@ public class GeoResourceReader extends YamlReader<CustomGeoResource> {
 
             if (e == World.Environment.CUSTOM) return 0;
 
-            String env = e.toString().toLowerCase();
-            String path = b.toString().toLowerCase();
+            String env = e.toString().toLowerCase(Locale.ROOT);
+            String path = b.toString().toLowerCase(Locale.ROOT);
             boolean isSection = sup.isConfigurationSection(env);
 
             if (!isSection) {

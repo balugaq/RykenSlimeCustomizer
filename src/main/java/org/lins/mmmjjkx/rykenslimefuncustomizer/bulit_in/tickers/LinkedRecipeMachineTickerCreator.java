@@ -54,7 +54,7 @@ public class LinkedRecipeMachineTickerCreator extends RecipeMachineTickerCreator
 
         int saveAmount = section.getInt("saveAmount", 0);
         if (saveAmount < 0 || saveAmount >= 63) {
-            Debug.error(file, recipes, "配置错误 '预留数量' (saveAmount)", 0, 62);
+            Debug.error(file, section, "配置错误 '预留数量' (saveAmount)", 0, 62);
             return null;
         }
 
@@ -86,14 +86,14 @@ public class LinkedRecipeMachineTickerCreator extends RecipeMachineTickerCreator
             Map<Integer, Integer> linkedChances = new HashMap<>();
 
             for (String k : outputs.getKeys(false)) {
-                ConfigurationSection section1 = outputs.getConfigurationSection(k);
-                if (section1 == null) break;
-                var item = CommonUtils.readItem(file, section1, addon);
+                ConfigurationSection output = outputs.getConfigurationSection(k);
+                if (output == null) break;
+                var item = CommonUtils.readItem(file, output, addon);
                 if (item != null) {
-                    int chance = CommonUtils.clamp(section1.getInt("chance", 100), 1, 100,
-                        file, section1, "'概率 (chance) 非法'");
+                    int chance = CommonUtils.clamp(output.getInt("chance", 100), 1, 100,
+                        file, output, "'概率 (chance) 非法'");
 
-                    int slot = section1.getInt("slot", -1);
+                    int slot = output.getInt("slot", -1);
                     if (slot == -1) {
                         freeOutput.add(item);
                         freeChances.add(chance);
@@ -111,29 +111,29 @@ public class LinkedRecipeMachineTickerCreator extends RecipeMachineTickerCreator
 
             IntSet noConsume = new IntOpenHashSet();
             Map<Integer, ItemStack> stackMap = new HashMap<>();
-            for (String k : section.getKeys(false)) {
-                ConfigurationSection section1 = section.getConfigurationSection(k);
-                if (section1 == null) continue;
+            for (String k : inputs.getKeys(false)) {
+                ConfigurationSection input = inputs.getConfigurationSection(k);
+                if (input == null) continue;
 
-                ItemStack itemStack = CommonUtils.readItem(file, section1, addon);
+                ItemStack itemStack = CommonUtils.readItem(file, input, addon);
                 if (itemStack == null) {
                     continue;
                 }
 
-                int slot = section1.getInt("slot", -1);
+                int slot = input.getInt("slot", -1);
                 if (slot == -1) {
-                    Debug.warn(file, recipe, "缺少或配置错误 '槽位' (slot)");
+                    Debug.warn(file, input, "缺少或配置错误 '槽位' (slot)");
                     continue;
                 }
 
                 if (slot < 0 || slot > 53) {
-                    Debug.warn(file, recipe, "'槽位' 非法 (slot)");
+                    Debug.warn(file, input, "'槽位' 非法 (slot)");
                     continue;
                 }
 
                 stackMap.put(slot, itemStack);
 
-                if (section1.getBoolean("noConsume", false)) {
+                if (input.getBoolean("noConsume", false)) {
                     noConsume.add(slot);
                 }
             }

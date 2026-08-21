@@ -42,6 +42,7 @@ import java.io.File;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ItemGroupReader extends YamlReader<ItemGroup> {
     @Override
@@ -81,7 +82,7 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
         BaseRSCItemGroup parent = null;
         var par = section.getString("parent");
         if (par != null) {
-            var parK = NamespacedKey.fromString(par.toLowerCase(), RykenSlimefunCustomizer.INSTANCE);
+            var parK = NamespacedKey.fromString(par.toLowerCase(Locale.ROOT), RykenSlimefunCustomizer.INSTANCE);
             ItemGroup raw = CommonUtils.getIf(Slimefun.getRegistry().getAllItemGroups(), ig -> ig.getKey().equals(parK));
             switch (raw) {
                 case null -> {
@@ -112,7 +113,7 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
         if (groupType == GroupType.locked) {
             List<NamespacedKey> parents = new ArrayList<>();
             for (String ig : section.getStringList("parents")) {
-                NamespacedKey nk = NamespacedKey.fromString(ig.toLowerCase());
+                NamespacedKey nk = NamespacedKey.fromString(ig.toLowerCase(Locale.ROOT));
                 if (nk == null) {
                     Debug.warn(file, section, "NamespacedKey 非法 (parents): " + ig);
                     continue;
