@@ -6,7 +6,7 @@ junit = "5.11.4"
 mockito = "5.14.2"
 
 [libraries]
-paper-api = { module = "io.papermc.paper:paper-api", version = "1.21.11-R0.1-SNAPSHOT" }
+paper-api = { module = "io.papermc.paper:paper-api", version = "26.2.build.112-stable" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 libby-bukkit = { module = "net.byteflux:libby-bukkit", version = "1.3.1" }
 uni-item-all = { module = "io.github.projectunified:uni-item-all", version = "2.2.1" }
