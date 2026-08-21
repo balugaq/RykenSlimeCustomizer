@@ -135,7 +135,7 @@ tasks.build {
 }
 
 tasks.runServer {
-    dependsOn(shadowJar)
+    dependsOn(tasks.named("shadowJar"))
     val run = file(providers.gradleProperty("server.run.dir").orElse("run"))
     runDirectory.set(run)
 
