@@ -185,10 +185,10 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         if (jeg) {
             try {
                 handleJEG();
-            } catch (ClassNotFoundException e) {
-                Debug.error("JustEnoughGuide 版本过低，无法适配", e);
+            } catch (NoClassDefFoundError e) {
+                Debug.warn("JustEnoughGuide 版本过低，无法适配", e);
             } catch (IOException e) {
-                Debug.error("", e);
+                Debug.warn("", e);
             }
         }
 
@@ -211,7 +211,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         Debug.info("============================");
     }
 
-    private void handleJEG() throws ClassNotFoundException, IOException {
+    private void handleJEG() throws NoClassDefFoundError, IOException {
         Debug.info("已检测到 JustEnoughGuide，正在适配...");
 
         SaveditemsGroup itemGroup = new SaveditemsGroup(

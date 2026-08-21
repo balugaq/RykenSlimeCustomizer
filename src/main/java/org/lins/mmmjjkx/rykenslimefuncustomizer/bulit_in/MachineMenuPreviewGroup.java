@@ -83,6 +83,13 @@ public class MachineMenuPreviewGroup extends FlexItemGroup {
         inv.addItem(progressSlot, new CustomItemStack(progressBar, CommonUtils.richFormatSeconds(recipe.getTicks() / 2)));
         tryAddBackButton(inv, profile, mode);
 
+        for (int i = 0; i < inv.getSize(); i++) {
+            var stack = inv.getItemInSlot(i);
+            if (stack == null || stack.getType() == Material.AIR) {
+                inv.addMenuClickHandler(i, ChestMenuUtils.getEmptyClickHandler());
+            }
+        }
+
         inv.open(p);
     }
 
