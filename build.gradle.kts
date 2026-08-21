@@ -161,7 +161,6 @@ runServer {
     maxHeapSize = "4G"
     minecraftVersion("1.21.11")
 }
-}
 
 publishing {
     repositories {
