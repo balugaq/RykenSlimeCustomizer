@@ -23,6 +23,8 @@ import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.CustomMenuHolder;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.Recipe;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.tickers.MachineTicker;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.AdvancedCustomMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.menu.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
@@ -60,7 +62,7 @@ public class MachineMenuPreviewGroup extends FlexItemGroup {
     public void open(Player p, PlayerProfile profile, SlimefunGuideMode mode) {
         profile.getGuideHistory().add(this, 0);
 
-        ChestMenu inv = presetMenu(p, profile, mode, menu);
+        ChestMenu inv = presetMenu(p, profile, mode, menu, isWorkbench());
 
         // add templates;
         // add inputs;
@@ -70,17 +72,19 @@ public class MachineMenuPreviewGroup extends FlexItemGroup {
         }
 
         // add progress bar;
-        int progressSlot;
-        ItemStack progressBar;
-        if (getMenu() == null || getMenu().getProgressSlot() == -1) {
-            progressSlot = CustomMenuHolder.DEFAULT_PROGRESS_SLOT;
-            progressBar = CustomMenuHolder.DEFAULT_PROGRESS_BAR;
-        } else {
-            progressSlot = getMenu().getProgressSlot();
-            progressBar = getMenu().getProgressBar();
-        }
+        if (!isWorkbench()) {
+            int progressSlot;
+            ItemStack progressBar;
+            if (getMenu() == null || getMenu().getProgressSlot() == -1) {
+                progressSlot = CustomMenuHolder.DEFAULT_PROGRESS_SLOT;
+                progressBar = CustomMenuHolder.DEFAULT_PROGRESS_BAR;
+            } else {
+                progressSlot = getMenu().getProgressSlot();
+                progressBar = getMenu().getProgressBar();
+            }
 
-        inv.addItem(progressSlot, new CustomItemStack(progressBar, CommonUtils.richFormatSeconds(recipe.getTicks() / 2)));
+            inv.addItem(progressSlot, new CustomItemStack(progressBar, CommonUtils.richFormatSeconds(recipe.getTicks() / 2)));
+        }
         tryAddBackButton(inv, profile, mode);
 
         for (int i = 0; i < inv.getSize(); i++) {
@@ -93,13 +97,19 @@ public class MachineMenuPreviewGroup extends FlexItemGroup {
         inv.open(p);
     }
 
-    private static ChestMenu presetMenu(Player p, PlayerProfile profile, SlimefunGuideMode mode, @Nullable CustomMenu menu) {
+    private boolean isWorkbench() {
+        return sf instanceof AdvancedCustomMachine acm && acm.getType() == MachineTicker.Type.WORKBENCH;
+    }
+
+    private static ChestMenu presetMenu(Player p, PlayerProfile profile, SlimefunGuideMode mode, @Nullable CustomMenu menu, boolean workbench) {
         var inv = new ChestMenu(RykenSlimefunCustomizer.jeg
             ? GuideUtil.getGuideTitle(mode)
             : Slimefun.getLocalization().getMessage(p, "guide.title.main"));
 
         if (menu != null) {
             menu.apply(inv);
+        } else if (workbench) {
+            CustomMenuHolder.constructMenu(inv);
         } else {
             CustomMenuHolder.constructMenu(inv, CustomMenuHolder.DEFAULT_PROGRESS_SLOT, CustomMenuHolder.DEFAULT_PROGRESS_BAR);
         }

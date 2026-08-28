@@ -44,20 +44,27 @@ public interface MachineTicker extends DataCache, RecipesHolder, CustomMenuHolde
     void tick(Location location);
 
     default void init() {
+        boolean workbench = getType() == Type.WORKBENCH;
         var menu = getCustomMenu();
         if (menu == null) {
             Debug.warn("未找到菜单 " + this.getMachine().getId() + " 使用默认菜单");
             this.createPreset(
                 this.getMachine(),
                 this.getMachine().getItemName(),
-                preset -> CustomMenuHolder.constructMenu(preset, getProgressSlot(), getProgressBar()),
+                preset -> {
+                    if (workbench) {
+                        CustomMenuHolder.constructMenu(preset);
+                    } else {
+                        CustomMenuHolder.constructMenu(preset, getProgressSlot(), getProgressBar());
+                    }
+                },
                 this::onNewInstance
             );
             return;
         }
 
         createPreset(this.getMachine(), menu.getTitle() == null || menu.getTitle().isBlank() ? getMachine().getItemName() : menu.getTitle(), menu::apply, this::onNewInstance);
-        if (menu.getProgressBar() != null) {
+        if (!workbench && menu.getProgressBar() != null) {
             getAdvancedMachineProcessor().setProgressBar(menu.getProgressBar());
         }
     }

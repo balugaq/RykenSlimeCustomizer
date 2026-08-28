@@ -32,6 +32,14 @@ public interface CustomMenuHolder extends InventoryBlock {
     @Nullable CustomMenu getCustomMenu();
     
     static void constructMenu(ChestMenu menu, int progressSlot, @Nullable ItemStack progressBar) {
+        constructMenu(menu);
+
+        if (progressBar != null) {
+            menu.addItem(progressSlot, progressBar, ChestMenuUtils.getEmptyClickHandler());
+        }
+    }
+
+    static void constructMenu(ChestMenu menu) {
         for (int i : DEFAULT_BORDER) {
             menu.addItem(i, ChestMenuUtils.getBackground(), ChestMenuUtils.getEmptyClickHandler());
         }
@@ -43,8 +51,6 @@ public interface CustomMenuHolder extends InventoryBlock {
         for (int i : DEFAULT_BORDER_OUT) {
             menu.addItem(i, ChestMenuUtils.getOutputSlotTexture(), ChestMenuUtils.getEmptyClickHandler());
         }
-
-        menu.addItem(progressSlot, progressBar, ChestMenuUtils.getEmptyClickHandler());
     }
 
     default ItemStack getProgressBar() {
