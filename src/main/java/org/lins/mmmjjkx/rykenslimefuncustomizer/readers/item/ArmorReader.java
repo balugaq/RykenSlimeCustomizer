@@ -29,6 +29,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.CustomArmorPiece;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
@@ -119,16 +120,18 @@ public class ArmorReader extends YamlReader<List<CustomArmorPiece>> {
                 );
             }
 
-            pieces.add(new CustomArmorPiece(
-                    group,
-                    sfis,
-                    rt,
-                    recipe,
-                    potionEffects.toArray(new PotionEffect[0]),
-                    fullSet,
-                    s,
-                    protectionTypes.toArray(new ProtectionType[0]),
-                    addon.getAddonId()));
+            var instance = new CustomArmorPiece(
+                group,
+                sfis,
+                rt,
+                recipe,
+                potionEffects.toArray(new PotionEffect[0]),
+                fullSet,
+                s,
+                protectionTypes.toArray(new ProtectionType[0]),
+                addon.getAddonId());
+            BaseRSCItemGroup.registerDisplayTier(section, instance);
+            pieces.add(instance);
         }
 
         if (pieces.isEmpty()) {

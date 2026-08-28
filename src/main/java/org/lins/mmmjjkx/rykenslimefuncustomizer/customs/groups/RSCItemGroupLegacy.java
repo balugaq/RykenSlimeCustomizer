@@ -39,6 +39,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ReflectionUtil;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -154,35 +155,36 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
         int index = 9;
         int target = 36 * (page - 1) - 1;
 
-        while (target < this.contents.size() - 1 && index < 45) {
+        List<Object> validContents = this.contents.stream()
+            .filter(content -> isContentVisibleInGroup(content, p, profile, mode))
+            .sorted(Comparator.comparingInt(BaseRSCItemGroup::getDisplayTier))
+            .toList();
+
+        while (target < validContents.size() - 1 && index < 45) {
             ++target;
-            Object content = this.contents.get(target);
+            Object content = validContents.get(target);
             switch (content) {
                 case RSCItemGroupLegacy itemGroup -> {
-                    if (itemGroup.isVisibleInNested(p, profile, mode)) {
-                        menu.addItem(index, itemGroup.getItem(p));
-                        menu.addMenuClickHandler(index, (pl, slot, item, action) -> {
-                            // Don't open the item group, but run the scripts
-                            if (itemGroup.type == GroupType.button) {
-                                for (var o : itemGroup.contents) {
-                                    if (o instanceof String ac) {
-                                        readAction(ac, mode, pl, slot, item, action);
-                                    }
+                    menu.addItem(index, itemGroup.getItem(p));
+                    menu.addMenuClickHandler(index, (pl, slot, item, action) -> {
+                        // Don't open the item group, but run the scripts
+                        if (itemGroup.type == GroupType.button) {
+                            for (var o : itemGroup.contents) {
+                                if (o instanceof String ac) {
+                                    readAction(ac, mode, pl, slot, item, action);
                                 }
-                                return false;
                             }
-                            SlimefunGuide.openItemGroup(profile, itemGroup, mode, 1);
                             return false;
-                        });
-                        ++index;
-                    }
+                        }
+                        SlimefunGuide.openItemGroup(profile, itemGroup, mode, 1);
+                        return false;
+                    });
+                    ++index;
                 }
                 case SlimefunItem sf -> {
-                    if (!sf.isDisabledIn(p.getWorld())) {
-                        var impl = Slimefun.getRegistry().getSlimefunGuide(mode);
-                        ReflectionUtil.invokeMethod(impl, "displaySlimefunItem", menu, this, p, profile, sf, page, index);
-                        ++index;
-                    }
+                    var impl = Slimefun.getRegistry().getSlimefunGuide(mode);
+                    ReflectionUtil.invokeMethod(impl, "displaySlimefunItem", menu, this, p, profile, sf, page, index);
+                    ++index;
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + content);
             }

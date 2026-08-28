@@ -18,6 +18,7 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.readers;
 
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
@@ -33,6 +34,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.AddonConfig;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddonLoader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.PluginStateCache;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.BaseRSCItemGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.DropFromBlock;
@@ -136,6 +138,11 @@ public abstract class YamlReader<T> {
                 if (object != null) {
                     addon.addLoadedObject();
                     objects.add(object);
+
+                    if (object instanceof SlimefunItem || object instanceof ItemGroup) {
+                        BaseRSCItemGroup.registerDisplayTier(section, object);
+                    }
+
                     Debug.debug("&aSUCCESS | 读取项" + key + "成功！");
                 } else {
                     Debug.debug("&cFAILURE | 读取项" + key + "失败！");
@@ -268,7 +275,7 @@ public abstract class YamlReader<T> {
                 }
 
                 var curr = MinecraftVersion.current();
-                boolean pass = false;
+                boolean pass;
                 switch (splits[1]) {
                     case ">" -> pass = curr.compareTo(version) > 0;
                     case "<" -> pass = curr.compareTo(version) < 0;
@@ -323,7 +330,7 @@ public abstract class YamlReader<T> {
                     }
                     case "config.int" -> {
                         if (splits.length != 4) {
-                            Debug.error("读取" + key + "的注册条件时发现问题: config.int需要三个参数");
+                            Debug.error("读取" + key + "的注册条件时发现问题: config.int 需要三个参数");
                             continue;
                         }
 
@@ -334,11 +341,30 @@ public abstract class YamlReader<T> {
                         if (!intCheck(
                                 splits[1],
                                 key,
-                                "config.int",
                                 current,
                                 destination,
                                 (op) -> "需要配置选项" + configKey + op + splits[3] + "才能被注册",
                                 warn)) {
+                            return false;
+                        }
+                    }
+                    case "config.double" -> {
+                        if (splits.length != 4) {
+                            Debug.error("读取" + key + "的注册条件时发现问题: config.double 需要三个参数");
+                            continue;
+                        }
+
+                        String configKey = splits[1];
+                        double current = config.config().getDouble(splits[2]);
+                        double destination = Double.parseDouble(splits[3]);
+
+                        if (!doubleCheck(
+                            splits[1],
+                            key,
+                            current,
+                            destination,
+                            (op) -> "需要配置选项" + configKey + op + splits[3] + "才能被注册",
+                            warn)) {
                             return false;
                         }
                     }
@@ -351,7 +377,6 @@ public abstract class YamlReader<T> {
     private boolean intCheck(
             String operator,
             String key,
-            String regParam,
             int current,
             int destination,
             Function<String, String> msg,
@@ -384,10 +409,59 @@ public abstract class YamlReader<T> {
                         yield current != destination;
                     }
                     default -> {
-                        Debug.error("读取" + key + "的注册条件时发现问题: " + regParam + "需要合法的比较符！");
+                        Debug.error("读取" + key + "的注册条件时发现问题: config.double 需要合法的比较符！");
                         yield true;
                     }
                 };
+
+        if (!b) {
+            if (warn) {
+                Debug.warn(key + msg.apply(operation));
+            }
+        }
+
+        return b;
+    }
+
+    private boolean doubleCheck(
+        String operator,
+        String key,
+        double current,
+        double destination,
+        Function<String, String> msg,
+        boolean warn) {
+        String operation = "";
+        boolean b =
+            switch (operator) {
+                case ">" -> {
+                    operation = "大于";
+                    yield current > destination;
+                }
+                case "<" -> {
+                    operation = "小于";
+                    yield current < destination;
+                }
+                case ">=" -> {
+                    operation = "大于或等于";
+                    yield current >= destination;
+                }
+                case "<=" -> {
+                    operation = "小于或等于";
+                    yield current <= destination;
+                }
+                case "==" -> {
+                    operation = "等于";
+                    yield current == destination;
+                }
+                case "!=" -> {
+                    operation = "不等于";
+                    yield current != destination;
+                }
+                default -> {
+                    Debug.error("读取" + key + "的注册条件时发现问题: config.double 需要合法的比较符！");
+                    yield true;
+                }
+            };
 
         if (!b) {
             if (warn) {

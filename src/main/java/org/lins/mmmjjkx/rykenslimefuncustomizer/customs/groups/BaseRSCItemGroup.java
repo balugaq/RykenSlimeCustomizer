@@ -9,6 +9,8 @@ import io.github.thebusybiscuit.slimefun4.core.guide.SlimefunGuideImplementation
 import io.github.thebusybiscuit.slimefun4.core.guide.SlimefunGuideMode;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ClickAction;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -16,6 +18,7 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
@@ -34,7 +37,28 @@ import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public interface BaseRSCItemGroup {
+    int DEFAULT_TIER = 1000;
+    Object2IntMap<Object> displayTiers = new Object2IntOpenHashMap<>();
     EnumMap<ObjectType, List<Pair<SlimefunItem, ItemGroup>>> blocked = new EnumMap<>(ObjectType.class);
+
+    static int getDisplayTier(Object instance) {
+        if (displayTiers.containsKey(instance)) {
+            return displayTiers.getInt(instance);
+        }
+
+        if (instance instanceof ItemGroup itemGroup) {
+            return itemGroup.getTier();
+        }
+
+        return DEFAULT_TIER;
+    }
+
+    static void registerDisplayTier(ConfigurationSection section, Object instance) {
+        if (section.contains("display_tier")) {
+            displayTiers.put(instance, section.getInt("display_tier", DEFAULT_TIER));
+        }
+    }
+
     default ItemGroup getSelf() {
         return (ItemGroup) this;
     }

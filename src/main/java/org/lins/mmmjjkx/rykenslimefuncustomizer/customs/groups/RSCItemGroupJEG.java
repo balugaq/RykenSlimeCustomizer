@@ -38,6 +38,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,7 +113,10 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
 
         Format format = type == GroupType.nested ? Formats.nested : Formats.sub;
         char c = type == GroupType.nested ? Formats.Char.ITEM_GROUP : Formats.Char.CONTENT;
-        List<Object> validContent = this.contents.stream().filter(content -> isContentVisibleInGroup(content, p, profile, mode)).toList();
+        List<Object> validContent = this.contents.stream()
+            .filter(content -> isContentVisibleInGroup(content, p, profile, mode))
+            .sorted(Comparator.comparingInt(BaseRSCItemGroup::getDisplayTier))
+            .toList();
         int pages = (validContent.size() - 1) / format.getChars(c).size() + 1;
         GuideUtil.commonRender(menu, format, profile, p, this, page, pages, np -> {
             openPage(p, profile, mode, np);
