@@ -21,13 +21,16 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.CommandSafe;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.ObjectType;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Keys;
 
 import java.io.File;
 import java.util.EnumMap;
@@ -75,11 +78,28 @@ public interface BaseRSCItemGroup {
         addContent(base.getSelf());
     }
 
-    static BaseRSCItemGroup create(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent) {
+    List<Object> getContents();
+
+    @Nullable
+    default ItemGroup findSubGroup(String key) {
+        return findSubGroup(Keys.newKey(key));
+    }
+
+    @Nullable
+    default ItemGroup findSubGroup(NamespacedKey key) {
+        for (var o : getContents()) {
+            if (!(o instanceof ItemGroup group)) continue;
+            if (!group.getKey().equals(key)) continue;
+            return group;
+        }
+        return null;
+    }
+
+    static BaseRSCItemGroup create(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent, ScriptEval eval) {
         if (RykenSlimefunCustomizer.jeg) {
-            return new RSCItemGroupJEG(key, item, tier, addon, type, visible, forceHidden, hasParent, 1);
+            return new RSCItemGroupJEG(key, item, tier, addon, type, visible, forceHidden, hasParent, eval, 1);
         } else {
-            return new RSCItemGroupLegacy(key, item, tier, addon, type, visible, forceHidden, hasParent, 1);
+            return new RSCItemGroupLegacy(key, item, tier, addon, type, visible, forceHidden, hasParent, eval, 1);
         }
     }
 

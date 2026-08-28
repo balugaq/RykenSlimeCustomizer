@@ -22,6 +22,9 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.items.groups.LockedItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.groups.NestedItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.groups.SubItemGroup;
+import io.github.thebusybiscuit.slimefun4.core.handlers.ItemUseHandler;
+import io.github.thebusybiscuit.slimefun4.core.handlers.ToolUseHandler;
+import io.github.thebusybiscuit.slimefun4.core.handlers.WeaponUseHandler;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
@@ -33,6 +36,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.GroupType;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.RSCItemGroupJEG;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.RSCItemGroupLegacy;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.groups.Visible;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
@@ -137,7 +141,12 @@ public class ItemGroupReader extends YamlReader<ItemGroup> {
             visible = (a, b, c) -> true;
         }
 
-        BaseRSCItemGroup group = BaseRSCItemGroup.create(key, stack, tier, addon, groupType, visible, forceHidden, parent != null);
+        var eval = ScriptEval.getScriptOrNull(section, addon, section.getString("script"));
+        if (eval != null) {
+            eval.doInit();
+        }
+
+        BaseRSCItemGroup group = BaseRSCItemGroup.create(key, stack, tier, addon, groupType, visible, forceHidden, parent != null, eval);
 
         if (parent != null) {
             parent.addContent(group);

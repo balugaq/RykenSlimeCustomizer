@@ -35,6 +35,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NonNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 
 import java.util.ArrayList;
@@ -51,16 +52,17 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
     private final boolean forceHidden;
     private final boolean hasParent;
     private final int page;
+    private final ScriptEval eval;
 
     @Override
     public ProjectAddon getProjectAddon() {
         return addon;
     }
 
-    public RSCItemGroupJEG(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent, int page) {
+    public RSCItemGroupJEG(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent, ScriptEval eval, int page) {
         super(key, item, tier);
 
-        Debug.debug(() -> "创建物品组: " + key + " type=" + type.name());
+        Debug.debug(() -> "创建物品组: " + key + " type=" + type.name() + ", page=" + page);
 
         contents = new ArrayList<>();
         this.addon = addon;
@@ -69,6 +71,7 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
         this.forceHidden = forceHidden;
         this.hasParent = hasParent;
         this.page = page;
+        this.eval = eval;
     }
 
     public void addContent(SlimefunItem sf) {
@@ -84,6 +87,11 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
     public void addContent(String action) {
         Debug.debug(() -> "已添加 Action " + action + " 至 " + getKey());
         contents.add(action);
+    }
+
+    @Override
+    public List<Object> getContents() {
+        return contents;
     }
 
     @Override
@@ -134,6 +142,8 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
             handleContent(s, content, menu, p, profile, mode);
         }
 
+        eval.evalFunction("init_script", menu, new MenuHandler(menu, p), this);
+
         return menu;
     }
 
@@ -176,7 +186,7 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
     }
 
     private void openPage(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
-        var group = new RSCItemGroupJEG(getKey(), getItem(p), getTier(), getProjectAddon(), type, visible, forceHidden, hasParent, page);
+        var group = new RSCItemGroupJEG(getKey(), getItem(p), getTier(), getProjectAddon(), type, visible, forceHidden, hasParent, eval, page);
         group.contents = contents;
         ChestMenu menu = group.setup(p, profile, mode);
         menu.open(p);

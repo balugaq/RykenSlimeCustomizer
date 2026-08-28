@@ -35,6 +35,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NonNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ReflectionUtil;
 
@@ -52,13 +53,14 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
     private final boolean forceHidden;
     private final boolean hasParent;
     private final int page;
+    private final ScriptEval eval;
 
     @Override
     public ProjectAddon getProjectAddon() {
         return addon;
     }
 
-    public RSCItemGroupLegacy(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent, int page) {
+    public RSCItemGroupLegacy(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent, ScriptEval eval, int page) {
         super(key, item, tier);
 
         Debug.debug(() -> "创建物品组: " + key + " type=" + type.name() + ", page=" + page);
@@ -70,6 +72,7 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
         this.forceHidden = forceHidden;
         this.hasParent = hasParent;
         this.page = page;
+        this.eval = eval;
     }
 
     public void addContent(SlimefunItem sf) {
@@ -85,6 +88,11 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
     public void addContent(String action) {
         Debug.debug(() -> "已添加 Action " + action + " 至 " + getKey());
         contents.add(action);
+    }
+
+    @Override
+    public List<Object> getContents() {
+        return contents;
     }
 
     @Override
@@ -113,7 +121,7 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
     }
 
     private void openPage(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
-        var group = new RSCItemGroupLegacy(getKey(), getItem(p), getTier(), getProjectAddon(), type, visible, forceHidden, hasParent, page);
+        var group = new RSCItemGroupLegacy(getKey(), getItem(p), getTier(), getProjectAddon(), type, visible, forceHidden, hasParent, eval, page);
         group.contents = contents;
         ChestMenu menu = group.setup(p, profile, mode);
         menu.open(p);
@@ -210,6 +218,8 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
 
             return false;
         });
+
+        eval.evalFunction("init_script", menu, new MenuHandler(menu, p), this);
 
         return menu;
     }
