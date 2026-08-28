@@ -115,6 +115,13 @@ public class SimpleMachineReader extends YamlReader<SlimefunItem> {
             }
         }
 
+        if (machineType.get().isEnergy()) {
+            addPowerBufferLore(base, section, capacity);
+            addPowerPerSecondLore(base, section, capacity, consumption);
+            addSpeedLore(base, section, speed);
+        }
+        addMachineLore(base, section);
+
         SlimefunItem instance = SimpleMachineFactory.create(
                 base,
                 machineType.get(),

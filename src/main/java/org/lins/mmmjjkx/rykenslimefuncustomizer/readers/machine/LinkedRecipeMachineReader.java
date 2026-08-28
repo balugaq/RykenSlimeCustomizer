@@ -117,6 +117,11 @@ public class LinkedRecipeMachineReader extends YamlReader<AdvancedCustomMachine>
             return null;
         }
 
+        addPowerBufferLore(base, section, capacity);
+        addPowerPerSecondLore(base, section, capacity, energy);
+        addSpeedLore(base, section, speed);
+        addMachineLore(base, section);
+
         var eval = ScriptEval.getScriptOrNull(section, addon, section.getString("script"));
 
         var machine = new AdvancedCustomMachine(

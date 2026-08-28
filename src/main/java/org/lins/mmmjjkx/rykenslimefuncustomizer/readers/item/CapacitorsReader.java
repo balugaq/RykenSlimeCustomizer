@@ -52,6 +52,8 @@ public class CapacitorsReader extends YamlReader<CustomCapacitor> {
             return null;
         }
 
+        addPowerBufferLore(base, section, capacity);
+
         CustomCapacitor instance = new CustomCapacitor(base, capacity);
 
         instance.register(RykenSlimefunCustomizer.INSTANCE);

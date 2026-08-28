@@ -128,6 +128,10 @@ public class WorkbenchReader extends YamlReader<CustomWorkbench> {
             return null;
         }
 
+        addPowerBufferLore(base, section, capacity);
+        addPowerPerSecondLore(base, section, capacity, energy);
+        addMachineLore(base, section);
+
         var eval = ScriptEval.getScriptOrNull(section, addon, section.getString("script"));
 
         int click = section.getInt("click", -1);

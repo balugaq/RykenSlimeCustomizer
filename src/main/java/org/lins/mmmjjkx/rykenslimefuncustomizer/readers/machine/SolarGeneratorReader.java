@@ -66,6 +66,9 @@ public class SolarGeneratorReader extends YamlReader<CustomSolarGenerator> {
             return null;
         }
 
+        addPowerBufferLore(base, section, capacity);
+        addMachineLore(base, section);
+
         return new CustomSolarGenerator(base, dayEnergy, nightEnergy, capacity, lightLevel);
     }
 

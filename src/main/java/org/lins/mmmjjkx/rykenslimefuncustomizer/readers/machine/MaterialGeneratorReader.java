@@ -83,6 +83,10 @@ public class MaterialGeneratorReader extends YamlReader<AdvancedCustomMachine> {
 
         int status = section.getInt("status", -1);
 
+        addPowerBufferLore(base, section, capacity);
+        addPowerPerSecondLore(base, section, capacity, energy);
+        addMachineLore(base, section);
+
         var eval = ScriptEval.getScriptOrNull(section, addon, section.getString("script"));
 
         AdvancedCustomMachine machine = new CustomMaterialGenerator(

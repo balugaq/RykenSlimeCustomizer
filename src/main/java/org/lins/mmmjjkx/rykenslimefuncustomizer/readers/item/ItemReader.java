@@ -96,6 +96,9 @@ public class ItemReader extends YamlReader<SlimefunItem> {
         var base = getBase(section, s);
         if (base == null) return null;
 
+        addRangeLore(base, section);
+        addUsesLeftLore(base, section);
+
         CustomItem instance = new CustomItem(base);
         Object[] constructorArgs = instance.constructorArgs();
 

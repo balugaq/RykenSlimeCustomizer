@@ -21,7 +21,10 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
+import io.github.thebusybiscuit.slimefun4.core.attributes.MachineTier;
+import io.github.thebusybiscuit.slimefun4.core.attributes.MachineType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
+import io.github.thebusybiscuit.slimefun4.utils.LoreBuilder;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -519,6 +522,59 @@ public abstract class YamlReader<T> {
         SlimefunItemStack sfis = new SlimefunItemStack(slimefunItemStack.getItemId(), slimefunItemStack.asOne());
 
         return new BaseResult(group, sfis, rt, recipe, output);
+    }
+
+    /** 储能 lore：仅 add_power_buffer_lore 为 true 时追加（默认 false，兼容旧配置）。 */
+    protected void addPowerBufferLore(BaseResult base, ConfigurationSection section, int capacity) {
+        if (capacity > 0 && section.getBoolean("add_power_buffer_lore", false)) {
+            CommonUtils.addLore(base.sfis(), true, LoreBuilder.powerBuffer(capacity));
+        }
+    }
+
+    /** 速度 lore：仅 add_speed_lore 为 true 时追加（默认 false，兼容旧配置）。 */
+    protected void addSpeedLore(BaseResult base, ConfigurationSection section, float speed) {
+        if (section.getBoolean("add_speed_lore", false)) {
+            CommonUtils.addLore(base.sfis(), true, LoreBuilder.speed(speed));
+        }
+    }
+
+    /** 机器 tier/type lore：仅 add_machine_lore 为 true 时追加（默认 false，兼容旧配置）。 */
+    protected void addMachineLore(BaseResult base, ConfigurationSection section) {
+        if (!section.getBoolean("add_machine_lore", false)) return;
+
+        MachineTier tier = CommonUtils.getEnum(MachineTier.class, section.getString("machine_tier"))
+            .orElse(MachineTier.BASIC);
+        MachineType type = CommonUtils.getEnum(MachineType.class, section.getString("machine_type"))
+            .orElse(MachineType.MACHINE);
+        CommonUtils.addLore(base.sfis(), true, LoreBuilder.machine(tier, type));
+    }
+
+    /** 每秒耗电 lore：需 capacity > 0 且 add_power_per_second_lore 为 true 时追加（默认 false，兼容旧配置）。 */
+    protected void addPowerPerSecondLore(BaseResult base, ConfigurationSection section, int capacity, int power) {
+        if (capacity > 0 && power > 0 && section.getBoolean("add_power_per_second_lore", false)) {
+            CommonUtils.addLore(base.sfis(), true, LoreBuilder.powerPerSecond(power));
+        }
+    }
+
+    /** 范围 lore：配置了 range 就追加（直接取值，无开关）。 */
+    protected void addRangeLore(BaseResult base, ConfigurationSection section) {
+        if (section.contains("range")) {
+            CommonUtils.addLore(base.sfis(), true, LoreBuilder.range(section.getInt("range", 0)));
+        }
+    }
+
+    /** 剩余使用次数 lore：配置了 usesLeft 就追加（直接取值，无开关）。 */
+    protected void addUsesLeftLore(BaseResult base, ConfigurationSection section) {
+        if (section.contains("usesLeft")) {
+            CommonUtils.addLore(base.sfis(), true, LoreBuilder.usesLeft(section.getInt("usesLeft", 0)));
+        }
+    }
+
+    /** 饥饿值 lore：仅 add_hunger_lore 为 true 时追加（默认 false，兼容旧配置）。 */
+    protected void addHungerLore(BaseResult base, ConfigurationSection section, double hunger) {
+        if (hunger > 0 && section.getBoolean("add_hunger_lore", false)) {
+            CommonUtils.addLore(base.sfis(), true, LoreBuilder.hunger(hunger));
+        }
     }
 
     @NullMarked

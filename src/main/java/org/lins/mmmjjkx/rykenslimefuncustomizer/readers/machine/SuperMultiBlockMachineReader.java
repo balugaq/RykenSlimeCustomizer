@@ -115,6 +115,11 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
             return null;
         }
 
+        addPowerBufferLore(base, section, capacity);
+        addPowerPerSecondLore(base, section, capacity, energy);
+        addSpeedLore(base, section, speed);
+        addMachineLore(base, section);
+
         var eval = ScriptEval.getScriptOrNull(section, addon, section.getString("script"));
 
         boolean displayProjectiles = section.getBoolean("displayProjectiles", true);

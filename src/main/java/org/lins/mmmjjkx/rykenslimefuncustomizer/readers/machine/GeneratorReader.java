@@ -68,6 +68,9 @@ public class GeneratorReader extends YamlReader<CustomGenerator> {
             return null;
         }
 
+        addPowerBufferLore(base, section, capacity);
+        addMachineLore(base, section);
+
         return new CustomGenerator(base, menu, capacity, input, output, production, fuels);
     }
 

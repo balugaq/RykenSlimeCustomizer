@@ -55,6 +55,8 @@ public class MultiBlockMachineReader extends YamlReader<CustomMultiBlockMachine>
         var base = getBase(section, s);
         if (base == null) return null;
 
+        addMachineLore(base, section);
+
         ConfigurationSection recipesSection = section.getConfigurationSection("recipes");
 
         int workSlot = section.getInt("work", -1);

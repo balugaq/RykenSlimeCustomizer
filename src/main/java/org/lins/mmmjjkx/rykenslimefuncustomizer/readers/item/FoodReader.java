@@ -51,6 +51,10 @@ public class FoodReader extends YamlReader<CustomFood> {
         var base = getBase(section, s);
         if (base == null) return null;
 
+        addRangeLore(base, section);
+        addUsesLeftLore(base, section);
+        addHungerLore(base, section, section.getInt("nutrition", 0));
+
         var eval = ScriptEval.getScriptOrNull(section, addon, section.getString("script"));
 
         if (CommonUtils.versionToCode(Bukkit.getMinecraftVersion()) >= 1205 && PluginStateCache.isEnabled("NBTAPI")) {

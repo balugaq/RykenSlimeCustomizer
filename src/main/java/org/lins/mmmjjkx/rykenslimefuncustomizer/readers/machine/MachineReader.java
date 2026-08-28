@@ -59,6 +59,8 @@ public class MachineReader extends YamlReader<AbstractEmptyMachine<?>> {
         var base = getBase(section, s);
         if (base == null) return null;
 
+        addMachineLore(base, section);
+
         var eval = ScriptEval.getScriptOrNull(section, addon, section.getString("script"));
 
         List<Integer> input = section.getIntegerList("input");
@@ -77,6 +79,7 @@ public class MachineReader extends YamlReader<AbstractEmptyMachine<?>> {
                 Debug.error(file, section, "缺少或配置错误 '电容量' (capacity)", 1, Integer.MAX_VALUE);
                 return null;
             }
+            addPowerBufferLore(base, section, capacity);
             MachineRecord record = new MachineRecord(capacity);
             String encType = energySettings.getString("type");
             Optional<EnergyNetComponentType> enc = CommonUtils.getEnum(EnergyNetComponentType.class, encType);
