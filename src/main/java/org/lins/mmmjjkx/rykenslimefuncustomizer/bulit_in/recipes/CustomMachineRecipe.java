@@ -17,8 +17,6 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes;
 
-import com.balugaq.jeg.utils.GuideUtil;
-import com.balugaq.jeg.utils.clickhandler.OnDisplay;
 import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
@@ -31,8 +29,8 @@ import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.AsyncChanceRecipeTask;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.InputWrapper;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.InvIndex;
@@ -44,7 +42,6 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.StackUtils;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Random;
 
 import static org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.RecipesHolder.RECIPE_INPUT;
@@ -55,11 +52,29 @@ import static org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.recipes.RecipesH
 public class CustomMachineRecipe extends AbstractRecipe {
     private final List<InputWrapper> inputs;
     private final List<ItemWrapper> outputs;
-    private final IntList chances;
+    private final IntList chances; // keep field name for LogiTech reflection
     private final boolean chooseOneIfHas; // keep field name for LogiTech reflection
     private final boolean forDisplay; // keep field name for LogiTech reflection
     private final boolean hide;
-    private final boolean noConsume; // keep field name for LogiTech reflection
+    private final boolean noConsumeAll;
+
+    // https://github.com/Ruchikanmani/LogiTech/commit/8fff699719b435100ab57345ff2eeaa46f18e3fe
+    @Deprecated
+    @ApiStatus.Obsolete
+    @ApiStatus.Internal
+    private final IntList noConsume; // keep field name for LogiTech reflection
+
+    // fallback
+    public static IntList fuckLogitech(List<InputWrapper> inputs) {
+        int size = inputs.stream().mapToInt(wp ->
+            wp.getNoConsume().getLinkedNoConsume().size() + (wp.getNoConsume().getNoConsumeAmountExcludeLinked() + wp.getMaxStackSize() - 1) / wp.getMaxStackSize()
+        ).sum();
+        IntList noConsume = new IntArrayList();
+        for (int i = 1; i <= size; i++) {
+            noConsume.add(i);
+        }
+        return noConsume;
+    }
 
     public boolean isChooseOne() {
         return chooseOneIfHas;
@@ -67,10 +82,6 @@ public class CustomMachineRecipe extends AbstractRecipe {
 
     public boolean isForDisplayOnly() {
         return forDisplay;
-    }
-
-    public boolean isNoConsumeAll() {
-        return noConsume;
     }
 
     @Deprecated
@@ -85,7 +96,7 @@ public class CustomMachineRecipe extends AbstractRecipe {
 
     @Deprecated
     public boolean isNoConsume() {
-        return noConsume;
+        return noConsumeAll;
     }
 
     public CustomMachineRecipe(
@@ -117,7 +128,9 @@ public class CustomMachineRecipe extends AbstractRecipe {
         this.chooseOneIfHas = chooseOne;
         this.forDisplay = forDisplayOnly;
         this.hide = hide;
-        this.noConsume = noConsumeAll;
+        this.noConsumeAll = noConsumeAll;
+
+        this.noConsume = fuckLogitech(input);
     }
 
     public static CustomMachineRecipe from(MachineRecipe mr) {

@@ -32,6 +32,7 @@ import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.AsyncChanceRecipeTask;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.InvIndex;
@@ -55,7 +56,13 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
     private final boolean forDisplay; // keep field name for LogiTech reflection
     private final boolean hide;
     private final int saveAmount;
-    private final boolean noConsume; // keep field name for LogiTech reflection
+    private final boolean noConsumeAll;
+
+    // https://github.com/Ruchikanmani/LogiTech/commit/8fff699719b435100ab57345ff2eeaa46f18e3fe
+    @Deprecated
+    @ApiStatus.Obsolete
+    @ApiStatus.Internal
+    private final IntList noConsume; // keep field name for LogiTech reflection
 
     public boolean isChooseOne() {
         return chooseOneIfHas;
@@ -63,10 +70,6 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
 
     public boolean isForDisplayOnly() {
         return forDisplay;
-    }
-
-    public boolean isNoConsumeAll() {
-        return noConsume;
     }
 
     @Deprecated
@@ -81,7 +84,7 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
 
     @Deprecated
     public boolean isNoConsume() {
-        return noConsume;
+        return noConsumeAll;
     }
 
     @Override
@@ -225,7 +228,8 @@ public class CustomLinkedMachineRecipe extends AbstractRecipe {
         this.forDisplay = forDisplayOnly;
         this.hide = hide;
         this.saveAmount = saveAmount;
-        this.noConsume = noConsumeAll;
+        this.noConsumeAll = noConsumeAll;
+        this.noConsume = new IntArrayList(noConsumeIndexes);
     }
 
     @Override
