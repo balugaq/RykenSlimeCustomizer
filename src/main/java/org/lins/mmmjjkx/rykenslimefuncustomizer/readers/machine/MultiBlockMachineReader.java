@@ -27,6 +27,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.CustomMultiBlockMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
@@ -101,7 +102,7 @@ public class MultiBlockMachineReader extends YamlReader<CustomMultiBlockMachine>
             sound = soundEffect.get();
         }
 
-        JavaScriptEval eval = getScriptOrNull(section, section.getString("script"));
+        var eval = ScriptEval.getScriptOrNull(section, addon, section.getString("script"));
 
         return new CustomMultiBlockMachine(base, recipes, workSlot, sound, eval);
     }

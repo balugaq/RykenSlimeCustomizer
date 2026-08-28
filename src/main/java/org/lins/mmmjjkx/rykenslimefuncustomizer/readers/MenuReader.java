@@ -77,7 +77,7 @@ public class MenuReader extends YamlReader<CustomMenu> {
             return null;
         }
 
-        JavaScriptEval eval = getScriptOrNull(section, section.getString("script"));
+        var eval = ScriptEval.getScriptOrNull(section, addon, section.getString("script"));
 
         if (section.contains("import")) {
             String menuId = section.getString("import", "");

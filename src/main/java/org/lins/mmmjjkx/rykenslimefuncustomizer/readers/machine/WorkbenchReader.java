@@ -26,6 +26,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.CustomWorkbench;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.menu.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
@@ -127,7 +128,7 @@ public class WorkbenchReader extends YamlReader<CustomWorkbench> {
             return null;
         }
 
-        JavaScriptEval eval = getScriptOrNull(section, section.getString("script"));
+        var eval = ScriptEval.getScriptOrNull(section, addon, section.getString("script"));
 
         int click = section.getInt("click", -1);
         if (click < 0 || click > 53) {

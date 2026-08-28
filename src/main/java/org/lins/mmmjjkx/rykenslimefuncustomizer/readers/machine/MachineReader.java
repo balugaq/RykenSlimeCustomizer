@@ -30,6 +30,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.script_machine.ScriptMac
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.script_machine.ScriptMachineNoEnergy;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
@@ -58,7 +59,7 @@ public class MachineReader extends YamlReader<AbstractEmptyMachine<?>> {
         var base = getBase(section, s);
         if (base == null) return null;
 
-        JavaScriptEval eval = getScriptOrNull(section, section.getString("script"));
+        var eval = ScriptEval.getScriptOrNull(section, addon, section.getString("script"));
 
         List<Integer> input = section.getIntegerList("input");
         List<Integer> output = section.getIntegerList("output");

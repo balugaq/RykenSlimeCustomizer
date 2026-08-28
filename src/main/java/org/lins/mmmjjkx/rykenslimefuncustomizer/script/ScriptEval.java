@@ -30,12 +30,14 @@ import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Server;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Value;
+import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
@@ -43,6 +45,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.PluginStateCache;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.super_multiblock.SuperMultiBlockManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.integrations.NBTAPIIntegration;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.objects.CiConsumer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.objects.CiFunction;
 
@@ -53,8 +56,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.Permission;
 import java.security.Permissions;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
@@ -67,6 +72,11 @@ import java.util.stream.IntStream;
 
 @Getter(AccessLevel.PROTECTED)
 public abstract class ScriptEval {
+    /**
+     * 已加载脚本的缓存，key 为脚本的规范化路径。
+     * 附属卸载时通过 {@link #clearScriptCache(ProjectAddon)} 清除对应条目，避免重载后复用失效的 ScriptEval。
+     */
+    public static final Map<File, ScriptEval> SCRIPT_CACHE = new ConcurrentHashMap<>();
     @Getter
     private static final Queue<Runnable> initTasks = new ConcurrentLinkedQueue<>();
     protected final HostAccess UNIVERSAL_HOST_ACCESS = createHostAccess();
@@ -168,6 +178,70 @@ public abstract class ScriptEval {
         this.addon = addon;
 
         contextInit();
+    }
+
+    @Contract("_, _, null -> null")
+    @Nullable
+    public static ScriptEval getScriptOrNull(ConfigurationSection section, ProjectAddon addon, @Nullable String script) {
+        if (script == null) return null;
+        var js = getScriptOrNull(addon, script);
+        if (js == null) {
+            Debug.warn(addon.getScriptsFolder(), section, "找不到对应的脚本文件 (script), file=" + script + ".js");
+            return null;
+        }
+
+        Debug.debug(js.getFile(), () -> "成功加载了脚本文件 " + js.getFile().getName());
+        return js;
+    }
+
+    /**
+     * 按相对于附属 scripts/ 目录的路径获取（或创建并缓存）脚本。
+     * 传入的名字不可信：先规范化路径并校验仍在 scripts/ 目录内，拒绝路径穿越。
+     */
+    @Nullable
+    public static ScriptEval getScriptOrNull(ProjectAddon addon, @Nullable String scriptName) {
+        if (scriptName == null || scriptName.isBlank()) return null;
+
+        String fileName = scriptName.endsWith(".js") ? scriptName : scriptName + ".js";
+        File scriptsFolder = addon.getScriptsFolder();
+        File file = new File(scriptsFolder, fileName);
+
+        if (SCRIPT_CACHE.containsKey(file)) {
+            return SCRIPT_CACHE.get(file);
+        }
+
+        try {
+            String canonical = file.getCanonicalPath();
+            String base = scriptsFolder.getCanonicalPath() + File.separator;
+            if (!canonical.startsWith(base)) {
+                Debug.warn("非法的脚本路径 (getScript), 已拒绝: " + fileName);
+                return null;
+            }
+            file = new File(canonical);
+        } catch (IOException e) {
+            Debug.warn("无法解析脚本路径 (getScript): " + fileName, e);
+            return null;
+        }
+
+        if (!file.isFile()) {
+            return null;
+        }
+
+        return SCRIPT_CACHE.computeIfAbsent(file, f -> JavaScriptEval.create(f, addon));
+    }
+
+    public static void clearScriptCache(ProjectAddon addon) {
+        try {
+            String base = addon.getScriptsFolder().getCanonicalPath() + File.separator;
+            SCRIPT_CACHE.keySet().removeIf(f -> {
+                try {
+                    return f.getCanonicalPath().startsWith(base);
+                } catch (IOException e) {
+                    return false;
+                }
+            });
+        } catch (IOException ignored) {
+        }
     }
 
     public abstract String key();
@@ -335,6 +409,11 @@ public abstract class ScriptEval {
             return addon.getConfig().config();
         });
 
+
+        addThing("getScript", (Function<String, ScriptEval>) s -> {
+            return getScriptOrNull(addon, s);
+        });
+
         if (PluginStateCache.isEnabled("NBTAPI")) {
             addThing("NBTAPI", NBTAPIIntegration.instance);
         }
@@ -345,7 +424,7 @@ public abstract class ScriptEval {
             text = text.replaceAll("%player%", p.getName());
         }
 
-        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+        if (PluginStateCache.isEnabled("PlaceholderAPI")) {
             text = PlaceholderAPI.setPlaceholders(p, text);
         }
 

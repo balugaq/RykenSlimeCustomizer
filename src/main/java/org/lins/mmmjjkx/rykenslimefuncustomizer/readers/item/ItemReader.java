@@ -43,6 +43,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.CustomItem;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ClassUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
@@ -156,7 +157,7 @@ public class ItemReader extends YamlReader<SlimefunItem> {
             instance = resolveRadiation(instance, base, section, constructorArgs);
         }
 
-        JavaScriptEval eval = getScriptOrNull(section, section.getString("script"));
+        var eval = ScriptEval.getScriptOrNull(section, addon, section.getString("script"));
         if (eval != null) {
             eval.doInit();
 

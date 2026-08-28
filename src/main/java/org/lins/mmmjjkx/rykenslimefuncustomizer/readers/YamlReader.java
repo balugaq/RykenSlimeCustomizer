@@ -22,12 +22,10 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
@@ -35,7 +33,6 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.AddonConfig;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddonLoader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.PluginStateCache;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.DropFromBlock;
@@ -498,24 +495,6 @@ public abstract class YamlReader<T> {
         }
 
         return List.of(new SlimefunItemStack(getId(s), stack));
-    }
-
-    @Contract("_, null -> null")
-    @Nullable
-    public JavaScriptEval getScriptOrNull(ConfigurationSection section, @Nullable String script) {
-        if (script == null) return null;
-        String scriptName = script + ".js";
-        File file = new File(addon.getScriptsFolder(), scriptName);
-        if (!file.exists()) {
-            Debug.warn(file, section, "找不到对应的脚本文件 (script), file=" + file.getAbsolutePath());
-            return null;
-        } else {
-            var js = JavaScriptEval.create(file, addon);
-            if (js != null) {
-                Debug.debug(file, () -> "成功加载了脚本文件 " + scriptName);
-            }
-            return js;
-        }
     }
 
     public static void resolveDropFrom(File file, ConfigurationSection section, SlimefunItemStack sfis, ProjectAddon addon) {

@@ -48,6 +48,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.generations.GenerationIn
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.menu.CustomMenu;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.ScriptableEventListener;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.DropFromBlock;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.RecipeTypeMap;
 
@@ -202,6 +203,7 @@ public final class ProjectAddon {
 
         // scripts.clear();
         scriptEvals.clear();
+        ScriptEval.clearScriptCache(this);
         items.clear();
         machines.clear();
         itemGroups.clear();

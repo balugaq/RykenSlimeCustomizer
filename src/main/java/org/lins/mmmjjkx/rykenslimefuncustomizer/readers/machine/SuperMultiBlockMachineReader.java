@@ -42,6 +42,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.super_multiblock.Vanilla
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.super_multiblock.Vector3i;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.readers.YamlReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Constants;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
@@ -114,7 +115,7 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
             return null;
         }
 
-        JavaScriptEval eval = getScriptOrNull(section, section.getString("script"));
+        var eval = ScriptEval.getScriptOrNull(section, addon, section.getString("script"));
 
         boolean displayProjectiles = section.getBoolean("displayProjectiles", true);
         boolean checkFormed = section.getBoolean("checkFormed", true);
@@ -172,7 +173,7 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
     }
 
     @Nullable
-    private SuperMultiBlockDefinition readMultiBlockDefinition(ConfigurationSection section, String s, @Nullable JavaScriptEval eval) {
+    private SuperMultiBlockDefinition readMultiBlockDefinition(ConfigurationSection section, String s, @Nullable ScriptEval eval) {
         if (section == null) return null;
         if (!section.contains("structure")) {
             Debug.error(file, section, "缺失结构定义 (structure)");
@@ -295,7 +296,7 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
     }
 
     @Nullable
-    private Pair<Map<String, MultiBlockPart>, String> readMapping(ConfigurationSection section, String s, @Nullable JavaScriptEval eval) {
+    private Pair<Map<String, MultiBlockPart>, String> readMapping(ConfigurationSection section, String s, @Nullable ScriptEval eval) {
         Map<String, MultiBlockPart> mapping = new HashMap<>();
         String core = null;
         for (String key : section.getKeys(false)) {
@@ -325,7 +326,7 @@ public class SuperMultiBlockMachineReader extends YamlReader<CustomSuperMultiBlo
     }
 
     @Nullable
-    private MultiBlockPart readMultiBlockPart(ConfigurationSection section, String s, @Nullable JavaScriptEval eval, String mappingLocation) {
+    private MultiBlockPart readMultiBlockPart(ConfigurationSection section, String s, @Nullable ScriptEval eval, String mappingLocation) {
         // 读取多方块结构定义
         // material_type: mc / slimefun / custom
         // material: 方块/BlockData/粘液id

@@ -92,7 +92,7 @@ public class TemplateMachineReader extends YamlReader<AdvancedCustomMachine> {
             return null;
         }
 
-        ScriptEval eval = getScriptOrNull(section, section.getString("script"));
+        var eval = ScriptEval.getScriptOrNull(section, addon, section.getString("script"));
 
         var machine = new AdvancedCustomMachine(
             base,

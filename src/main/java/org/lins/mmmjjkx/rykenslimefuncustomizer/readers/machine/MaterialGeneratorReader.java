@@ -83,7 +83,7 @@ public class MaterialGeneratorReader extends YamlReader<AdvancedCustomMachine> {
 
         int status = section.getInt("status", -1);
 
-        ScriptEval eval = getScriptOrNull(section, section.getString("script"));
+        var eval = ScriptEval.getScriptOrNull(section, addon, section.getString("script"));
 
         AdvancedCustomMachine machine = new CustomMaterialGenerator(
             base,

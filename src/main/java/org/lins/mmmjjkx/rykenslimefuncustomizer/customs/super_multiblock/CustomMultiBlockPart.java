@@ -22,12 +22,13 @@ import org.graalvm.polyglot.Value;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.JavaScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 
 public class CustomMultiBlockPart implements MultiBlockPart {
-    private final JavaScriptEval eval;
+    private final ScriptEval eval;
     private final DisplayDescriptor descriptor;
 
-    public CustomMultiBlockPart(@NonNull JavaScriptEval eval, @Nullable DisplayDescriptor descriptor) {
+    public CustomMultiBlockPart(@NonNull ScriptEval eval, @Nullable DisplayDescriptor descriptor) {
         this.eval = eval;
         this.descriptor = descriptor;
     }

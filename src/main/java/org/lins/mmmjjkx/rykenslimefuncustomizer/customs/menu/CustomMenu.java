@@ -94,7 +94,7 @@ public class CustomMenu {
             String id,
             String title,
             @Nullable BlockMenuPreset preset,
-            @Nullable JavaScriptEval eval) {
+            @Nullable ScriptEval eval) {
         this(id, title, new HashMap<>(), preset == null || preset.isPlayerInventoryClickable(), -1, null, eval);
 
         if (preset != null) {
