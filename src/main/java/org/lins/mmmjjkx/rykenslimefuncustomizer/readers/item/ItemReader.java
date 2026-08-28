@@ -80,7 +80,6 @@ public class ItemReader extends YamlReader<SlimefunItem> {
         Class<? extends CustomItem> clazz = ClassUtils.generateClass(
             instance.getClass(),
             "Radiation",
-            "Item",
             new Class[] {Radioactive.class},
             builder -> builder.method(ElementMatchers.isDeclaredBy(Radioactive.class))
                 .intercept(FixedValue.value(radioactivity.get())));
@@ -97,6 +96,65 @@ public class ItemReader extends YamlReader<SlimefunItem> {
         if (base == null) return null;
 
         CustomItem instance = new CustomItem(base);
+        Object[] constructorArgs = instance.constructorArgs();
+
+        if (section.getBoolean("placeable", false)) {
+            Class<? extends CustomItem> clazz = ClassUtils.generateClass(
+                instance.getClass(),
+                "NotPlaceable",
+                new Class[] {NotPlaceable.class},
+                null
+            );
+
+            instance = (CustomItem) clazz.getDeclaredConstructors()[0].newInstance(constructorArgs);
+        }
+
+        if (section.getBoolean("anti_wither", false)) {
+            if (!base.sfis().getType().isBlock()) {
+                Debug.warn(file, section, "非方块无法设置防凋零属性 已跳过");
+            } else {
+                Class<? extends CustomItem> clazz = ClassUtils.generateClass(
+                    instance.getClass(),
+                    "WitherProof",
+                    new Class[]{WitherProofBlockImpl.class},
+                    null
+                );
+
+                instance = (CustomItem) clazz.getDeclaredConstructors()[0].newInstance(constructorArgs);
+            }
+        }
+
+        if (section.getBoolean("soulbound", false)) {
+            Class<? extends CustomItem> clazz = ClassUtils.generateClass(
+                instance.getClass(),
+                "Soulbound",
+                new Class[] {Soulbound.class},
+                null
+            );
+
+            instance = (CustomItem) clazz.getDeclaredConstructors()[0].newInstance(constructorArgs);
+        }
+
+        if (section.contains("piglin_trade_chance")) {
+            int chance = CommonUtils.clamp(section.getInt("chance", 100), 1, 100, file, section, "'猪灵交易概率 (piglin_trade_chance) 非法'");
+
+            Class<? extends CustomItem> clazz = ClassUtils.generateClass(
+                instance.getClass(),
+                "PiglinBarterDrop",
+                new Class[] {PiglinBarterDrop.class},
+                builder -> builder.method(ElementMatchers.isDeclaredBy(PiglinBarterDrop.class))
+                        .intercept(FixedValue.value(chance)));
+
+            instance = (CustomItem) clazz.getDeclaredConstructors()[0].newInstance(constructorArgs);
+        }
+
+        if (section.contains("energy_capacity")) {
+            instance = resolveEnergyCapacity(section, instance, base, constructorArgs);
+        }
+
+        if (section.contains("radiation")) {
+            instance = resolveRadiation(instance, base, section, constructorArgs);
+        }
 
         JavaScriptEval eval = getScriptOrNull(section, section.getString("script"));
         if (eval != null) {
@@ -112,8 +170,6 @@ public class ItemReader extends YamlReader<SlimefunItem> {
             });
             instance.addItemHandler((ToolUseHandler) (e, it, i, drops) -> eval.evalFunction("onToolUse", e, it, i, drops));
         }
-
-        Object[] constructorArgs = instance.constructorArgs();
 
         if (section.contains("rainbow")) {
             String materialType = section.getString("rainbow", "");
@@ -150,68 +206,6 @@ public class ItemReader extends YamlReader<SlimefunItem> {
             }
         }
 
-        if (section.getBoolean("placeable", false)) {
-            Class<? extends CustomItem> clazz = ClassUtils.generateClass(
-                instance.getClass(),
-                "NotPlaceable",
-                "Item",
-                new Class[] {NotPlaceable.class},
-                null
-            );
-
-            instance = (CustomItem) clazz.getDeclaredConstructors()[0].newInstance(constructorArgs);
-        }
-
-        if (section.getBoolean("anti_wither", false)) {
-            if (!base.sfis().getType().isBlock()) {
-                Debug.warn(file, section, "非方块无法设置防凋零属性 已跳过");
-            } else {
-                Class<? extends CustomItem> clazz = ClassUtils.generateClass(
-                    instance.getClass(),
-                    "WitherProof",
-                    "Item",
-                    new Class[]{WitherProofBlockImpl.class},
-                    null
-                );
-
-                instance = (CustomItem) clazz.getDeclaredConstructors()[0].newInstance(constructorArgs);
-            }
-        }
-
-        if (section.getBoolean("soulbound", false)) {
-            Class<? extends CustomItem> clazz = ClassUtils.generateClass(
-                instance.getClass(),
-                "Soulbound",
-                "Item",
-                new Class[] {Soulbound.class},
-                null
-            );
-
-            instance = (CustomItem) clazz.getDeclaredConstructors()[0].newInstance(constructorArgs);
-        }
-
-        if (section.contains("piglin_trade_chance")) {
-            int chance = CommonUtils.clamp(section.getInt("chance", 100), 1, 100, file, section, "'猪灵交易概率 (piglin_trade_chance) 非法'");
-
-            Class<? extends CustomItem> clazz = ClassUtils.generateClass(
-                instance.getClass(),
-                "PiglinBarterDrop",
-                "Item",
-                new Class[] {PiglinBarterDrop.class},
-                builder -> builder.method(ElementMatchers.isDeclaredBy(PiglinBarterDrop.class))
-                        .intercept(FixedValue.value(chance)));
-
-            instance = (CustomItem) clazz.getDeclaredConstructors()[0].newInstance(constructorArgs);
-        }
-
-        if (section.contains("energy_capacity")) {
-            instance = resolveEnergyCapacity(section, instance, base, constructorArgs);
-        }
-
-        if (section.contains("radiation")) {
-            instance = resolveRadiation(instance, base, section, constructorArgs);
-        }
-
         boolean hidden = section.getBoolean("hidden", false);
         if (hidden) instance.setHidden(true);
 
@@ -238,7 +232,6 @@ public class ItemReader extends YamlReader<SlimefunItem> {
         Class<? extends CustomItem> clazz = ClassUtils.generateClass(
             instance.getClass(),
             "Rechargeable",
-            "Item",
             new Class[] {Rechargeable.class},
             builder -> builder.method(ElementMatchers.isDeclaredBy(Rechargeable.class).and(ElementMatchers.named("getMaxItemCharge")))
                 .intercept(FixedValue.value((float) energyCapacity)));

@@ -32,11 +32,10 @@ public class ClassUtils {
     public static <T> Class<? extends T> generateClass(
             Class<T> extendClass,
             String centerName,
-            String nameReplacement,
             Class<?>[] interfaces,
             @Nullable Function<DynamicType.Builder<?>, DynamicType.Builder<?>> delegation) {
 
-        String finalClassName = extendClass.getSimpleName().replace(nameReplacement, "") + centerName + nameReplacement;
+        String finalClassName = extendClass.getSimpleName() + centerName;
         if (cache.containsKey(finalClassName)) {
             return (Class<? extends T>) cache.get(finalClassName);
         }
