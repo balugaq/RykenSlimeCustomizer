@@ -34,6 +34,8 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
@@ -45,6 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@NullMarked
 public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGroup {
     private List<Object> contents;
     private final ProjectAddon addon;
@@ -60,7 +63,7 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
         return addon;
     }
 
-    public RSCItemGroupLegacy(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent, ScriptEval eval, int page) {
+    public RSCItemGroupLegacy(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent, @Nullable ScriptEval eval, int page) {
         super(key, item, tier);
 
         Debug.debug(() -> "创建物品组: " + key + " type=" + type.name() + ", page=" + page);
@@ -219,7 +222,9 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
             return false;
         });
 
-        eval.evalFunction("init_script", menu, new MenuHandler(menu, p), this);
+        if (eval != null) {
+            eval.evalFunction("init_script", menu, new MenuHandler(menu, p), this);
+        }
 
         return menu;
     }

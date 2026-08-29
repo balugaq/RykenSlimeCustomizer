@@ -34,6 +34,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
@@ -44,6 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@NullMarked
 public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
     private List<Object> contents;
     private final ProjectAddon addon;
@@ -52,14 +55,14 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
     private final boolean forceHidden;
     private final boolean hasParent;
     private final int page;
-    private final ScriptEval eval;
+    private final @Nullable ScriptEval eval;
 
     @Override
     public ProjectAddon getProjectAddon() {
         return addon;
     }
 
-    public RSCItemGroupJEG(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent, ScriptEval eval, int page) {
+    public RSCItemGroupJEG(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent, @Nullable ScriptEval eval, int page) {
         super(key, item, tier);
 
         Debug.debug(() -> "创建物品组: " + key + " type=" + type.name() + ", page=" + page);
@@ -95,7 +98,7 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
     }
 
     @Override
-    public boolean isVisible/*InMainMenu*/(@NonNull Player p, @NonNull PlayerProfile profile, @NonNull SlimefunGuideMode layout) {
+    public boolean isVisible/*InMainMenu*/(Player p, PlayerProfile profile, SlimefunGuideMode layout) {
         if (forceHidden || hasParent || type == GroupType.sub || type == GroupType.button) return false;
         if (type == GroupType.nested || type == GroupType.normal) {
             return true; // compatibility
@@ -104,7 +107,7 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
         return visible.apply(p, profile, layout);
     }
 
-    public boolean isVisibleInNested(@NonNull Player p, @NonNull PlayerProfile profile, @NonNull SlimefunGuideMode layout) {
+    public boolean isVisibleInNested(Player p, PlayerProfile profile, SlimefunGuideMode layout) {
         if (forceHidden) return false;
 
         return visible.apply(p, profile, layout);
@@ -142,7 +145,9 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
             handleContent(s, content, menu, p, profile, mode);
         }
 
-        eval.evalFunction("init_script", menu, new MenuHandler(menu, p), this);
+        if (eval != null) {
+            eval.evalFunction("init_script", menu, new MenuHandler(menu, p), this);
+        }
 
         return menu;
     }

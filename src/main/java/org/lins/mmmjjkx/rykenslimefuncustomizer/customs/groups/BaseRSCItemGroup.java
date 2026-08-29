@@ -21,6 +21,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.addon.ProjectAddon;
@@ -39,6 +40,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@NullMarked
 public interface BaseRSCItemGroup {
     int DEFAULT_TIER = 1000;
     Object2IntMap<Object> displayTiers = new Object2IntOpenHashMap<>();
@@ -95,7 +97,7 @@ public interface BaseRSCItemGroup {
         return null;
     }
 
-    static BaseRSCItemGroup create(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent, ScriptEval eval) {
+    static BaseRSCItemGroup create(NamespacedKey key, ItemStack item, int tier, ProjectAddon addon, GroupType type, Visible visible, boolean forceHidden, boolean hasParent, @Nullable ScriptEval eval) {
         if (RykenSlimefunCustomizer.jeg) {
             return new RSCItemGroupJEG(key, item, tier, addon, type, visible, forceHidden, hasParent, eval, 1);
         } else {
