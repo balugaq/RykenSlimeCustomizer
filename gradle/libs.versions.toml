@@ -3,7 +3,7 @@
 shadow = "9.3.2"
 lombok = "1.18.46"
 junit = "5.11.4"
-mockito = "5.14.2"
+mockito = "5.23.0"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version = "1.21.11-R0.1-SNAPSHOT" }
