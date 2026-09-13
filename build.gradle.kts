@@ -12,7 +12,7 @@ plugins {
 
 group = "io.github.balugaq"
 val archiveName = "RykenSlimeCustomizer"
-version = "3.1.11"
+version = "3.1.12"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
@@ -85,10 +85,10 @@ dependencies {
     annotationProcessor(libs.lombok)
     compileOnly(libs.item.nbt.api.plugin)
     compileOnly(libs.justenoughguide)
-    compileOnly(libs.logitech)
+    // compileOnly(libs.logitech)
 
     // System-scoped local JARs
-    // compileOnly(fileTree(mapOf("dir" to "lib", "include" to listOf("*.jar"))))
+    compileOnly(fileTree(mapOf("dir" to "lib", "include" to listOf("*.jar"))))
 
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockito.core)
@@ -159,7 +159,7 @@ tasks.runServer {
         "-Dnet.kyori.adventure.text.warn_when_legacy_formatting_detected=false"
     )
     maxHeapSize = "4G"
-    minecraftVersion("1.20.1")
+    minecraftVersion("1.21.11")
 }
 
 publishing {

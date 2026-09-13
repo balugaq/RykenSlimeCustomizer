@@ -116,14 +116,14 @@ public class RSCItemGroupLegacy extends FlexItemGroup implements BaseRSCItemGrou
 
     @Override
     public void open(Player p, PlayerProfile profile, SlimefunGuideMode mode) {
-        GuideHistory history = profile.getGuideHistory();
-        if (mode == SlimefunGuideMode.SURVIVAL_MODE) {
-            history.add(this, page);
-        }
         openPage(p, profile, mode, page);
     }
 
     private void openPage(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
+        GuideHistory history = profile.getGuideHistory();
+        if (mode == SlimefunGuideMode.SURVIVAL_MODE) {
+            history.add(this, page);
+        }
         var group = new RSCItemGroupLegacy(getKey(), getItem(p), getTier(), getProjectAddon(), type, visible, forceHidden, hasParent, eval, page);
         group.contents = contents;
         ChestMenu menu = group.setup(p, profile, mode);

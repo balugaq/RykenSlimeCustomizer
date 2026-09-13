@@ -17,8 +17,13 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.utils;
 
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
+import io.github.thebusybiscuit.slimefun4.utils.itemstack.ItemStackWrapper;
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import lombok.experimental.UtilityClass;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.inventory.ItemStack;
@@ -46,6 +51,9 @@ import org.bukkit.inventory.meta.TropicalFishBucketMeta;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -64,6 +72,61 @@ public class StackUtils {
             @Nullable ItemStack cache, @Nullable ItemStack itemStack, boolean checkLore, boolean checkAmount) {
         return itemsMatch(cache, itemStack, checkLore, checkAmount, false);
     }
+
+    /**
+     * @author balugaq
+     */
+    private static boolean shouldCompareLore(ItemStack itemStack, boolean checkLore) {
+        return checkLore
+            || itemStack.getMaxStackSize() == 1 // Fix RPG weapons
+            || itemStack.getType()
+            == Material.PLAYER_HEAD // Fix Soul jars in SoulJars & Number Components in MomoTech
+            // & Backpacks-like items in Slimefun & DynaTech & MerakTech & TsingshanTechnology
+            || itemStack.getType() == Material.SPAWNER // Fix Reinforced Spawner in Slimefun4
+            || itemStack.getType() == Material.SUGAR // Fix Symbols in MomoTech
+            || itemStack.getType() == Material.MINECART // Fix Dolly(possible) in FluffyMachines
+            || itemStack.getType() == Material.CHEST_MINECART; // Fix Packed Dolly(possible) in FluffyMachines
+    }
+
+    /**
+     * Compare plain text (no style) only,
+     *
+     * @author balugaq
+     */
+    private static boolean loreMatchesLoose(List<Component> a1, List<Component> a2) {
+        if (a1.size() != a2.size()) return false;
+        var serializer = PlainTextComponentSerializer.plainText();
+        for (int i = 0; i < a1.size(); i++) {
+            if (!serializer.serialize(a1.get(i)).equals(serializer.serialize(a2.get(i)))) return false;
+        }
+        return true;
+    }
+
+    /**
+     * @author balugaq
+     */
+    @SuppressWarnings("UnstableApiUsage")
+    private static boolean itemsMatchModern(
+        ItemStack cacheItem,
+        ItemStack itemStack,
+        boolean checkLore,
+        boolean checkCustomModelId) {
+        // most case pdc and others are enough
+        if (!cacheItem.matchesWithoutData(itemStack, checkCustomModelId ? DataComponentsCache.EXCLUDE_LORE : DataComponentsCache.EXCLUDE_LORE_AND_CMD, true)) {
+            return false;
+        }
+
+        if (shouldCompareLore(itemStack, checkLore)) {
+            // we have to check lore manually, otherwise `matchesWithoutData` cannot identify non-style-preset text.
+            // of course, we can use CraftBukkit utils like `ItemMeta.getLore()`, but it needs reflection.
+            return loreMatchesLoose(
+                cacheItem.getData(DataComponentTypes.LORE).styledLines(),
+                itemStack.getData(DataComponentTypes.LORE).styledLines());
+        }
+
+        return true;
+    }
+
     /**
      * Checks if items match each other, checks go in order from lightest to heaviest
      *
@@ -87,17 +150,14 @@ public class StackUtils {
             return false;
         }
 
-        if (Tag.SHULKER_BOXES.isTagged(itemStack.getType())) {
-            return false;
-        }
-
-        if (itemStack.getType() == Material.BUNDLE) {
-            return false;
-        }
-
         // If amounts do not match, then the items cannot possibly match
         if (checkAmount && itemStack.getAmount() > cache.getAmount()) {
             return false;
+        }
+
+        // Use DataComponent API
+        if (MinecraftVersion.current().isAtLeast(MinecraftVersion.V1_21_4)) {
+            return itemsMatchModern(asCraftItemStack(cache), asCraftItemStack(itemStack), checkLore, checkCustomModelId);
         }
 
         // If either item does not have a meta then either a mismatch or both without meta = vanilla
@@ -169,12 +229,7 @@ public class StackUtils {
         }
 
         // Check the lore
-        if (checkLore
-                || itemStack.getType()
-                        == Material.PLAYER_HEAD // Fix Soul jars in SoulJars & Number Components in MomoTech
-                || itemStack.getType() == Material.SPAWNER // Fix Reinforced Spawner in Slimefun4
-                || itemStack.getType() == Material.SUGAR // Fix Symbols in MomoTech
-        ) {
+        if (shouldCompareLore(itemStack, checkLore)) {
             if (itemMeta.hasLore() && cachedMeta.hasLore()) {
                 if (!Objects.equals(itemMeta.getLore(), cachedMeta.getLore())) {
                     return false;
@@ -440,5 +495,73 @@ public class StackUtils {
 
         // Cannot escape via any meta's extension check
         return false;
+    }
+
+    /**
+     * @author balugaq
+     */
+    public static ItemStack getCleanItem(@Nullable ItemStack item) {
+        if (item == null) {
+            return new ItemStack(Material.AIR);
+        }
+
+        ItemStack cleanItem = new ItemStack(item.getType());
+        cleanItem.setAmount(item.getAmount());
+        if (item.hasItemMeta()) {
+            cleanItem.setItemMeta(item.getItemMeta());
+        }
+
+        return cleanItem;
+    }
+
+    private static final @Nullable VarHandle API_ITEM_STACK_CRAFT_DELEGATE_FIELD;
+    static {
+        if (MinecraftVersion.current().isAtLeast(MinecraftVersion.V1_21)) {
+            try {
+                API_ITEM_STACK_CRAFT_DELEGATE_FIELD = MethodHandles.privateLookupIn(
+                    ItemStack.class,
+                    MethodHandles.lookup()
+                ).findVarHandle(ItemStack.class, "craftDelegate", ItemStack.class);
+            } catch (final IllegalAccessException | NoSuchFieldException exception) {
+                throw new RuntimeException(exception);
+            }
+        } else {
+            API_ITEM_STACK_CRAFT_DELEGATE_FIELD = null;
+        }
+    }
+
+    /**
+     * @author balugaq
+     */
+    private static ItemStack getDelegate(ItemStack bukkit) {
+        if (MinecraftVersion.current().isAtLeast(MinecraftVersion.V1_21)) {
+            return (ItemStack) API_ITEM_STACK_CRAFT_DELEGATE_FIELD.get(bukkit);
+        } else {
+            return bukkit;
+        }
+    }
+
+    /**
+     * @author balugaq
+     */
+    public static ItemStack asCraftItemStack(ItemStack stack) {
+        if (MinecraftVersion.current().isAtLeast(MinecraftVersion.V1_21)) {
+            if (stack instanceof SlimefunItemStack) {
+                return getCleanItem(stack);
+            }
+            if (stack instanceof ItemStackWrapper) {
+                return getCleanItem(stack);
+            }
+
+            var delegate = getDelegate(stack);
+            if (delegate instanceof SlimefunItemStack) {
+                return getCleanItem(stack);
+            }
+            if (delegate instanceof ItemStackWrapper) {
+                return getCleanItem(stack);
+            }
+        }
+
+        return stack;
     }
 }

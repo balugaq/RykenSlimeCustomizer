@@ -115,7 +115,6 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
 
     @Override
     public void open(Player p, PlayerProfile profile, SlimefunGuideMode mode) {
-        profile.getGuideHistory().add(this, page); // no matter survival or cheat mode.
         openPage(p, profile, mode, page);
     }
 
@@ -191,6 +190,7 @@ public class RSCItemGroupJEG extends FlexItemGroup implements BaseRSCItemGroup {
     }
 
     private void openPage(Player p, PlayerProfile profile, SlimefunGuideMode mode, int page) {
+        profile.getGuideHistory().add(this, page); // no matter survival or cheat mode.
         var group = new RSCItemGroupJEG(getKey(), getItem(p), getTier(), getProjectAddon(), type, visible, forceHidden, hasParent, eval, page);
         group.contents = contents;
         ChestMenu menu = group.setup(p, profile, mode);

@@ -70,9 +70,10 @@ public class CustomMachineRecipe extends AbstractRecipe {
             wp.getNoConsume().getLinkedNoConsume().size() + (wp.getNoConsume().getNoConsumeAmountExcludeLinked() + wp.getMaxStackSize() - 1) / wp.getMaxStackSize()
         ).sum();
         IntList noConsume = new IntArrayList();
-        for (int i = 1; i <= size; i++) {
+        for (int i = 0; i < size; i++) {
             noConsume.add(i);
         }
+
         return noConsume;
     }
 

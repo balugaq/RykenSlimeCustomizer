@@ -46,7 +46,8 @@ public class InputWrapper extends ItemWrapper {
     }
 
     public Stream<ItemStack> asArrayStream() {
-        int amt = getAmount() - noConsume.getNoConsumeAmountExcludeLinked();
+        // remove noconsume exclude for logitech check
+        int amt = getAmount(); // - noConsume.getNoConsumeAmountExcludeLinked();
         return toStacks(amt).stream();
     }
 
