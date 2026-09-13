@@ -10,9 +10,9 @@ paper-api = { module = "io.papermc.paper:paper-api", version = "1.21.11-R0.1-SNA
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 libby-bukkit = { module = "net.byteflux:libby-bukkit", version = "1.3.1" }
 uni-item-all = { module = "io.github.projectunified:uni-item-all", version = "2.2.1" }
-graalvm-js = { module = "org.graalvm.js:js", version = "25.1.3" }
-graalvm-js-language = { module = "org.graalvm.js:js-language", version = "25.1.3" }
-graalvm-js-scriptengine = { module = "org.graalvm.js:js-scriptengine", version = "25.1.3" }
+graalvm-js = { module = "org.graalvm.js:js", version = "25.2.4" }
+graalvm-js-language = { module = "org.graalvm.js:js-language", version = "25.2.4" }
+graalvm-js-scriptengine = { module = "org.graalvm.js:js-scriptengine", version = "25.2.4" }
 graalvm-shadowed-icu4j = { module = "org.graalvm.shadowed:icu4j", version = "25.1.3" }
 graalvm-truffle-api = { module = "org.graalvm.truffle:truffle-api", version = "25.1.3" }
 graalvm-truffle-compiler = { module = "org.graalvm.truffle:truffle-compiler", version = "25.1.3" }
