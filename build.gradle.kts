@@ -85,7 +85,7 @@ dependencies {
     annotationProcessor(libs.lombok)
     compileOnly(libs.item.nbt.api.plugin)
     compileOnly(libs.justenoughguide)
-    // compileOnly(libs.logitech)
+    compileOnly(libs.logitech)
 
     // System-scoped local JARs
     compileOnly(fileTree(mapOf("dir" to "lib", "include" to listOf("*.jar"))))
