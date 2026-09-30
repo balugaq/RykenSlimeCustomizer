@@ -38,7 +38,7 @@ public class InputWrapper extends ItemWrapper {
         }
         if (desc.noConsume()) {
             if (desc.slot() != -1) {
-                noConsume.addLinkedNoConsume(desc.slot());
+                noConsume.addLinkedNoConsume(desc.slot(), desc.itemStack().getAmount());
             } else {
                 noConsume.addNoConsumeAmountExcludeLinked(desc.itemStack().getAmount());
             }

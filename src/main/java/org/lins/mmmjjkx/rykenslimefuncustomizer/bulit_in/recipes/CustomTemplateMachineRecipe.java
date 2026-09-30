@@ -78,15 +78,13 @@ public class CustomTemplateMachineRecipe extends CustomMachineRecipe {
 
     @Override
     public List<ItemStack> getMatchChanceResult(boolean chooseOne) {
-        List<ItemStack> itemStacks = new ArrayList<>();
+        // delegate to super so that chance matching and choose-one selection stay consistent
+        // with CustomMachineRecipe; only apply the template amount multiplier afterwards.
+        List<ItemStack> itemStacks = super.getMatchChanceResult(chooseOne);
 
-        for (int i = 0; i < getOutput().length; i++) {
-            if (matchChance(getChances().getInt(i))) {
-                var output = getOutput()[i].clone();
-                if (moreOutputIfMoreTemplates) {
-                    output.setAmount(output.getAmount() * templateStack.getAmount());
-                }
-                itemStacks.add(output);
+        if (moreOutputIfMoreTemplates) {
+            for (ItemStack output : itemStacks) {
+                output.setAmount(output.getAmount() * templateStack.getAmount());
             }
         }
 

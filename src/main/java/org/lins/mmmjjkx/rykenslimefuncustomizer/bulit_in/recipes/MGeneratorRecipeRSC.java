@@ -19,6 +19,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.BlockMenuUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @NullMarked
 @Getter
@@ -78,11 +79,25 @@ public class MGeneratorRecipeRSC extends MGeneratorRecipe implements Recipe {
 
     @Override
     public boolean pushOutputs(BlockMenu inv) {
-        ItemStack[] clone = new ItemStack[getOutput().length];
+        // match per-output chances first (same semantics as CustomMachineRecipe.getMatchChanceResult)
+        List<ItemStack> results = new ArrayList<>();
         for (int i = 0; i < getOutput().length; i++) {
-            clone[i] = getOutput()[i].clone();
+            if (CustomMachineRecipe.matchChance(getChances().getInt(i))) {
+                results.add(getOutput()[i].clone());
+            }
         }
-        return BlockMenuUtil.pushItem(inv, clone, inv.getPreset().getSlotsAccessedByItemTransport(ItemTransportFlow.WITHDRAW)).isEmpty();
+
+        if (results.isEmpty()) {
+            // all chances failed, produce nothing
+            return true;
+        }
+
+        if (isChooseOne()) {
+            ItemStack picked = results.get(new Random().nextInt(results.size()));
+            return BlockMenuUtil.pushItem(inv, List.of(picked), inv.getPreset().getSlotsAccessedByItemTransport(ItemTransportFlow.WITHDRAW)).isEmpty();
+        }
+
+        return BlockMenuUtil.pushItem(inv, results, inv.getPreset().getSlotsAccessedByItemTransport(ItemTransportFlow.WITHDRAW)).isEmpty();
     }
 
     @Override

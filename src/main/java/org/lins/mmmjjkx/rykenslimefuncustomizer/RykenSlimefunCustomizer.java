@@ -50,6 +50,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.commands.MainCommand;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.CustomSuperMultiBlockMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.generations.BlockPopulator;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.super_multiblock.SuperMultiBlockManager;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.integrations.LogiTechRecipePatcher;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.DropFromBlockListener;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.RecipeViewListener;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SuperMultiBlockListener;
@@ -316,6 +317,9 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
             logitechNotStackableIds = null; // gc
             Debug.info("已自动禁用机器在逻辑工艺中的可堆叠属性! 共 " + i + " 个机器");
+
+            // 重建 MACHINE_RECIPELIST 中 RSC 机器的配方，修复 noConsume 在堆叠机器模拟时失效
+            LogiTechRecipePatcher.patchAll();
         }, 300L); // wait recipe supporter
     }
 
