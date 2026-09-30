@@ -18,6 +18,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.InputWrapper;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.wrappers.NoConsume;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.customs.AdvancedCustomMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.Debug;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ReflectionUtil;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -61,7 +62,7 @@ public final class LogiTechRecipePatcher {
             if (ticker == null || ticker.getType() == MachineTicker.Type.MATERIAL_GENERATOR) continue;
 
             List<? extends Recipe> recipes = ticker.getRecipes();
-            if (recipes == null || recipes.isEmpty()) continue;
+            if (recipes.isEmpty()) continue;
 
             // 链式配方机器 (CustomLinkedMachineRecipe) 不是 CustomMachineRecipe 体系，保持 LogiTech 原样
             boolean allCustom = true;
@@ -109,7 +110,7 @@ public final class LogiTechRecipePatcher {
         ItemStack[] output = r.getOutput();
         List<ItemStack> outs = new ArrayList<>(output.length);
         for (int i = 0; i < output.length; i++) {
-            double p = (chances != null && i < chances.size())
+            double p = i < chances.size()
                 ? Math.min(100, Math.max(0, chances.getInt(i))) / 100.0
                 : 1.0;
             outs.add(p > 0.99 ? output[i] : new ProbItemStack(output[i], p));
@@ -121,6 +122,6 @@ public final class LogiTechRecipePatcher {
             outArr = outs.toArray(new ItemStack[0]);
         }
 
-        return MachineRecipeUtils.stackFrom(r.getTicks(), input.toArray(new ItemStack[0]), outArr, noConsume);
+        return (MachineRecipe) ReflectionUtil.invokeStaticMethod(MachineRecipeUtils.class, "stackFrom", r.getTicks(), input.toArray(new ItemStack[0]), outArr, noConsume);
     }
 }
