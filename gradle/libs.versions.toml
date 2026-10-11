@@ -18,7 +18,7 @@ graalvm-truffle-api = { module = "org.graalvm.truffle:truffle-api", version = "2
 graalvm-truffle-compiler = { module = "org.graalvm.truffle:truffle-compiler", version = "25.4.4.1.1" }
 graalvm-truffle-enterprise = { module = "org.graalvm.truffle:truffle-enterprise", version = "25.4.4.1.1" }
 graalvm-truffle-runtime = { module = "org.graalvm.truffle:truffle-runtime", version = "25.4.4.1.1" }
-graalvm-polyglot = { module = "org.graalvm.polyglot:polyglot", version = "25.1.3" }
+graalvm-polyglot = { module = "org.graalvm.polyglot:polyglot", version = "25.4.4.1.1" }
 graalvm-sdk-collections = { module = "org.graalvm.sdk:collections", version = "25.4.4.1.1" }
 graalvm-sdk-nativeimage = { module = "org.graalvm.sdk:nativeimage", version = "25.4.4.1.1" }
 graalvm-sdk-word = { module = "org.graalvm.sdk:word", version = "25.4.4.1.1" }
