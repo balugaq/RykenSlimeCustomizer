@@ -13,7 +13,7 @@ uni-item-all = { module = "io.github.projectunified:uni-item-all", version = "2.
 graalvm-js = { module = "org.graalvm.js:js", version = "25.4.4.1.1" }
 graalvm-js-language = { module = "org.graalvm.js:js-language", version = "25.4.4.1.1" }
 graalvm-js-scriptengine = { module = "org.graalvm.js:js-scriptengine", version = "25.4.4.1.1" }
-graalvm-shadowed-icu4j = { module = "org.graalvm.shadowed:icu4j", version = "25.1.3" }
+graalvm-shadowed-icu4j = { module = "org.graalvm.shadowed:icu4j", version = "25.4.4.1.1" }
 graalvm-truffle-api = { module = "org.graalvm.truffle:truffle-api", version = "25.4.4.1.1" }
 graalvm-truffle-compiler = { module = "org.graalvm.truffle:truffle-compiler", version = "25.4.4.1.1" }
 graalvm-truffle-enterprise = { module = "org.graalvm.truffle:truffle-enterprise", version = "25.4.4.1.1" }
