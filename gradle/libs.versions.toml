@@ -1,7 +1,7 @@
 [versions]
 #spotless = "7.0.2"
 shadow = "9.6.1"
-lombok = "1.18.46"
+lombok = "1.18.48"
 junit = "5.14.4"
 mockito = "5.23.0"
 
